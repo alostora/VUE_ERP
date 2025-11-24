@@ -1,12 +1,10 @@
 <template>
   <div class="category-create-form">
-    <!-- Error Message -->
     <Message v-if="error" severity="error" class="mb-3">
       {{ error }}
     </Message>
 
     <form @submit.prevent="submitForm">
-      <!-- Name Field -->
       <div class="field mb-3">
         <label for="name" class="font-bold block mb-2">
           {{ $t("categories.categoryName") }} *
@@ -21,13 +19,11 @@
         <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
       </div>
 
-      <!-- Image Upload Field -->
       <div class="field mb-3">
         <label for="image" class="font-bold block mb-2">
           {{ $t("categories.categoryImage") }}
         </label>
         <div class="flex flex-column gap-2">
-          <!-- Image Preview -->
           <div v-if="imagePreview" class="image-preview">
             <img
               :src="imagePreview"
@@ -42,7 +38,6 @@
             />
           </div>
 
-          <!-- File Upload -->
           <FileUpload
             mode="basic"
             :chooseLabel="
@@ -61,7 +56,6 @@
             {{ errors.file_id }}
           </small>
 
-          <!-- Upload Progress -->
           <ProgressBar
             v-if="uploading"
             :value="uploadProgress"
@@ -73,7 +67,6 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="flex justify-content-end gap-2">
         <Button
           type="button"
@@ -118,7 +111,12 @@ export default {
   props: {
     company_id: {
       type: String,
-      required: true,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
     },
   },
   data() {
@@ -131,7 +129,7 @@ export default {
       selectedFile: null,
       formData: {
         name: "",
-        file_id: "",
+        file_id: "", // Correct field name for API
       },
       errors: {},
     };
@@ -198,7 +196,20 @@ export default {
           }
         );
 
-        this.formData.file_id = response.data.id;
+        // CORRECT: Get file_id from response
+        console.log("📁 File upload response:", response.data);
+
+        // Handle different response structures
+        if (response.data.data && response.data.data.id) {
+          this.formData.file_id = response.data.data.id;
+        } else if (response.data.id) {
+          this.formData.file_id = response.data.id;
+        } else {
+          throw new Error("Invalid file upload response format");
+        }
+
+        console.log("✅ File ID set to:", this.formData.file_id);
+
         this.showToast(
           "success",
           "Success",
@@ -235,15 +246,20 @@ export default {
       try {
         const url = `${general_request.BASE_URL}/admin/company/category`;
 
+        // CORRECT PAYLOAD STRUCTURE for CREATE:
         const payload = {
-          company_id: this.company_id,
+          company_id: this.effectiveCompanyId,
           name: this.formData.name,
-          ...(this.formData.file_id && { file_id: this.formData.file_id }),
+          file_id: this.formData.file_id, // Only include if file was uploaded
         };
+
+        console.log("📤 Creating category with payload:", payload);
 
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
+
+        console.log("✅ Category created successfully:", response.data);
 
         this.resetForm();
         this.$emit("category-created", response.data.data);
@@ -323,7 +339,11 @@ export default {
       errorMessages.forEach((message) => {
         if (message.includes("name")) {
           this.errors.name = message;
-        } else if (message.includes("file") || message.includes("image")) {
+        } else if (
+          message.includes("file") ||
+          message.includes("image") ||
+          message.includes("file_id")
+        ) {
           this.errors.file_id = message;
         } else if (message.includes("company")) {
           this.error = message;

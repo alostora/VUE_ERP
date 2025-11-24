@@ -105,6 +105,7 @@ export default {
      reports: "التقارير",
      settings: "الإعدادات",
      businessInfo: "معلومات العمل",
-     noCoverImage: "لا توجد صورة غلاف"
+     noCoverImage: "لا توجد صورة غلاف",
+     measurementUnits: "وحدات القياس",
 
 }

@@ -106,4 +106,5 @@ export default {
      settings: "Settings",
      businessInfo: "Business Information",
      noCoverImage: "No cover image available",
+     measurementUnits: "Measurement Units",
 }

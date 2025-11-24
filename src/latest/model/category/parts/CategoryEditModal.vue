@@ -6,15 +6,13 @@
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
   >
-    <!-- Category Edit Form -->
     <CategoryEditForm
       :category="category"
-      :company_id="company_id"
+      :company_id="effectiveCompanyId"
       @category-updated="handleCategoryUpdated"
       @cancel="closeModal"
     />
 
-    <!-- Loading Overlay -->
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
     </div>
@@ -40,7 +38,17 @@ export default {
     },
     company_id: {
       type: String,
-      required: true,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
+    },
+    headerText() {
+      return this.category?.id
+        ? this.$t("categories.editCategory")
+        : this.$t("categories.createCategory");
     },
   },
   data() {
@@ -48,13 +56,6 @@ export default {
       visible: false,
       loading: false,
     };
-  },
-  computed: {
-    headerText() {
-      return this.category?.id
-        ? this.$t("categories.editCategory")
-        : this.$t("categories.createCategory");
-    },
   },
   methods: {
     openModal() {

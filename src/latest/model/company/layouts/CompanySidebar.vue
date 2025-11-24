@@ -94,10 +94,15 @@ export default {
   data() {
     return {
       items: [
+        // {
+        //   label: "companies.companyDetails",
+        //   icon: "pi pi-building",
+        //   route: `/company/${this.$route.params.company_id}/show`,
+        // },
         {
           label: "companies.companyDetails",
           icon: "pi pi-building",
-          route: `/company/${this.$route.params.company_id}/show`,
+          route: `/company/${this.$route.params.company_id}/details`,
         },
         {
           label: "companies.categories",
@@ -105,6 +110,11 @@ export default {
           route: `/company/${this.$route.params.company_id}/categories`,
         },
         {
+          label: "companies.measurementUnits",
+          icon: "pi pi-calculator",
+          route: `/company/${this.$route.params.company_id}/measurement-units`,
+        },
+        /* {
           label: "companies.products",
           icon: "pi pi-shopping-bag",
           route: "#",
@@ -121,10 +131,18 @@ export default {
           icon: "pi pi-users",
           route: "#",
           disabled: true,
-        },
+        }, */
       ],
     };
   },
+
+  computed: {
+    // Use computed property to get company_id
+    companyId() {
+      return this.$route.params.company_id;
+    },
+  },
+
   methods: {
     handleNavigation(route) {
       if (route && route !== "#") {
@@ -134,22 +152,6 @@ export default {
         }
       }
     },
-  },
-  created() {
-    // Update routes with current company_id
-    this.items = this.items.map((item) => ({
-      ...item,
-      route:
-        item.route === "#"
-          ? "#"
-          : `/company/${this.$route.params.company_id}${
-              item.route.includes("/show")
-                ? "/show"
-                : item.route.includes("/categories")
-                ? "/categories"
-                : ""
-            }`,
-    }));
   },
 };
 </script>

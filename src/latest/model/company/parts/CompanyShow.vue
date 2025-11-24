@@ -55,11 +55,9 @@
           </div>
 
           <!-- Company Content -->
-          <div v-else-if="company.id" class="company-content">
-            <CompanyStatistics :company="company" />
-            <Divider />
-            <CompanyDetails :company="company" />
-          </div>
+          <div v-else-if="company.id" class="company-content"></div>
+
+          <RouterView :company="company" :company_id="company_id" />
         </div>
       </main>
     </div>
@@ -76,6 +74,7 @@
 </template>
 
 <script>
+import { RouterView } from "vue-router";
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import general_request from "../../../views/layouts/constants/general_request";
 
@@ -99,10 +98,9 @@ import Divider from "primevue/divider";
 export default {
   name: "CompanyShow",
   components: {
+    RouterView,
     CompanyHeader,
     CompanySidebar,
-    CompanyDetails,
-    CompanyStatistics,
     CompanyEditModal, // ضيفنا الـ modal هنا
     Button,
     ProgressSpinner,
@@ -200,14 +198,14 @@ export default {
     handleCompanyUpdated(updatedCompany) {
       // update الـ company data بعد التعديل
       this.company = { ...this.company, ...updatedCompany };
-      
+
       // show success message
       this.showToast(
         "success",
         this.$t("common.success"),
         this.$t("companies.companyUpdated")
       );
-      
+
       // refresh البيانات علشان نتأكد إن كل حاجة updated
       this.fetchCompany();
     },
@@ -323,7 +321,7 @@ export default {
   .company-layout-container {
     overflow: visible; /* في الموبايل بنسمح بالـ overlay */
   }
-  
+
   .company-main-content {
     margin-left: 0 !important;
     margin-right: 0 !important;

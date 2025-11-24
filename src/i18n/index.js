@@ -12,6 +12,8 @@ import enCities from './locales/en/city'
 import enCompanies from './locales/en/company'
 import enCategories from './locales/en/category'
 
+import enMeasurementUnits from './locales/en/measurementUnit'
+
 
 // Import Arabic translations
 import arUsers from './locales/ar/users'
@@ -25,6 +27,8 @@ import arCities from './locales/ar/city'
 import arCompanies from './locales/ar/company'
 import arCategories from './locales/ar/category'
 
+import arMeasuremartUnits from './locales/ar/measurementUnit'
+
 const messages = {
      en: {
           ...enCommon,
@@ -36,7 +40,8 @@ const messages = {
           governorates: enGovernorate,
           cities: enCities,
           companies: enCompanies,
-          categories: enCategories
+          categories: enCategories,
+          measurementUnits: enMeasurementUnits
      },
      ar: {
           ...arCommon,
@@ -48,7 +53,8 @@ const messages = {
           governorates: arGovernorate,
           cities: arCities,
           companies: arCompanies,
-          categories: arCategories
+          categories: arCategories,
+          measurementUnits: arMeasuremartUnits
      }
 }
 

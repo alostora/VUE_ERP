@@ -56,5 +56,7 @@ export default {
      countryRequired: "Country is required",
 
      governorateRequired: "Governorate is required",
-     nameRequired: "Name is required"
+     nameRequired: "Name is required",
+
+     nameArRequired: "Arabic name is required",
 }

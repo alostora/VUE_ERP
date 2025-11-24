@@ -1,21 +1,21 @@
 <template>
   <Dialog
-    :header="$t('categories.createCategory')"
+    :header="$t('measurementUnits.createMeasurementUnit')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
     @hide="closeModal"
   >
-    <CategoryCreateForm
+    <MeasurementUnitCreateForm
       :company_id="effectiveCompanyId"
-      @category-created="handleCategoryCreated"
+      @measurement-unit-created="handleMeasurementUnitCreated"
       @cancel="closeModal"
     />
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("categories.creatingCategory") }}</p>
+      <p class="mt-2">{{ $t("measurementUnits.creatingMeasurementUnit") }}</p>
     </div>
   </Dialog>
 </template>
@@ -23,14 +23,14 @@
 <script>
 import Dialog from "primevue/dialog";
 import ProgressSpinner from "primevue/progressspinner";
-import CategoryCreateForm from "./CategoryCreateForm.vue";
+import MeasurementUnitCreateForm from "./MeasurementUnitCreateForm.vue";
 
 export default {
-  name: "CategoryCreateModal",
+  name: "MeasurementUnitCreateModal",
   components: {
     Dialog,
     ProgressSpinner,
-    CategoryCreateForm,
+    MeasurementUnitCreateForm,
   },
   props: {
     company_id: {
@@ -59,8 +59,8 @@ export default {
       this.loading = false;
     },
 
-    handleCategoryCreated(newCategory) {
-      this.$emit("category-created", newCategory);
+    handleMeasurementUnitCreated(newMeasurementUnit) {
+      this.$emit("measurement-unit-created", newMeasurementUnit);
       this.closeModal();
     },
 

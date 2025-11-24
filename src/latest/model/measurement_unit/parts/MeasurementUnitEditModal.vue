@@ -1,21 +1,20 @@
 <template>
   <Dialog
-    :header="$t('categories.createCategory')"
+    :header="headerText"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
-    @hide="closeModal"
   >
-    <CategoryCreateForm
+    <MeasurementUnitEditForm
+      :measurement-unit="measurementUnit"
       :company_id="effectiveCompanyId"
-      @category-created="handleCategoryCreated"
+      @measurement-unit-updated="handleMeasurementUnitUpdated"
       @cancel="closeModal"
     />
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("categories.creatingCategory") }}</p>
     </div>
   </Dialog>
 </template>
@@ -23,16 +22,20 @@
 <script>
 import Dialog from "primevue/dialog";
 import ProgressSpinner from "primevue/progressspinner";
-import CategoryCreateForm from "./CategoryCreateForm.vue";
+import MeasurementUnitEditForm from "./MeasurementUnitEditForm.vue";
 
 export default {
-  name: "CategoryCreateModal",
+  name: "MeasurementUnitEditModal",
   components: {
     Dialog,
     ProgressSpinner,
-    CategoryCreateForm,
+    MeasurementUnitEditForm,
   },
   props: {
+    measurementUnit: {
+      type: Object,
+      default: () => ({}),
+    },
     company_id: {
       type: String,
       default: null,
@@ -41,6 +44,11 @@ export default {
   computed: {
     effectiveCompanyId() {
       return this.company_id || this.$route.params.company_id;
+    },
+    headerText() {
+      return this.measurementUnit?.id
+        ? this.$t("measurementUnits.editMeasurementUnit")
+        : this.$t("measurementUnits.createMeasurementUnit");
     },
   },
   data() {
@@ -57,10 +65,11 @@ export default {
     closeModal() {
       this.visible = false;
       this.loading = false;
+      this.$emit("modal-closed");
     },
 
-    handleCategoryCreated(newCategory) {
-      this.$emit("category-created", newCategory);
+    handleMeasurementUnitUpdated(updatedMeasurementUnit) {
+      this.$emit("measurement-unit-updated", updatedMeasurementUnit);
       this.closeModal();
     },
 
@@ -80,7 +89,6 @@ export default {
   height: 100%;
   background: rgba(255, 255, 255, 0.8);
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 1000;

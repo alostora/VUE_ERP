@@ -1,12 +1,10 @@
 <template>
   <div class="category-edit-form">
-    <!-- Error Message -->
     <Message v-if="error" severity="error" class="mb-3">
       {{ error }}
     </Message>
 
     <form @submit.prevent="submitForm">
-      <!-- Name Field -->
       <div class="field mb-3">
         <label for="name" class="font-bold block mb-2">
           {{ $t("categories.categoryName") }} *
@@ -20,25 +18,22 @@
         <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
       </div>
 
-      <!-- Image Upload Field -->
       <div class="field mb-3">
         <label for="image" class="font-bold block mb-2">
           {{ $t("categories.categoryImage") }}
         </label>
         <div class="flex flex-column gap-2">
-          <!-- Current Image -->
-          <div v-if="formData.file?.file_path" class="current-image">
+          <div v-if="currentFileId" class="current-image">
             <p class="text-sm text-color-secondary mb-2">
               {{ $t("categories.currentImage") }}:
             </p>
             <img
-              :src="formData.file.file_path"
+              :src="currentImageUrl"
               :alt="formData.name"
               class="current-image-preview"
             />
           </div>
 
-          <!-- Image Preview for New Upload -->
           <div v-if="imagePreview" class="image-preview">
             <p class="text-sm text-color-secondary mb-2">
               {{ $t("categories.newImage") }}:
@@ -56,7 +51,6 @@
             />
           </div>
 
-          <!-- File Upload -->
           <FileUpload
             mode="basic"
             :chooseLabel="
@@ -75,7 +69,6 @@
             {{ errors.file_id }}
           </small>
 
-          <!-- Upload Progress -->
           <ProgressBar
             v-if="uploading"
             :value="uploadProgress"
@@ -87,7 +80,6 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
       <div class="flex justify-content-end gap-2">
         <Button
           type="button"
@@ -136,7 +128,26 @@ export default {
     },
     company_id: {
       type: String,
-      required: true,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
+    },
+    submitButtonText() {
+      return this.formData.id
+        ? this.$t("common.update")
+        : this.$t("common.create");
+    },
+    isEditMode() {
+      return !!this.formData.id;
+    },
+    currentFileId() {
+      return this.formData.file?.id || this.formData.file_id;
+    },
+    currentImageUrl() {
+      return this.formData.file?.file_path;
     },
   },
   data() {
@@ -147,24 +158,15 @@ export default {
       error: "",
       imagePreview: null,
       selectedFile: null,
-      newFileId: null,
+      newFileId: null, // Store new file ID for update
       formData: {
         id: "",
         name: "",
         file: null,
+        file_id: "", // Store current file_id
       },
       errors: {},
     };
-  },
-  computed: {
-    submitButtonText() {
-      return this.formData.id
-        ? this.$t("common.update")
-        : this.$t("common.create");
-    },
-    isEditMode() {
-      return !!this.formData.id;
-    },
   },
   watch: {
     category: {
@@ -181,14 +183,20 @@ export default {
   },
   methods: {
     populateForm(category) {
+      console.log("📝 Populating form with category:", category);
+
       this.formData = {
         id: category.id || "",
         name: category.name || "",
         file: category.file || null,
+        file_id: category.file?.id || "", // Store current file_id
       };
+
       this.newFileId = null;
       this.imagePreview = null;
       this.selectedFile = null;
+
+      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -196,6 +204,7 @@ export default {
         id: "",
         name: "",
         file: null,
+        file_id: "",
       };
       this.newFileId = null;
       this.imagePreview = null;
@@ -254,7 +263,20 @@ export default {
           }
         );
 
-        this.newFileId = response.data.id;
+        // CORRECT: Get file_id from response for update
+        console.log("📁 File upload response:", response.data);
+
+        // Handle different response structures
+        if (response.data.data && response.data.data.id) {
+          this.newFileId = response.data.data.id;
+        } else if (response.data.id) {
+          this.newFileId = response.data.id;
+        } else {
+          throw new Error("Invalid file upload response format");
+        }
+
+        console.log("✅ New File ID for update:", this.newFileId);
+
         this.showToast(
           "success",
           "Success",
@@ -291,19 +313,19 @@ export default {
       try {
         const url = `${general_request.BASE_URL}/admin/company/category/${this.formData.id}`;
 
-        // Prepare payload - only include file_id if a new image was uploaded
+        // CORRECT PAYLOAD STRUCTURE for UPDATE:
         const payload = {
           name: this.formData.name,
-          ...(this.newFileId && { file_id: this.newFileId }),
+          file_id: this.newFileId || this.currentFileId, // Use new file ID if uploaded, otherwise keep current
         };
 
-        console.log("Updating category with payload:", payload);
+        console.log("📤 Updating category with payload:", payload);
 
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("Category updated successfully:", response.data);
+        console.log("✅ Category updated successfully:", response.data);
         this.$emit("category-updated", response.data.data);
 
         this.showToast(
@@ -381,7 +403,11 @@ export default {
       errorMessages.forEach((message) => {
         if (message.includes("name")) {
           this.errors.name = message;
-        } else if (message.includes("file") || message.includes("image")) {
+        } else if (
+          message.includes("file") ||
+          message.includes("image") ||
+          message.includes("file_id")
+        ) {
           this.errors.file_id = message;
         }
       });

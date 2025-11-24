@@ -1,10 +1,10 @@
 <template>
-  <div class="category-table-page">
+  <div class="measurement-unit-table-page">
     <div class="mb-4">
       <Button
-        :label="$t('categories.addCategory')"
+        :label="$t('measurementUnits.addMeasurementUnit')"
         icon="pi pi-plus"
-        @click="createCategory"
+        @click="createMeasurementUnit"
         class="p-button-primary"
       />
     </div>
@@ -13,7 +13,7 @@
       <div class="search-container">
         <InputText
           v-model="query_string"
-          :placeholder="$t('categories.search')"
+          :placeholder="$t('measurementUnits.search')"
           @input="handleSearchInput"
           class="search-input w-20rem"
         />
@@ -25,7 +25,7 @@
         :options="perPageOptions"
         optionLabel="label"
         optionValue="value"
-        :placeholder="$t('categories.show')"
+        :placeholder="$t('measurementUnits.show')"
         @change="getData(propSearchUrl)"
         class="w-10rem"
       />
@@ -45,31 +45,19 @@
       @page="handlePageChange"
       @sort="onSort"
     >
-      <Column field="id" :header="$t('categories.id')" style="min-width: 100px">
+      <Column
+        field="id"
+        :header="$t('measurementUnits.id')"
+        style="min-width: 100px"
+      >
         <template #body="slotProps">
           <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
         </template>
       </Column>
 
       <Column
-        field="file"
-        :header="$t('categories.image')"
-        style="min-width: 80px"
-      >
-        <template #body="slotProps">
-          <img
-            v-if="slotProps.data.file"
-            :src="slotProps.data.file.file_path"
-            :alt="slotProps.data.name"
-            class="category-image"
-          />
-          <span v-else>-</span>
-        </template>
-      </Column>
-
-      <Column
         field="name"
-        :header="$t('categories.name')"
+        :header="$t('measurementUnits.name')"
         sortable
         style="min-width: 150px"
       >
@@ -79,8 +67,18 @@
       </Column>
 
       <Column
+        field="equals"
+        :header="$t('measurementUnits.equals')"
+        style="min-width: 120px"
+      >
+        <template #body="slotProps">
+          <span>{{ slotProps.data.equals || "-" }}</span>
+        </template>
+      </Column>
+
+      <Column
         field="created_at"
-        :header="$t('categories.createdAt')"
+        :header="$t('measurementUnits.createdAt')"
         sortable
         style="min-width: 150px"
       >
@@ -90,7 +88,7 @@
       </Column>
 
       <Column
-        :header="$t('categories.actions')"
+        :header="$t('measurementUnits.actions')"
         :exportable="false"
         style="min-width: 200px"
       >
@@ -99,31 +97,31 @@
             <Button
               icon="pi pi-pencil"
               class="p-button-text p-button-sm p-button-primary"
-              @click="editCategoryModal(slotProps.data)"
-              v-tooltip.top="$t('categories.edit')"
+              @click="editMeasurementUnitModal(slotProps.data)"
+              v-tooltip.top="$t('measurementUnits.edit')"
             />
             <Button
               icon="pi pi-trash"
               class="p-button-text p-button-sm p-button-danger"
               @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('categories.delete')"
+              v-tooltip.top="$t('measurementUnits.delete')"
             />
           </div>
         </template>
       </Column>
     </DataTable>
 
-    <CategoryEditModal
-      ref="categoryEditModal"
-      :category="selectedItem"
+    <MeasurementUnitEditModal
+      ref="measurementUnitEditModal"
+      :measurement-unit="selectedItem"
       :company_id="effectiveCompanyId"
-      @category-updated="handleCategoryUpdated"
+      @measurement-unit-updated="handleMeasurementUnitUpdated"
     />
 
-    <CategoryCreateModal
-      ref="categoryCreateModal"
+    <MeasurementUnitCreateModal
+      ref="measurementUnitCreateModal"
       :company_id="effectiveCompanyId"
-      @category-created="handleCategoryCreated"
+      @measurement-unit-created="handleMeasurementUnitCreated"
     />
 
     <Toast />
@@ -141,19 +139,19 @@ import Toast from "primevue/toast";
 import ConfirmDialog from "primevue/confirmdialog";
 import Tooltip from "primevue/tooltip";
 
-import CategoryCreateModal from "./CategoryCreateModal.vue";
-import CategoryEditModal from "./CategoryEditModal.vue";
+import MeasurementUnitCreateModal from "./MeasurementUnitCreateModal.vue";
+import MeasurementUnitEditModal from "./MeasurementUnitEditModal.vue";
 
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
 import general_request from "../../../views/layouts/constants/general_request";
 
 export default {
-  name: "CategoryTable",
+  name: "MeasurementUnitTable",
 
   components: {
-    CategoryCreateModal,
-    CategoryEditModal,
+    MeasurementUnitCreateModal,
+    MeasurementUnitEditModal,
     DataTable,
     Column,
     InputText,
@@ -185,20 +183,26 @@ export default {
 
     propSearchUrl() {
       if (!this.effectiveCompanyId) {
+        console.error("❌ No company ID found!");
         return "";
       }
-      return `${general_request.BASE_URL}/admin/company/categories/${this.effectiveCompanyId}?paginate=true`;
+      return `${general_request.BASE_URL}/admin/company/measurement-units/${this.effectiveCompanyId}?paginate=true`;
     },
 
     propMainUrl() {
-      return `${general_request.BASE_URL}/admin/company/category`;
+      return `${general_request.BASE_URL}/admin/company/measurement-unit`;
     },
   },
 
   mounted() {
+    console.log("🚀 MeasurementUnitTable mounted()");
+    console.log("🏢 Effective Company ID:", this.effectiveCompanyId);
+
     if (this.effectiveCompanyId) {
+      console.log("✅ Company ID found, fetching measurement units...");
       this.getData();
     } else {
+      console.error("❌ No company ID found!");
     }
   },
 
@@ -206,7 +210,9 @@ export default {
     "$route.params.company_id": {
       immediate: true,
       handler(newCompanyId) {
+        console.log("🛣️ Route company_id changed:", newCompanyId);
         if (newCompanyId) {
+          console.log("✅ Company ID available, fetching data...");
           this.getData();
         }
       },
@@ -214,31 +220,31 @@ export default {
   },
 
   methods: {
-    createCategory() {
-      this.$refs.categoryCreateModal.openModal();
+    createMeasurementUnit() {
+      this.$refs.measurementUnitCreateModal.openModal();
     },
 
-    handleCategoryCreated(newCategory) {
-      this.handleItemCreated(newCategory);
+    handleMeasurementUnitCreated(newMeasurementUnit) {
+      this.handleItemCreated(newMeasurementUnit);
     },
 
-    editCategoryModal(category) {
-      this.selectedItem = { ...category };
+    editMeasurementUnitModal(measurementUnit) {
+      this.selectedItem = { ...measurementUnit };
       this.$nextTick(() => {
-        this.$refs.categoryEditModal.openModal();
+        this.$refs.measurementUnitEditModal.openModal();
       });
     },
 
-    handleCategoryUpdated(updatedCategory) {
-      this.handleItemUpdated(updatedCategory);
+    handleMeasurementUnitUpdated(updatedMeasurementUnit) {
+      this.handleItemUpdated(updatedMeasurementUnit);
     },
 
-    deleteRow(category) {
+    deleteRow(measurementUnit) {
       this.deleteItem(
-        category,
+        measurementUnit,
         this.propMainUrl,
-        this.$t("categories.categoryDeleted"),
-        this.$t("categories.deleteError")
+        this.$t("measurementUnits.measurementUnitDeleted"),
+        this.$t("measurementUnits.deleteError")
       );
     },
   },
@@ -263,13 +269,6 @@ export default {
   transform: translateY(-50%);
   color: var(--text-color-secondary);
   pointer-events: none;
-}
-
-.category-image {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 5px;
 }
 
 :deep(.p-datatable) {

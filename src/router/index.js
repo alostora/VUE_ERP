@@ -6,13 +6,7 @@ import user_routes from "../latest/model/user/routes/user-routes";
 import country_routes from "../latest/model/country/routes/country-routes";
 import governorate_routes from "../latest/model/governorate/routes/governorate-routes";
 import city_routes from "../latest/model/city/routes/city-routes";
-// import company_routes from "../latest/model/company/routes/company-routes";
-import category_routes from "../latest/model/category/routes/category-routes";
-
-import company_routes from "../latest/model/company/routes/company-routes"; // Add this line
-
-
-
+import company_routes from "../latest/model/company/routes/company-routes";
 import MVVMContent from "../latest/views/layouts/MVVMContent.vue";
 
 
@@ -30,13 +24,11 @@ const router = createRouter({
           name: 'Dashboard',
           component: MVVMContent
         },
-        // Assuming user_routes and country_routes also have requiresAuth: true set inside them
         ...user_routes,
         ...country_routes,
         ...governorate_routes,
         ...city_routes,
         ...company_routes,
-        ...category_routes,
       ],
     },
     {

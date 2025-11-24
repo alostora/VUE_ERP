@@ -57,5 +57,8 @@ export default {
 
      governorateRequired: "المحافظة مطلوبة",
      nameRequired: "الاسم مطلوب",
-     
+
+
+     nameArRequired: "الاسم العربي مطلوب",
+
 }
