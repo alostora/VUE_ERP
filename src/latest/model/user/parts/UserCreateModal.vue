@@ -1,0 +1,75 @@
+<template>
+  <Dialog
+    :header="$t('users.createUser')"
+    v-model:visible="visible"
+    :modal="true"
+    :style="{ width: '50vw' }"
+    :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
+    @hide="closeModal"
+  >
+    <!-- User Create Form -->
+    <UserCreateForm @user-created="handleUserCreated" @cancel="closeModal" />
+
+    <!-- Loading Overlay -->
+    <div v-if="loading" class="loading-overlay">
+      <ProgressSpinner />
+      <p class="mt-2">{{ $t("users.creatingUser") }}</p>
+    </div>
+  </Dialog>
+</template>
+
+<script>
+import Dialog from "primevue/dialog";
+import ProgressSpinner from "primevue/progressspinner";
+import UserCreateForm from "./UserCreateForm.vue";
+
+export default {
+  name: "UserCreateModal",
+  components: {
+    Dialog,
+    ProgressSpinner,
+    UserCreateForm,
+  },
+  data() {
+    return {
+      visible: false,
+      loading: false,
+    };
+  },
+  methods: {
+    openModal() {
+      this.visible = true;
+    },
+
+    closeModal() {
+      this.visible = false;
+      this.loading = false;
+    },
+
+    handleUserCreated(newUser) {
+      this.$emit("user-created", newUser);
+      this.closeModal();
+    },
+
+    setLoading(state) {
+      this.loading = state;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+</style>
