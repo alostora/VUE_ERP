@@ -45,6 +45,21 @@
           </router-link>
         </div>
       </nav>
+
+      <div class="sidebar-footer" v-if="!collapsed && !isMobile">
+        <div class="company-stats">
+          <div class="stat-item">
+            <i class="pi pi-folder stat-icon"></i>
+            <span class="stat-value">12</span>
+            <span class="stat-label">{{ $t("companies.categories") }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-shopping-bag stat-icon"></i>
+            <span class="stat-value">156</span>
+            <span class="stat-label">{{ $t("companies.products") }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </aside>
 </template>
@@ -352,6 +367,13 @@ export default {
 .rtl .active-indicator {
   right: auto;
   left: 0.5rem;
+}
+
+/* Footer with Stats */
+.sidebar-footer {
+  padding: 1rem 1.5rem 0;
+  border-top: 1px solid var(--surface-border);
+  margin-top: auto;
 }
 
 .company-stats {
