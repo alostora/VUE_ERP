@@ -157,7 +157,7 @@
           <div
             v-for="(variantRow, index) in variantRows"
             :key="index"
-            class="variant-row mb-2 p-2 border-round border-1 surface-border"
+            class="variant-row mb-2 p-2 border-round border surface-border"
           >
             <div class="grid align-items-center">
               <!-- Variant Selection -->

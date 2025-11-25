@@ -128,7 +128,7 @@
         <label class="font-bold block mb-2">
           {{ $t("final_product.currentVariants") }}
         </label>
-        <div class="current-variants p-3 border-round border-1 surface-border">
+        <div class="current-variants p-3 border-round border surface-border">
           <div
             v-for="variantValue in finalProduct.final_product_variant_values"
             :key="variantValue.id"
