@@ -37,18 +37,17 @@
 
     <!-- Data Table -->
     <DataTable
-      :value="sortedTableItems"
+      :value="tableItems"
       :paginator="true"
       :rows="per_page"
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      :lazy="true"
+      :lazy="false"
       class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageSelect"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
-      @sort="onSort"
     >
       <!-- ID Column -->
       <Column field="id" :header="$t('countries.id')" style="min-width: 100px">

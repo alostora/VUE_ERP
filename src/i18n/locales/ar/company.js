@@ -107,5 +107,7 @@ export default {
      businessInfo: "معلومات العمل",
      noCoverImage: "لا توجد صورة غلاف",
      measurementUnits: "وحدات القياس",
+     variants: "المتغيرات",
+     finalProducts: "المنتجات النهائية",
 
 }

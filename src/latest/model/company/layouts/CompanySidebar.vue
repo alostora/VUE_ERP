@@ -94,11 +94,6 @@ export default {
   data() {
     return {
       items: [
-        // {
-        //   label: "companies.companyDetails",
-        //   icon: "pi pi-building",
-        //   route: `/company/${this.$route.params.company_id}/show`,
-        // },
         {
           label: "companies.companyDetails",
           icon: "pi pi-building",
@@ -114,12 +109,22 @@ export default {
           icon: "pi pi-calculator",
           route: `/company/${this.$route.params.company_id}/measurement-units`,
         },
-        /* {
+        {
+          label: "companies.variants",
+          icon: "pi pi-palette",
+          route: `/company/${this.$route.params.company_id}/variants`,
+        },
+        {
           label: "companies.products",
           icon: "pi pi-shopping-bag",
-          route: "#",
-          disabled: true,
+          route: `/company/${this.$route.params.company_id}/products`,
         },
+        {
+          label: "companies.finalProducts",
+          icon: "pi pi-tags",
+          route: `/company/${this.$route.params.company_id}/final-products`,
+        },
+        /* 
         {
           label: "companies.branches",
           icon: "pi pi-map-marker",

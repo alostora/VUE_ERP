@@ -3041,3 +3041,1966 @@ export default {
 
 
 now you can see company structure and its related models ok??
+
+____________________________________________________________________________________________________________________________
+____________________________________________________________________________________________________________________________
+____________________________________________________________________________________________________________________________
+____________________________________________________________________________________________________________________________
+src\latest\model\measurement_unit
+its content
+
+<template>
+  <div class="measurement-unit-create-form">
+    <Message v-if="error" severity="error" class="mb-3">
+      {{ error }}
+    </Message>
+
+    <form @submit.prevent="submitForm">
+      <div class="field mb-3">
+        <label for="name" class="font-bold block mb-2">
+          {{ $t("measurementUnits.name") }} *
+        </label>
+        <InputText
+          id="name"
+          v-model="formData.name"
+          :class="{ 'p-invalid': errors.name }"
+          class="w-full"
+          :placeholder="$t('measurementUnits.namePlaceholder')"
+        />
+        <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+      </div>
+
+      <div class="field mb-3">
+        <label for="name_ar" class="font-bold block mb-2">
+          {{ $t("measurementUnits.name_ar") }} *
+        </label>
+        <InputText
+          id="name_ar"
+          v-model="formData.name_ar"
+          :class="{ 'p-invalid': errors.name_ar }"
+          class="w-full"
+          :placeholder="$t('measurementUnits.nameArPlaceholder')"
+        />
+        <small v-if="errors.name_ar" class="p-error">{{
+          errors.name_ar
+        }}</small>
+      </div>
+
+      <div class="flex justify-content-end gap-2">
+        <Button
+          type="button"
+          :label="$t('common.cancel')"
+          @click="$emit('cancel')"
+          class="p-button-text"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          :label="$t('common.create')"
+          :loading="loading"
+          class="p-button-primary"
+        />
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Message from "primevue/message";
+import general_request from "../../../views/layouts/constants/general_request";
+
+export default {
+  name: "MeasurementUnitCreateForm",
+  components: {
+    InputText,
+    Button,
+    Message,
+  },
+  props: {
+    company_id: {
+      type: String,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      error: "",
+      formData: {
+        name: "",
+        name_ar: "",
+      },
+      errors: {},
+    };
+  },
+  methods: {
+    resetForm() {
+      this.formData = {
+        name: "",
+        name_ar: "",
+      };
+      this.errors = {};
+      this.error = "";
+    },
+
+    validateForm() {
+      this.errors = {};
+
+      if (!this.formData.name?.trim()) {
+        this.errors.name = this.$t("measurementUnits.nameRequired");
+      }
+
+      if (!this.formData.name_ar?.trim()) {
+        this.errors.name_ar = this.$t("measurementUnits.nameArRequired");
+      }
+
+      return Object.keys(this.errors).length === 0;
+    },
+
+    async submitForm() {
+      if (!this.validateForm()) {
+        return;
+      }
+
+      this.loading = true;
+      this.error = "";
+
+      try {
+        const url = `${general_request.BASE_URL}/admin/company/measurement-unit`;
+
+        const payload = {
+          company_id: this.effectiveCompanyId,
+          name: this.formData.name,
+          name_ar: this.formData.name_ar,
+        };
+
+        console.log("📤 Creating measurement unit with payload:", payload);
+
+        const response = await this.$http.post(url, payload, {
+          headers: general_request.headers,
+        });
+
+        console.log("✅ Measurement unit created successfully:", response.data);
+
+        this.resetForm();
+        this.$emit("measurement-unit-created", response.data.data);
+
+        this.showToast(
+          "success",
+          this.$t("measurementUnits.success"),
+          this.$t("measurementUnits.measurementUnitCreated")
+        );
+      } catch (error) {
+        this.handleSaveError(error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    handleSaveError(error) {
+      this.errors = {};
+      this.error = "";
+
+      if (error.response?.data) {
+        const responseData = error.response.data;
+
+        console.log("API Error Response:", responseData);
+
+        if (responseData.status_code === 400) {
+          this.handleBadRequestError(responseData);
+        } else if (responseData.status_code === 422) {
+          this.handleValidationError(responseData);
+        } else {
+          this.handleGenericError(responseData);
+        }
+      } else {
+        this.handleNetworkError(error);
+      }
+    },
+
+    handleBadRequestError(responseData) {
+      if (responseData.errors) {
+        if (Array.isArray(responseData.errors)) {
+          this.error = responseData.errors.join(", ");
+        } else if (
+          responseData.errors.errors &&
+          Array.isArray(responseData.errors.errors)
+        ) {
+          this.error = responseData.errors.errors.join(", ");
+          this.mapCommonErrorsToFields(responseData.errors.errors);
+        }
+      }
+
+      if (!this.error && responseData.message) {
+        this.error = responseData.message;
+      }
+    },
+
+    handleValidationError(responseData) {
+      if (responseData.errors && typeof responseData.errors === "object") {
+        this.errors = this.formatFieldErrors(responseData.errors);
+        const firstError = Object.values(this.errors)[0];
+        if (firstError) {
+          this.error = firstError;
+        }
+      } else if (responseData.message) {
+        this.error = responseData.message;
+      }
+    },
+
+    handleGenericError(responseData) {
+      this.error =
+        responseData.message || this.$t("measurementUnits.createError");
+    },
+
+    handleNetworkError(error) {
+      this.error = error.message || this.$t("measurementUnits.networkError");
+    },
+
+    mapCommonErrorsToFields(errorMessages) {
+      errorMessages.forEach((message) => {
+        if (message.includes("name")) {
+          this.errors.name = message;
+        } else if (message.includes("name_ar")) {
+          this.errors.name_ar = message;
+        } else if (message.includes("company")) {
+          this.error = message;
+        }
+      });
+    },
+
+    formatFieldErrors(errorsObject) {
+      const formattedErrors = {};
+      Object.keys(errorsObject).forEach((field) => {
+        const fieldErrors = errorsObject[field];
+        if (Array.isArray(fieldErrors)) {
+          formattedErrors[field] = fieldErrors[0];
+        } else if (typeof fieldErrors === "string") {
+          formattedErrors[field] = fieldErrors;
+        }
+      });
+      return formattedErrors;
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({
+          severity: severity,
+          summary: summary,
+          detail: detail,
+          life: 3000,
+        });
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.measurement-unit-create-form {
+  max-width: 100%;
+}
+
+.field {
+  margin-bottom: 1.5rem;
+}
+</style>
+
+______________________________________________
+src\latest\model\measurement_unit\parts\MeasurementUnitCreateModal.vue
+its content
+
+<template>
+  <Dialog
+    :header="$t('measurementUnits.createMeasurementUnit')"
+    v-model:visible="visible"
+    :modal="true"
+    :style="{ width: '50vw' }"
+    :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
+    @hide="closeModal"
+  >
+    <MeasurementUnitCreateForm
+      :company_id="effectiveCompanyId"
+      @measurement-unit-created="handleMeasurementUnitCreated"
+      @cancel="closeModal"
+    />
+
+    <div v-if="loading" class="loading-overlay">
+      <ProgressSpinner />
+      <p class="mt-2">{{ $t("measurementUnits.creatingMeasurementUnit") }}</p>
+    </div>
+  </Dialog>
+</template>
+
+<script>
+import Dialog from "primevue/dialog";
+import ProgressSpinner from "primevue/progressspinner";
+import MeasurementUnitCreateForm from "./MeasurementUnitCreateForm.vue";
+
+export default {
+  name: "MeasurementUnitCreateModal",
+  components: {
+    Dialog,
+    ProgressSpinner,
+    MeasurementUnitCreateForm,
+  },
+  props: {
+    company_id: {
+      type: String,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
+    },
+  },
+  data() {
+    return {
+      visible: false,
+      loading: false,
+    };
+  },
+  methods: {
+    openModal() {
+      this.visible = true;
+    },
+
+    closeModal() {
+      this.visible = false;
+      this.loading = false;
+    },
+
+    handleMeasurementUnitCreated(newMeasurementUnit) {
+      this.$emit("measurement-unit-created", newMeasurementUnit);
+      this.closeModal();
+    },
+
+    setLoading(state) {
+      this.loading = state;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+</style>
+
+
+_____________________________________
+
+src\latest\model\measurement_unit\parts\MeasurementUnitEditForm.vue
+
+<template>
+  <div class="measurement-unit-edit-form">
+    <Message v-if="error" severity="error" class="mb-3">
+      {{ error }}
+    </Message>
+
+    <form @submit.prevent="submitForm">
+      <div class="field mb-3">
+        <label for="name" class="font-bold block mb-2">
+          {{ $t("measurementUnits.name") }} *
+        </label>
+        <InputText
+          id="name"
+          v-model="formData.name"
+          :class="{ 'p-invalid': errors.name }"
+          class="w-full"
+        />
+        <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+      </div>
+
+      <div class="field mb-3">
+        <label for="name_ar" class="font-bold block mb-2">
+          {{ $t("measurementUnits.name_ar") }} *
+        </label>
+        <InputText
+          id="name_ar"
+          v-model="formData.name_ar"
+          :class="{ 'p-invalid': errors.name_ar }"
+          class="w-full"
+        />
+        <small v-if="errors.name_ar" class="p-error">{{
+          errors.name_ar
+        }}</small>
+      </div>
+
+      <div class="flex justify-content-end gap-2">
+        <Button
+          type="button"
+          :label="$t('common.cancel')"
+          @click="$emit('cancel')"
+          class="p-button-text"
+          :disabled="loading"
+        />
+        <Button
+          type="submit"
+          :label="submitButtonText"
+          :loading="loading"
+          class="p-button-primary"
+        />
+      </div>
+    </form>
+  </div>
+</template>
+
+<script>
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Message from "primevue/message";
+import general_request from "../../../views/layouts/constants/general_request";
+
+export default {
+  name: "MeasurementUnitEditForm",
+  components: {
+    InputText,
+    Button,
+    Message,
+  },
+  props: {
+    measurementUnit: {
+      type: Object,
+      default: () => ({}),
+    },
+    company_id: {
+      type: String,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
+    },
+    submitButtonText() {
+      return this.formData.id
+        ? this.$t("common.update")
+        : this.$t("common.create");
+    },
+  },
+  data() {
+    return {
+      loading: false,
+      error: "",
+      formData: {
+        id: "",
+        name: "",
+        name_ar: "",
+      },
+      errors: {},
+    };
+  },
+  watch: {
+    measurementUnit: {
+      immediate: true,
+      deep: true,
+      handler(newMeasurementUnit) {
+        if (newMeasurementUnit && newMeasurementUnit.id) {
+          this.populateForm(newMeasurementUnit);
+        } else {
+          this.resetForm();
+        }
+      },
+    },
+  },
+  methods: {
+    populateForm(measurementUnit) {
+      console.log("📝 Populating form with measurement unit:", measurementUnit);
+
+      this.formData = {
+        id: measurementUnit.id || "",
+        name: measurementUnit.name || "",
+        name_ar: measurementUnit.name_ar || "",
+      };
+
+      console.log("✅ Form data after population:", this.formData);
+    },
+
+    resetForm() {
+      this.formData = {
+        id: "",
+        name: "",
+        name_ar: "",
+      };
+      this.errors = {};
+      this.error = "";
+    },
+
+    validateForm() {
+      this.errors = {};
+
+      if (!this.formData.name?.trim()) {
+        this.errors.name = this.$t("validation.nameRequired");
+      }
+
+      if (!this.formData.name_ar?.trim()) {
+        this.errors.name_ar = this.$t("validation.nameArRequired");
+      }
+
+      return Object.keys(this.errors).length === 0;
+    },
+
+    async submitForm() {
+      if (!this.validateForm()) {
+        return;
+      }
+
+      this.loading = true;
+      this.error = "";
+
+      try {
+        const url = `${general_request.BASE_URL}/admin/company/measurement-unit/${this.formData.id}`;
+
+        const payload = {
+          name: this.formData.name,
+          name_ar: this.formData.name_ar,
+        };
+
+        console.log("📤 Updating measurement unit with payload:", payload);
+
+        const response = await this.$http.patch(url, payload, {
+          headers: general_request.headers,
+        });
+
+        console.log("✅ Measurement unit updated successfully:", response.data);
+        this.$emit("measurement-unit-updated", response.data.data);
+
+        this.showToast(
+          "success",
+          this.$t("measurementUnits.success"),
+          this.$t("measurementUnits.measurementUnitUpdated")
+        );
+      } catch (error) {
+        this.handleSaveError(error);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    handleSaveError(error) {
+      this.errors = {};
+      this.error = "";
+
+      if (error.response?.data) {
+        const responseData = error.response.data;
+
+        console.log("API Error Response:", responseData);
+
+        if (responseData.status_code === 400) {
+          this.handleBadRequestError(responseData);
+        } else if (responseData.status_code === 422) {
+          this.handleValidationError(responseData);
+        } else {
+          this.handleGenericError(responseData);
+        }
+      } else {
+        this.handleNetworkError(error);
+      }
+    },
+
+    handleBadRequestError(responseData) {
+      if (responseData.errors) {
+        if (Array.isArray(responseData.errors)) {
+          this.error = responseData.errors.join(", ");
+        } else if (
+          responseData.errors.errors &&
+          Array.isArray(responseData.errors.errors)
+        ) {
+          this.error = responseData.errors.errors.join(", ");
+          this.mapCommonErrorsToFields(responseData.errors.errors);
+        }
+      }
+
+      if (!this.error && responseData.message) {
+        this.error = responseData.message;
+      }
+    },
+
+    handleValidationError(responseData) {
+      if (responseData.errors && typeof responseData.errors === "object") {
+        this.errors = this.formatFieldErrors(responseData.errors);
+        const firstError = Object.values(this.errors)[0];
+        if (firstError) {
+          this.error = firstError;
+        }
+      } else if (responseData.message) {
+        this.error = responseData.message;
+      }
+    },
+
+    handleGenericError(responseData) {
+      this.error =
+        responseData.message || this.$t("measurementUnits.updateError");
+    },
+
+    handleNetworkError(error) {
+      this.error = error.message || this.$t("measurementUnits.networkError");
+    },
+
+    mapCommonErrorsToFields(errorMessages) {
+      errorMessages.forEach((message) => {
+        if (message.includes("name")) {
+          this.errors.name = message;
+        } else if (message.includes("name_ar")) {
+          this.errors.name_ar = message;
+        }
+      });
+    },
+
+    formatFieldErrors(errorsObject) {
+      const formattedErrors = {};
+      Object.keys(errorsObject).forEach((field) => {
+        const fieldErrors = errorsObject[field];
+        if (Array.isArray(fieldErrors)) {
+          formattedErrors[field] = fieldErrors[0];
+        } else if (typeof fieldErrors === "string") {
+          formattedErrors[field] = fieldErrors;
+        }
+      });
+      return formattedErrors;
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({
+          severity: severity,
+          summary: summary,
+          detail: detail,
+          life: 3000,
+        });
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.measurement-unit-edit-form {
+  max-width: 100%;
+}
+
+.field {
+  margin-bottom: 1.5rem;
+}
+</style>
+
+____________________________________
+
+src\latest\model\measurement_unit\parts\MeasurementUnitEditModal.vue
+<template>
+  <Dialog
+    :header="headerText"
+    v-model:visible="visible"
+    :modal="true"
+    :style="{ width: '50vw' }"
+    :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
+  >
+    <MeasurementUnitEditForm
+      :measurement-unit="measurementUnit"
+      :company_id="effectiveCompanyId"
+      @measurement-unit-updated="handleMeasurementUnitUpdated"
+      @cancel="closeModal"
+    />
+
+    <div v-if="loading" class="loading-overlay">
+      <ProgressSpinner />
+    </div>
+  </Dialog>
+</template>
+
+<script>
+import Dialog from "primevue/dialog";
+import ProgressSpinner from "primevue/progressspinner";
+import MeasurementUnitEditForm from "./MeasurementUnitEditForm.vue";
+
+export default {
+  name: "MeasurementUnitEditModal",
+  components: {
+    Dialog,
+    ProgressSpinner,
+    MeasurementUnitEditForm,
+  },
+  props: {
+    measurementUnit: {
+      type: Object,
+      default: () => ({}),
+    },
+    company_id: {
+      type: String,
+      default: null,
+    },
+  },
+  computed: {
+    effectiveCompanyId() {
+      return this.company_id || this.$route.params.company_id;
+    },
+    headerText() {
+      return this.measurementUnit?.id
+        ? this.$t("measurementUnits.editMeasurementUnit")
+        : this.$t("measurementUnits.createMeasurementUnit");
+    },
+  },
+  data() {
+    return {
+      visible: false,
+      loading: false,
+    };
+  },
+  methods: {
+    openModal() {
+      this.visible = true;
+    },
+
+    closeModal() {
+      this.visible = false;
+      this.loading = false;
+      this.$emit("modal-closed");
+    },
+
+    handleMeasurementUnitUpdated(updatedMeasurementUnit) {
+      this.$emit("measurement-unit-updated", updatedMeasurementUnit);
+      this.closeModal();
+    },
+
+    setLoading(state) {
+      this.loading = state;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+</style>
+
+_____________________________________________________
+src\latest\model\measurement_unit\parts\MeasurementUnitTable.vue
+
+<template>
+  <div class="measurement-unit-table-page">
+    <div class="mb-4">
+      <Button
+        :label="$t('measurementUnits.addMeasurementUnit')"
+        icon="pi pi-plus"
+        @click="createMeasurementUnit"
+        class="p-button-primary"
+      />
+    </div>
+
+    <div class="flex gap-2 mb-4">
+      <div class="search-container">
+        <InputText
+          v-model="query_string"
+          :placeholder="$t('measurementUnits.search')"
+          @input="handleSearchInput"
+          class="search-input w-20rem"
+        />
+        <i class="pi pi-search search-icon" />
+      </div>
+
+      <Select
+        v-model="per_page"
+        :options="perPageOptions"
+        optionLabel="label"
+        optionValue="value"
+        :placeholder="$t('measurementUnits.show')"
+        @change="getData(propSearchUrl)"
+        class="w-10rem"
+      />
+    </div>
+
+    <DataTable
+      :value="tableItems"
+      :paginator="true"
+      :rows="per_page"
+      :totalRecords="meta.total"
+      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+      :loading="loading"
+      :lazy="false"
+      class="p-datatable-sm"
+      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+      currentPageReportTemplate="{first} to {last} of {totalRecords}"
+      @page="handlePageChange"
+    >
+      <Column
+        field="id"
+        :header="$t('measurementUnits.id')"
+        style="min-width: 100px"
+      >
+        <template #body="slotProps">
+          <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+        </template>
+      </Column>
+
+      <Column
+        field="name"
+        :header="$t('measurementUnits.name')"
+        sortable
+        style="min-width: 150px"
+      >
+        <template #body="slotProps">
+          <span class="font-medium">{{ slotProps.data.name }}</span>
+        </template>
+      </Column>
+
+      <Column
+        field="equals"
+        :header="$t('measurementUnits.equals')"
+        style="min-width: 120px"
+      >
+        <template #body="slotProps">
+          <span>{{ slotProps.data.equals || "-" }}</span>
+        </template>
+      </Column>
+
+      <Column
+        field="created_at"
+        :header="$t('measurementUnits.createdAt')"
+        sortable
+        style="min-width: 150px"
+      >
+        <template #body="slotProps">
+          {{ formatDate(slotProps.data.created_at) }}
+        </template>
+      </Column>
+
+      <Column
+        :header="$t('measurementUnits.actions')"
+        :exportable="false"
+        style="min-width: 200px"
+      >
+        <template #body="slotProps">
+          <div class="flex gap-1">
+            <Button
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm p-button-primary"
+              @click="editMeasurementUnitModal(slotProps.data)"
+              v-tooltip.top="$t('measurementUnits.edit')"
+            />
+            <Button
+              icon="pi pi-trash"
+              class="p-button-text p-button-sm p-button-danger"
+              @click="deleteRow(slotProps.data)"
+              v-tooltip.top="$t('measurementUnits.delete')"
+            />
+          </div>
+        </template>
+      </Column>
+    </DataTable>
+
+    <MeasurementUnitEditModal
+      ref="measurementUnitEditModal"
+      :measurement-unit="selectedItem"
+      :company_id="effectiveCompanyId"
+      @measurement-unit-updated="handleMeasurementUnitUpdated"
+    />
+
+    <MeasurementUnitCreateModal
+      ref="measurementUnitCreateModal"
+      :company_id="effectiveCompanyId"
+      @measurement-unit-created="handleMeasurementUnitCreated"
+    />
+
+    <Toast />
+    <ConfirmDialog />
+  </div>
+</template>
+
+<script>
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Select from "primevue/select";
+import Toast from "primevue/toast";
+import ConfirmDialog from "primevue/confirmdialog";
+import Tooltip from "primevue/tooltip";
+
+import MeasurementUnitCreateModal from "./MeasurementUnitCreateModal.vue";
+import MeasurementUnitEditModal from "./MeasurementUnitEditModal.vue";
+
+import { useTable } from "../../../views/layouts/constants/composables/useTable";
+import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
+import general_request from "../../../views/layouts/constants/general_request";
+
+export default {
+  name: "MeasurementUnitTable",
+
+  components: {
+    MeasurementUnitCreateModal,
+    MeasurementUnitEditModal,
+    DataTable,
+    Column,
+    InputText,
+    Button,
+    Select,
+    Toast,
+    ConfirmDialog,
+  },
+
+  directives: {
+    tooltip: Tooltip,
+  },
+
+  props: {
+    company_id: {
+      type: String,
+      default: null,
+    },
+  },
+
+  mixins: [useTable(), useCrud()],
+
+  computed: {
+    effectiveCompanyId() {
+      const companyId = this.company_id || this.$route.params.company_id;
+      console.log("🏢 Effective Company ID:", companyId);
+      return companyId;
+    },
+
+    propSearchUrl() {
+      if (!this.effectiveCompanyId) {
+        console.error("❌ No company ID found!");
+        return "";
+      }
+      return `${general_request.BASE_URL}/admin/company/measurement-units/${this.effectiveCompanyId}?paginate=true`;
+    },
+
+    propMainUrl() {
+      return `${general_request.BASE_URL}/admin/company/measurement-unit`;
+    },
+  },
+
+  mounted() {
+    console.log("🚀 MeasurementUnitTable mounted()");
+    console.log("🏢 Effective Company ID:", this.effectiveCompanyId);
+
+    if (this.effectiveCompanyId) {
+      console.log("✅ Company ID found, fetching measurement units...");
+      this.getData();
+    } else {
+      console.error("❌ No company ID found!");
+    }
+  },
+
+  watch: {
+    "$route.params.company_id": {
+      immediate: true,
+      handler(newCompanyId) {
+        console.log("🛣️ Route company_id changed:", newCompanyId);
+        if (newCompanyId) {
+          console.log("✅ Company ID available, fetching data...");
+          this.getData();
+        }
+      },
+    },
+  },
+
+  methods: {
+    createMeasurementUnit() {
+      this.$refs.measurementUnitCreateModal.openModal();
+    },
+
+    handleMeasurementUnitCreated(newMeasurementUnit) {
+      this.handleItemCreated(newMeasurementUnit);
+    },
+
+    editMeasurementUnitModal(measurementUnit) {
+      this.selectedItem = { ...measurementUnit };
+      this.$nextTick(() => {
+        this.$refs.measurementUnitEditModal.openModal();
+      });
+    },
+
+    handleMeasurementUnitUpdated(updatedMeasurementUnit) {
+      this.handleItemUpdated(updatedMeasurementUnit);
+    },
+
+    deleteRow(measurementUnit) {
+      this.deleteItem(
+        measurementUnit,
+        this.propMainUrl,
+        this.$t("measurementUnits.measurementUnitDeleted"),
+        this.$t("measurementUnits.deleteError")
+      );
+    },
+  },
+};
+</script>
+
+<style scoped>
+.search-container {
+  position: relative;
+  display: inline-block;
+}
+
+.search-input {
+  padding-left: 2.5rem;
+  width: 20rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color-secondary);
+  pointer-events: none;
+}
+
+:deep(.p-datatable) {
+  width: 100%;
+}
+
+:deep(.p-column-title) {
+  font-weight: 600;
+}
+</style>
+
+
+___________________________________________________
+
+src\latest\model\measurement_unit\routes\measurement_unit_routes.js
+import MeasurementUnitTable from "../parts/MeasurementUnitTable.vue";
+
+const measurement_unit_routes = [
+     {
+          path: "/company/:company_id/measurement-units",
+          name: "company-measurement-units",
+          component: MeasurementUnitTable,
+          props: true,
+     }
+];
+
+export default measurement_unit_routes;
+
+
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+_______________________________________________________________________________________________________________________________________________________________________
+
+
+At last i want from you if you under stand above structure and examples to create Final Product Inside Company
+
+
+
+ok step by step 
+this is the get final products url=>api
+{{base_url}}/admin/company/product/company-final-products/search/{{company_id}}?category_id=&product_id={{product_id}}&query_string=&paginate=true
+
+this is its response
+
+{
+    "data": [
+        {
+            "id": "a0704350-95ca-46ca-911b-66c33bdd6abc",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+            "name": "product name",
+            "name_ar": "product name",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 0,
+            "price": null,
+            "details": "details for product222",
+            "details_ar": "details for product222",
+            "created_at": "2025-11-25T03:11:01.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "a0704350-967b-4408-8c95-4bb03959c09e",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                    "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+                    "final_product_id": "a0704350-95ca-46ca-911b-66c33bdd6abc",
+                    "created_at": "2025-11-25T03:11:01.000000Z",
+                    "variant": {
+                        "id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "updated variant name",
+                        "name_ar": "updated variant name",
+                        "created_at": "2025-11-24T23:00:12.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "a06ff3c7-700d-432c-8550-4a6ae856de15",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                        "value": "larg",
+                        "value_ar": "larg",
+                        "created_at": "2025-11-24T23:28:37.000000Z"
+                    }
+                }
+            ],
+            "main_image": null
+        },
+        {
+            "id": "a0703ec6-0910-406f-8722-48ccff6b0e2e",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+            "name": "product name",
+            "name_ar": "product name",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 0,
+            "price": null,
+            "details": "details for product222",
+            "details_ar": "details for product222",
+            "created_at": "2025-11-25T02:58:19.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "a0703ec6-09b9-4500-ae5c-16dd76a8b8e6",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                    "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+                    "final_product_id": "a0703ec6-0910-406f-8722-48ccff6b0e2e",
+                    "created_at": "2025-11-25T02:58:19.000000Z",
+                    "variant": {
+                        "id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "updated variant name",
+                        "name_ar": "updated variant name",
+                        "created_at": "2025-11-24T23:00:12.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "a06ff3c7-700d-432c-8550-4a6ae856de15",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                        "value": "larg",
+                        "value_ar": "larg",
+                        "created_at": "2025-11-24T23:28:37.000000Z"
+                    }
+                }
+            ],
+            "main_image": null
+        },
+        {
+            "id": "a0703e2b-eb9d-47fa-bc5b-5b60b5d23c6f",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+            "name": "product name",
+            "name_ar": "product name",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 0,
+            "price": null,
+            "details": "details for product222",
+            "details_ar": "details for product222",
+            "created_at": "2025-11-25T02:56:38.000000Z",
+            "final_product_variant_values": [],
+            "main_image": null
+        },
+        {
+            "id": "9f99dd92-b164-4afc-8dba-a8b2302a5786",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+            "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+            "name": "hosam zaki",
+            "name_ar": "hosam zaki",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 25,
+            "price": 25,
+            "details": "Invoice Details",
+            "details_ar": "تفاصيل الضريبة",
+            "created_at": "2025-08-10T13:19:22.000000Z",
+            "final_product_variant_values": [],
+            "main_image": null
+        },
+        {
+            "id": "9f8c7be5-7219-4129-9136-03540d9ba228",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+            "product_id": "9f8c5e71-388f-40cd-96b1-654edb5bec86",
+            "name": "Chips",
+            "name_ar": "شيبسي",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 10,
+            "price": 10,
+            "details": "Chips",
+            "details_ar": "شيبسي",
+            "created_at": "2025-08-03T21:40:28.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "9f8c7be5-78c5-4c3c-af8f-489596538692",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f8c5e71-388f-40cd-96b1-654edb5bec86",
+                    "final_product_id": "9f8c7be5-7219-4129-9136-03540d9ba228",
+                    "created_at": "2025-08-03T21:40:28.000000Z",
+                    "variant": {
+                        "id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "المقاس",
+                        "name_ar": null,
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5a71-2412-4fb2-9c33-ee1d6e84e194",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "value": "small",
+                        "value_ar": "صغير",
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    }
+                }
+            ],
+            "main_image": {
+                "id": "9f8c7cb3-ea24-4e5a-b41f-795da2fb13d5",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "final_product_id": "9f8c7be5-7219-4129-9136-03540d9ba228",
+                "file": {
+                    "id": "9f8c7cb3-e496-43cd-9824-5373d9646bd3",
+                    "file_path": "https://www.ngcis.com/ERP/public/uploads/q7h9KdWA0s__lays-potato.png",
+                    "original_name": "lays-potato.png",
+                    "new_name": "q7h9KdWA0s__lays-potato.png"
+                }
+            }
+        },
+        {
+            "id": "9f8a6bf6-d0db-4803-bb63-4bdf6d45213a",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f8a6b3d-4902-40a7-862e-d4bf4e4ec7d6",
+            "product_id": "9f8a6b87-31fa-4dd0-a3a8-957e38648128",
+            "name": "new product 2",
+            "name_ar": "منتج جديد 2",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 10,
+            "price": 10,
+            "details": "product details 2",
+            "details_ar": "تفاصل المنتج 2",
+            "created_at": "2025-08-02T21:04:16.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "9f8a6bf6-dc4a-452a-9540-4340e249f01e",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f8a6b3d-4902-40a7-862e-d4bf4e4ec7d6",
+                    "product_id": "9f8a6b87-31fa-4dd0-a3a8-957e38648128",
+                    "final_product_id": "9f8a6bf6-d0db-4803-bb63-4bdf6d45213a",
+                    "created_at": "2025-08-02T21:04:16.000000Z",
+                    "variant": {
+                        "id": "9f4c5fa6-21b2-4398-803c-4c6a7cf464ce",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "color",
+                        "name_ar": "اللون",
+                        "created_at": "2025-07-03T00:48:30.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5fa6-2481-4017-940b-672b48f6533f",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5fa6-21b2-4398-803c-4c6a7cf464ce",
+                        "value": "green",
+                        "value_ar": "اخضر",
+                        "created_at": "2025-07-03T00:48:30.000000Z"
+                    }
+                },
+                {
+                    "id": "9f8a6bf6-df6f-4650-a46d-f590b71deadc",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f8a6b3d-4902-40a7-862e-d4bf4e4ec7d6",
+                    "product_id": "9f8a6b87-31fa-4dd0-a3a8-957e38648128",
+                    "final_product_id": "9f8a6bf6-d0db-4803-bb63-4bdf6d45213a",
+                    "created_at": "2025-08-02T21:04:16.000000Z",
+                    "variant": {
+                        "id": "9f4e4d08-6eff-4dce-9d82-000f9872b25b",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "colorrrrr",
+                        "name_ar": "اللونننننن",
+                        "created_at": "2025-07-03T23:48:06.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4e4d08-76bd-4a9d-b4ba-fc5adeb4b3b4",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4e4d08-6eff-4dce-9d82-000f9872b25b",
+                        "value": "yellowwwww",
+                        "value_ar": "اصفررررر",
+                        "created_at": "2025-07-03T23:48:06.000000Z"
+                    }
+                }
+            ],
+            "main_image": {
+                "id": "9f8a6c46-6c3d-402b-8bea-928d48bc483f",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "final_product_id": "9f8a6bf6-d0db-4803-bb63-4bdf6d45213a",
+                "file": {
+                    "id": "9f8a6c46-6601-4de3-b8ce-41465d474569",
+                    "file_path": "https://www.ngcis.com/ERP/public/uploads/VseAUbcEm0__istockphoto-1442417585-612x612.jpg",
+                    "original_name": "istockphoto-1442417585-612x612.jpg",
+                    "new_name": "VseAUbcEm0__istockphoto-1442417585-612x612.jpg"
+                }
+            }
+        },
+        {
+            "id": "9f844e79-4b8e-4069-b932-19b6073df69b",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+            "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+            "name": "product name192",
+            "name_ar": "اسم المنتج عربي192",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 192,
+            "price": 192,
+            "details": "details",
+            "details_ar": "التفاصيل",
+            "created_at": "2025-07-30T20:06:50.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "9f844e79-5473-4c9b-b284-31727905ac24",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f844e79-4b8e-4069-b932-19b6073df69b",
+                    "created_at": "2025-07-30T20:06:50.000000Z",
+                    "variant": {
+                        "id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "المقاس",
+                        "name_ar": null,
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5a71-2412-4fb2-9c33-ee1d6e84e194",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "value": "small",
+                        "value_ar": "صغير",
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    }
+                },
+                {
+                    "id": "9f844e79-5777-4b39-81fe-eb7614bf9ec2",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f844e79-4b8e-4069-b932-19b6073df69b",
+                    "created_at": "2025-07-30T20:06:50.000000Z",
+                    "variant": {
+                        "id": "9f4c5a71-26e5-4c61-a4bc-ff59cbe30b90",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "color",
+                        "name_ar": null,
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5a71-29bb-4bac-aaba-c9c081c4f280",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5a71-26e5-4c61-a4bc-ff59cbe30b90",
+                        "value": "green",
+                        "value_ar": "اخضر",
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    }
+                }
+            ],
+            "main_image": null
+        },
+        {
+            "id": "9f844cc5-7f3b-4c1a-893f-9e3ac69cfb18",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+            "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+            "name": "product name118",
+            "name_ar": "اسم المنتج عربي118",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 118,
+            "price": 118,
+            "details": "product details",
+            "details_ar": "تفاصي المنتج",
+            "created_at": "2025-07-30T20:02:05.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "9f844cc6-5ed9-4077-b8c0-0c40254379a0",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f844cc5-7f3b-4c1a-893f-9e3ac69cfb18",
+                    "created_at": "2025-07-30T20:02:05.000000Z",
+                    "variant": {
+                        "id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "المقاس",
+                        "name_ar": null,
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5a71-2412-4fb2-9c33-ee1d6e84e194",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "value": "small",
+                        "value_ar": "صغير",
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    }
+                },
+                {
+                    "id": "9f844cc6-6228-4529-939e-82d9d243ae90",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f844cc5-7f3b-4c1a-893f-9e3ac69cfb18",
+                    "created_at": "2025-07-30T20:02:05.000000Z",
+                    "variant": {
+                        "id": "9f4c5a71-26e5-4c61-a4bc-ff59cbe30b90",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "color",
+                        "name_ar": null,
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5a71-29bb-4bac-aaba-c9c081c4f280",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5a71-26e5-4c61-a4bc-ff59cbe30b90",
+                        "value": "green",
+                        "value_ar": "اخضر",
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    }
+                }
+            ],
+            "main_image": null
+        },
+        {
+            "id": "9f5e444e-75d6-43a3-a594-939709f86103",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+            "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+            "name": "product name144",
+            "name_ar": "اسم المنتج عربي144",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 100,
+            "price": 100,
+            "details": "t shirt",
+            "details_ar": "تيشيرت ",
+            "created_at": "2025-07-11T22:16:57.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "9f5e4461-4d13-4735-87be-e407bb9e36fd",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f5e444e-75d6-43a3-a594-939709f86103",
+                    "created_at": "2025-07-11T22:17:09.000000Z",
+                    "variant": {
+                        "id": "9f4c5d8d-f539-4712-bda3-252b5255fd2f",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "color",
+                        "name_ar": "اللون",
+                        "created_at": "2025-07-03T00:42:39.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5d8d-fa20-46a5-a741-8e57125166d0",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5d8d-f539-4712-bda3-252b5255fd2f",
+                        "value": "green",
+                        "value_ar": "اخضر",
+                        "created_at": "2025-07-03T00:42:39.000000Z"
+                    }
+                }
+            ],
+            "main_image": {
+                "id": "9f5e6996-2763-40af-960e-46917b5be268",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "final_product_id": "9f5e444e-75d6-43a3-a594-939709f86103",
+                "file": {
+                    "id": "9f5e6996-20d1-4053-8615-1b36a760ff66",
+                    "file_path": "https://www.ngcis.com/ERP/public/uploads/rxX1hO9ELR__3aa3aa99693911.5efff38f3eb00.jpg",
+                    "original_name": "3aa3aa99693911.5efff38f3eb00.jpg",
+                    "new_name": "rxX1hO9ELR__3aa3aa99693911.5efff38f3eb00.jpg"
+                }
+            }
+        },
+        {
+            "id": "9f5e43fd-8c52-480c-8c53-0070fdae5f1d",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+            "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+            "name": "product name180",
+            "name_ar": "اسم المنتج عربي180",
+            "has_discount": false,
+            "related_discount": null,
+            "discount_value": 0,
+            "price_after_discount": 180,
+            "price": 180,
+            "details": "xxxxxxx xxxxxxxxxxx",
+            "details_ar": "xxxxxx xxxxxxxxxxxxxxxx",
+            "created_at": "2025-07-11T22:16:04.000000Z",
+            "final_product_variant_values": [
+                {
+                    "id": "9f5e43fd-957d-4c73-bad3-e4f0f8d362d0",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f5e43fd-8c52-480c-8c53-0070fdae5f1d",
+                    "created_at": "2025-07-11T22:16:04.000000Z",
+                    "variant": {
+                        "id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "المقاس",
+                        "name_ar": null,
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4c5a71-2412-4fb2-9c33-ee1d6e84e194",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4c5a71-1f22-40c4-b3b4-c7c114cd07cb",
+                        "value": "small",
+                        "value_ar": "صغير",
+                        "created_at": "2025-07-03T00:33:56.000000Z"
+                    }
+                },
+                {
+                    "id": "9f5e4420-b619-4d6e-b084-11e6f14aa36f",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "category_id": "9f4a2cbf-1319-4b91-99e5-f7c0fa758039",
+                    "product_id": "9f4a5587-b30b-4063-92b8-1c337c8454f9",
+                    "final_product_id": "9f5e43fd-8c52-480c-8c53-0070fdae5f1d",
+                    "created_at": "2025-07-11T22:16:27.000000Z",
+                    "variant": {
+                        "id": "9f4e4d08-6eff-4dce-9d82-000f9872b25b",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "name": "colorrrrr",
+                        "name_ar": "اللونننننن",
+                        "created_at": "2025-07-03T23:48:06.000000Z"
+                    },
+                    "variant_value": {
+                        "id": "9f4e4d08-76bd-4a9d-b4ba-fc5adeb4b3b4",
+                        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                        "variant_id": "9f4e4d08-6eff-4dce-9d82-000f9872b25b",
+                        "value": "yellowwwww",
+                        "value_ar": "اصفررررر",
+                        "created_at": "2025-07-03T23:48:06.000000Z"
+                    }
+                }
+            ],
+            "main_image": null
+        }
+    ],
+    "links": {
+        "first": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773?page=1",
+        "last": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773?page=2",
+        "prev": null,
+        "next": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773?page=2"
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 2,
+        "links": [
+            {
+                "url": null,
+                "label": "&laquo; Previous",
+                "active": false
+            },
+            {
+                "url": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773?page=1",
+                "label": "1",
+                "active": true
+            },
+            {
+                "url": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773?page=2",
+                "label": "2",
+                "active": false
+            },
+            {
+                "url": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773?page=2",
+                "label": "Next &raquo;",
+                "active": false
+            }
+        ],
+        "path": "https://www.ngcis.com/ERP/public/api/admin/company/product/company-final-products/search/9f440efe-2b3a-46bb-9319-090027c5a773",
+        "per_page": 10,
+        "to": 10,
+        "total": 14
+    }
+}
+_______________________________________________________________________
+this is post Create final product
+{{base_url}}/admin/company/product/final-product
+this is its body
+
+{
+    "company_id": "{{company_id}}",
+    "category_id": "{{category_id}}", //{{base_url}}/admin/company/categories/search/{{company_id}}
+    "product_id": "{{product_id}}", //{{base_url}}/admin/company/products/search/{{company_id}}?query_string=&category_uuid={{category_id}}&paginate=false  depends on category
+    "price": 100, // required
+    "name": "name", // nullable
+    "name_ar": "name ar", // nullable
+    "details": "details for product222", // nullable
+    "details_ar": "details for product222", // nullable
+    "variants": [
+        {
+            "variant_id": "{{variant_id}}", // {{base_url}}/admin/company/variants/search/{{company_id}}
+            "variant_value_id": "{{variant_value_id}}" // {{base_url}}/admin/company/variant-values/search/{{variant_id}}  depends on variant
+        }
+    ]
+}
+
+this is its response
+
+{
+    "status_code": 200,
+    "message": "company.company_product_created_successfully",
+    "data": {
+        "id": "a07051c4-f6c0-4072-ba0d-459f5eb66fa9",
+        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+        "name": "name",
+        "name_ar": "name ar",
+        "has_discount": false,
+        "related_discount": null,
+        "discount_value": 0,
+        "price_after_discount": 100,
+        "price": 100,
+        "details": "details for product222",
+        "details_ar": "details for product222",
+        "created_at": "2025-11-25T03:51:26.000000Z",
+        "category": {
+            "id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "name": "rererere",
+            "name_ar": "ssssss",
+            "created_at": "2025-11-24T07:51:12.000000Z",
+            "file": {
+                "id": "a06ea533-8a76-4b06-9a2e-4de5b8089641",
+                "file_path": "https://www.ngcis.com/ERP/public/uploads/c0agqp3MoG__Mail.JPG",
+                "original_name": "Mail.JPG",
+                "new_name": "c0agqp3MoG__Mail.JPG"
+            }
+        },
+        "product": {
+            "id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "category": {
+                "id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "rererere",
+                "name_ar": "ssssss",
+                "created_at": "2025-11-24T07:51:12.000000Z",
+                "file": {
+                    "id": "a06ea533-8a76-4b06-9a2e-4de5b8089641",
+                    "file_path": "https://www.ngcis.com/ERP/public/uploads/c0agqp3MoG__Mail.JPG",
+                    "original_name": "Mail.JPG",
+                    "new_name": "c0agqp3MoG__Mail.JPG"
+                }
+            },
+            "name": "product name",
+            "name_ar": "product name",
+            "details": "details",
+            "details_ar": "details",
+            "purchases_measurement_unit": {
+                "id": "a06e7c29-36b4-4046-8f90-4b0b57821ecf",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "measurement unit name",
+                "created_at": "2025-11-24T05:58:19.000000Z"
+            },
+            "sales_measurement_unit": {
+                "id": "a06e7c29-36b4-4046-8f90-4b0b57821ecf",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "measurement unit name",
+                "created_at": "2025-11-24T05:58:19.000000Z"
+            },
+            "created_at": "2025-11-25T01:11:29.000000Z"
+        },
+        "final_product_variant_values": [
+            {
+                "id": "a07051c4-f770-4e9e-92ef-2071f870eb2b",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+                "final_product_id": "a07051c4-f6c0-4072-ba0d-459f5eb66fa9",
+                "created_at": "2025-11-25T03:51:26.000000Z",
+                "variant": {
+                    "id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "name": "updated variant name",
+                    "name_ar": "updated variant name",
+                    "created_at": "2025-11-24T23:00:12.000000Z"
+                },
+                "variant_value": {
+                    "id": "a06ff3c7-700d-432c-8550-4a6ae856de15",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "variant_id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                    "value": "larg",
+                    "value_ar": "larg",
+                    "created_at": "2025-11-24T23:28:37.000000Z"
+                }
+            }
+        ],
+        "main_image": null,
+        "final_product_images": []
+    }
+}
+
+______________________________________________________________________
+
+this is patch Update Final Product
+{{base_url}}/admin/company/product/final-product/{{final_product_id}}
+
+this is its body
+
+{
+    "price": 100, // nullable
+    "name": "name", // nullable
+    "name_ar": "name ar", // nullable
+    "details": "details for product222", // nullable
+    "details_ar": "details for product222" // nullable
+}
+
+this is its response
+
+{
+    "status_code": 200,
+    "message": "company.company_product_updated_successfully",
+    "data": {
+        "id": "a0704350-95ca-46ca-911b-66c33bdd6abc",
+        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+        "name": "name",
+        "name_ar": "name ar",
+        "has_discount": false,
+        "related_discount": null,
+        "discount_value": 0,
+        "price_after_discount": 100,
+        "price": 100,
+        "details": "details for product222",
+        "details_ar": "details for product222",
+        "created_at": "2025-11-25T03:11:01.000000Z",
+        "category": {
+            "id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "name": "rererere",
+            "name_ar": "ssssss",
+            "created_at": "2025-11-24T07:51:12.000000Z",
+            "file": {
+                "id": "a06ea533-8a76-4b06-9a2e-4de5b8089641",
+                "file_path": "https://www.ngcis.com/ERP/public/uploads/c0agqp3MoG__Mail.JPG",
+                "original_name": "Mail.JPG",
+                "new_name": "c0agqp3MoG__Mail.JPG"
+            }
+        },
+        "product": {
+            "id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "category": {
+                "id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "rererere",
+                "name_ar": "ssssss",
+                "created_at": "2025-11-24T07:51:12.000000Z",
+                "file": {
+                    "id": "a06ea533-8a76-4b06-9a2e-4de5b8089641",
+                    "file_path": "https://www.ngcis.com/ERP/public/uploads/c0agqp3MoG__Mail.JPG",
+                    "original_name": "Mail.JPG",
+                    "new_name": "c0agqp3MoG__Mail.JPG"
+                }
+            },
+            "name": "product name",
+            "name_ar": "product name",
+            "details": "details",
+            "details_ar": "details",
+            "purchases_measurement_unit": {
+                "id": "a06e7c29-36b4-4046-8f90-4b0b57821ecf",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "measurement unit name",
+                "created_at": "2025-11-24T05:58:19.000000Z"
+            },
+            "sales_measurement_unit": {
+                "id": "a06e7c29-36b4-4046-8f90-4b0b57821ecf",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "measurement unit name",
+                "created_at": "2025-11-24T05:58:19.000000Z"
+            },
+            "created_at": "2025-11-25T01:11:29.000000Z"
+        },
+        "final_product_variant_values": [
+            {
+                "id": "a0704350-967b-4408-8c95-4bb03959c09e",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+                "final_product_id": "a0704350-95ca-46ca-911b-66c33bdd6abc",
+                "created_at": "2025-11-25T03:11:01.000000Z",
+                "variant": {
+                    "id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "name": "updated variant name",
+                    "name_ar": "updated variant name",
+                    "created_at": "2025-11-24T23:00:12.000000Z"
+                },
+                "variant_value": {
+                    "id": "a06ff3c7-700d-432c-8550-4a6ae856de15",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "variant_id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                    "value": "larg",
+                    "value_ar": "larg",
+                    "created_at": "2025-11-24T23:28:37.000000Z"
+                }
+            }
+        ],
+        "main_image": null,
+        "final_product_images": []
+    }
+}
+_______________________________________________________________________________
+
+this is DELETE
+delete final product 
+{{base_url}}/admin/company/product/final-product/9aab8489-101e-4991-b6ae-ab8c60517b34
+_______________________________________________________
+
+this is Show One Item One Final Product 
+
+{{base_url}}/admin/company/product/final-product/{{final_product_id}}
+
+this is its response
+
+{
+    "status_code": 200,
+    "message": "company.company_product_retrieved_successfully",
+    "data": {
+        "id": "a0704350-95ca-46ca-911b-66c33bdd6abc",
+        "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+        "name": "name",
+        "name_ar": "name ar",
+        "has_discount": false,
+        "related_discount": null,
+        "discount_value": 0,
+        "price_after_discount": 100,
+        "price": 100,
+        "details": "details for product222",
+        "details_ar": "details for product222",
+        "created_at": "2025-11-25T03:11:01.000000Z",
+        "category": {
+            "id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "name": "rererere",
+            "name_ar": "ssssss",
+            "created_at": "2025-11-24T07:51:12.000000Z",
+            "file": {
+                "id": "a06ea533-8a76-4b06-9a2e-4de5b8089641",
+                "file_path": "https://www.ngcis.com/ERP/public/uploads/c0agqp3MoG__Mail.JPG",
+                "original_name": "Mail.JPG",
+                "new_name": "c0agqp3MoG__Mail.JPG"
+            }
+        },
+        "product": {
+            "id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+            "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+            "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+            "category": {
+                "id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "rererere",
+                "name_ar": "ssssss",
+                "created_at": "2025-11-24T07:51:12.000000Z",
+                "file": {
+                    "id": "a06ea533-8a76-4b06-9a2e-4de5b8089641",
+                    "file_path": "https://www.ngcis.com/ERP/public/uploads/c0agqp3MoG__Mail.JPG",
+                    "original_name": "Mail.JPG",
+                    "new_name": "c0agqp3MoG__Mail.JPG"
+                }
+            },
+            "name": "product name",
+            "name_ar": "product name",
+            "details": "details",
+            "details_ar": "details",
+            "purchases_measurement_unit": {
+                "id": "a06e7c29-36b4-4046-8f90-4b0b57821ecf",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "measurement unit name",
+                "created_at": "2025-11-24T05:58:19.000000Z"
+            },
+            "sales_measurement_unit": {
+                "id": "a06e7c29-36b4-4046-8f90-4b0b57821ecf",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "name": "measurement unit name",
+                "created_at": "2025-11-24T05:58:19.000000Z"
+            },
+            "created_at": "2025-11-25T01:11:29.000000Z"
+        },
+        "final_product_variant_values": [
+            {
+                "id": "a0704350-967b-4408-8c95-4bb03959c09e",
+                "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                "category_id": "a06ea488-2d30-4ba9-a987-4485ee0c0154",
+                "product_id": "a0701891-c642-414f-b19a-c67c9c949ba9",
+                "final_product_id": "a0704350-95ca-46ca-911b-66c33bdd6abc",
+                "created_at": "2025-11-25T03:11:01.000000Z",
+                "variant": {
+                    "id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "name": "updated variant name",
+                    "name_ar": "updated variant name",
+                    "created_at": "2025-11-24T23:00:12.000000Z"
+                },
+                "variant_value": {
+                    "id": "a06ff3c7-700d-432c-8550-4a6ae856de15",
+                    "company_id": "9f440efe-2b3a-46bb-9319-090027c5a773",
+                    "variant_id": "a06fe99d-2819-497b-aac9-6df1767699af",
+                    "value": "larg",
+                    "value_ar": "larg",
+                    "created_at": "2025-11-24T23:28:37.000000Z"
+                }
+            }
+        ],
+        "main_image": null,
+        "final_product_images": []
+    }
+}
+
+
+
+now go ahead you have full structure
+
+next step we will controle its images and iste variants
+
+now you have full structure go now

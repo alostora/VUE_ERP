@@ -42,7 +42,8 @@ export default {
           confirmation: "Confirmation",
           back: "Back",
           edit: "Edit",
-          retry: "Retry"
+          retry: "Retry",
+          add: "Add",
      },
      footer: {
           copyright: 'Copyright',

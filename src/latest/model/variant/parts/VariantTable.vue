@@ -1,11 +1,21 @@
 <template>
-  <div class="measurement-unit-table-page">
+  <div class="variant-table-page">
+    <div class="mb-3">
+      <h2 class="m-0">{{ $t("variants.title") }}</h2>
+    </div>
+
     <div class="mb-4">
       <Button
-        :label="$t('measurementUnits.addMeasurementUnit')"
+        :label="$t('variants.addVariant')"
         icon="pi pi-plus"
-        @click="createMeasurementUnit"
-        class="p-button-primary"
+        @click="createVariant"
+        class="p-button-primary mr-2"
+      />
+      <Button
+        :label="$t('variants.addVariants')"
+        icon="pi pi-plus-circle"
+        @click="createMultipleVariants"
+        class="p-button-secondary"
       />
     </div>
 
@@ -13,7 +23,7 @@
       <div class="search-container">
         <InputText
           v-model="query_string"
-          :placeholder="$t('measurementUnits.search')"
+          :placeholder="$t('variants.search')"
           @input="handleSearchInput"
           class="search-input w-20rem"
         />
@@ -25,7 +35,7 @@
         :options="perPageOptions"
         optionLabel="label"
         optionValue="value"
-        :placeholder="$t('measurementUnits.show')"
+        :placeholder="$t('variants.show')"
         @change="getData(propSearchUrl)"
         class="w-10rem"
       />
@@ -43,12 +53,9 @@
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
+      
     >
-      <Column
-        field="id"
-        :header="$t('measurementUnits.id')"
-        style="min-width: 100px"
-      >
+      <Column field="id" :header="$t('variants.id')" style="min-width: 100px">
         <template #body="slotProps">
           <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
         </template>
@@ -56,7 +63,7 @@
 
       <Column
         field="name"
-        :header="$t('measurementUnits.name')"
+        :header="$t('variants.name')"
         sortable
         style="min-width: 150px"
       >
@@ -66,18 +73,19 @@
       </Column>
 
       <Column
-        field="equals"
-        :header="$t('measurementUnits.equals')"
-        style="min-width: 120px"
+        field="name_ar"
+        :header="$t('variants.name_ar')"
+        sortable
+        style="min-width: 150px"
       >
         <template #body="slotProps">
-          <span>{{ slotProps.data.equals || "-" }}</span>
+          <span>{{ slotProps.data.name_ar }}</span>
         </template>
       </Column>
 
       <Column
         field="created_at"
-        :header="$t('measurementUnits.createdAt')"
+        :header="$t('variants.createdAt')"
         sortable
         style="min-width: 150px"
       >
@@ -87,40 +95,56 @@
       </Column>
 
       <Column
-        :header="$t('measurementUnits.actions')"
+        :header="$t('variants.actions')"
         :exportable="false"
-        style="min-width: 200px"
+        style="min-width: 250px"
       >
         <template #body="slotProps">
           <div class="flex gap-1">
             <Button
               icon="pi pi-pencil"
               class="p-button-text p-button-sm p-button-primary"
-              @click="editMeasurementUnitModal(slotProps.data)"
-              v-tooltip.top="$t('measurementUnits.edit')"
+              @click="editVariantModal(slotProps.data)"
+              v-tooltip.top="$t('variants.editVariant')"
+            />
+            <Button
+              icon="pi pi-list"
+              class="p-button-text p-button-sm p-button-info"
+              @click="viewVariantValues(slotProps.data)"
+              v-tooltip.top="$t('variants.viewValues')"
             />
             <Button
               icon="pi pi-trash"
               class="p-button-text p-button-sm p-button-danger"
               @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('measurementUnits.delete')"
+              v-tooltip.top="$t('variants.delete')"
             />
           </div>
         </template>
       </Column>
     </DataTable>
 
-    <MeasurementUnitEditModal
-      ref="measurementUnitEditModal"
-      :measurement-unit="selectedItem"
+    <!-- Single Variant Modal -->
+    <VariantEditModal
+      ref="variantEditModal"
+      :variant="selectedItem"
       :company_id="effectiveCompanyId"
-      @measurement-unit-updated="handleMeasurementUnitUpdated"
+      @variant-updated="handleVariantUpdated"
     />
 
-    <MeasurementUnitCreateModal
-      ref="measurementUnitCreateModal"
+    <!-- Multiple Variants Modal -->
+    <VariantCreateModal
+      ref="variantCreateModal"
       :company_id="effectiveCompanyId"
-      @measurement-unit-created="handleMeasurementUnitCreated"
+      @variants-created="handleVariantsCreated"
+    />
+
+    <!-- Variant Values Modal -->
+    <VariantValuesModal
+      ref="variantValuesModal"
+      :variant="selectedVariant"
+      :company_id="effectiveCompanyId"
+      @variant-values-updated="handleVariantValuesUpdated"
     />
 
     <Toast />
@@ -138,19 +162,21 @@ import Toast from "primevue/toast";
 import ConfirmDialog from "primevue/confirmdialog";
 import Tooltip from "primevue/tooltip";
 
-import MeasurementUnitCreateModal from "./MeasurementUnitCreateModal.vue";
-import MeasurementUnitEditModal from "./MeasurementUnitEditModal.vue";
+import VariantCreateModal from "./VariantCreateModal.vue";
+import VariantEditModal from "./VariantEditModal.vue";
+import VariantValuesModal from "./VariantValuesModal.vue";
 
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
 import general_request from "../../../views/layouts/constants/general_request";
 
 export default {
-  name: "MeasurementUnitTable",
+  name: "VariantTable",
 
   components: {
-    MeasurementUnitCreateModal,
-    MeasurementUnitEditModal,
+    VariantCreateModal,
+    VariantEditModal,
+    VariantValuesModal,
     DataTable,
     Column,
     InputText,
@@ -173,6 +199,12 @@ export default {
 
   mixins: [useTable(), useCrud()],
 
+  data() {
+    return {
+      selectedVariant: null,
+    };
+  },
+
   computed: {
     effectiveCompanyId() {
       const companyId = this.company_id || this.$route.params.company_id;
@@ -185,20 +217,20 @@ export default {
         console.error("❌ No company ID found!");
         return "";
       }
-      return `${general_request.BASE_URL}/admin/company/measurement-units/${this.effectiveCompanyId}?paginate=true`;
+      return `${general_request.BASE_URL}/admin/company/variants/search/${this.effectiveCompanyId}?paginate=true`;
     },
 
     propMainUrl() {
-      return `${general_request.BASE_URL}/admin/company/measurement-unit`;
+      return `${general_request.BASE_URL}/admin/company/variant`;
     },
   },
 
   mounted() {
-    console.log("🚀 MeasurementUnitTable mounted()");
+    console.log("🚀 VariantTable mounted()");
     console.log("🏢 Effective Company ID:", this.effectiveCompanyId);
 
     if (this.effectiveCompanyId) {
-      console.log("✅ Company ID found, fetching measurement units...");
+      console.log("✅ Company ID found, fetching variants...");
       this.getData();
     } else {
       console.error("❌ No company ID found!");
@@ -219,31 +251,53 @@ export default {
   },
 
   methods: {
-    createMeasurementUnit() {
-      this.$refs.measurementUnitCreateModal.openModal();
+    createVariant() {
+      this.$refs.variantCreateModal.openModal(true);
     },
 
-    handleMeasurementUnitCreated(newMeasurementUnit) {
-      this.handleItemCreated(newMeasurementUnit);
+    createMultipleVariants() {
+      this.$refs.variantCreateModal.openModal(false);
     },
 
-    editMeasurementUnitModal(measurementUnit) {
-      this.selectedItem = { ...measurementUnit };
+    handleVariantsCreated(newVariants) {
+      if (Array.isArray(newVariants)) {
+        newVariants.forEach((variant) => {
+          this.handleItemCreated(variant);
+        });
+      } else {
+        this.handleItemCreated(newVariants);
+      }
+    },
+
+    editVariantModal(variant) {
+      this.selectedItem = { ...variant };
       this.$nextTick(() => {
-        this.$refs.measurementUnitEditModal.openModal();
+        this.$refs.variantEditModal.openModal();
       });
     },
 
-    handleMeasurementUnitUpdated(updatedMeasurementUnit) {
-      this.handleItemUpdated(updatedMeasurementUnit);
+    handleVariantUpdated(updatedVariant) {
+      this.handleItemUpdated(updatedVariant);
     },
 
-    deleteRow(measurementUnit) {
+    viewVariantValues(variant) {
+      this.selectedVariant = { ...variant };
+      this.$nextTick(() => {
+        this.$refs.variantValuesModal.openModal();
+      });
+    },
+
+    handleVariantValuesUpdated() {
+      // Refresh the table data when variant values are updated
+      this.getData();
+    },
+
+    deleteRow(variant) {
       this.deleteItem(
-        measurementUnit,
+        variant,
         this.propMainUrl,
-        this.$t("measurementUnits.measurementUnitDeleted"),
-        this.$t("measurementUnits.deleteError")
+        this.$t("variants.variantDeleted"),
+        this.$t("variants.deleteError")
       );
     },
   },
@@ -251,6 +305,10 @@ export default {
 </script>
 
 <style scoped>
+.variant-table-page {
+  padding: 1rem;
+}
+
 .search-container {
   position: relative;
   display: inline-block;

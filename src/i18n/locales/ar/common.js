@@ -46,7 +46,8 @@ export default {
           save: "حفظ",
           back: "رجوع",
           edit: "تعديل",
-          retry: "إعادة المحاولة"
+          retry: "إعادة المحاولة",
+          add: "اضافة"
      },
      footer: {
           copyright: 'حقوق النشر',

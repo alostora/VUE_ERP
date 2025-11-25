@@ -32,39 +32,6 @@ export function useTable() {
                          page: this.meta.current_page || 1,
                     }
                },
-
-               sortedTableItems() {
-                    if (!this.sortField || this.sortOrder === 0) {
-                         return this.tableItems;
-                    }
-
-                    return [...this.tableItems].sort((a, b) => {
-                         let valueA = a[this.sortField];
-                         let valueB = b[this.sortField];
-
-                         // Handle nested objects (like account_type.name)
-                         if (this.sortField.includes('.')) {
-                              const fields = this.sortField.split('.');
-                              valueA = fields.reduce((obj, field) => obj?.[field], a);
-                              valueB = fields.reduce((obj, field) => obj?.[field], b);
-                         }
-
-                         if (valueA == null) valueA = '';
-                         if (valueB == null) valueB = '';
-
-                         valueA = String(valueA).toLowerCase();
-                         valueB = String(valueB).toLowerCase();
-
-                         let comparison = 0;
-                         if (valueA > valueB) {
-                              comparison = 1;
-                         } else if (valueA < valueB) {
-                              comparison = -1;
-                         }
-
-                         return this.sortOrder === 1 ? comparison : comparison * -1;
-                    });
-               }
           },
 
           methods: {

@@ -2,7 +2,10 @@ import CompanyTable from "../parts/CompanyTable.vue";
 import CompanyShow from "../parts/CompanyShow.vue";
 import category_routes from "../../category/routes/category_routes";
 import measurement_unit_routes from "../../measurement_unit/routes/measurement_unit_routes";
-import details from "../parts/CompanyDetails.vue";
+import variant_routes from "../../variant/routes/variant_routes";
+import product_routes from "../../product/routes/product_routes";
+import final_product_routes from "../../final_product/routes/final_product_routes";
+import CompanyDetails from "../parts/CompanyDetails.vue";
 
 const company_routes = [
      {
@@ -23,13 +26,16 @@ const company_routes = [
                {
                     path: "/company/:company_id/details",
                     name: "company-details",
-                    component: details,
+                    component: CompanyDetails,
                     props: (route) => ({
                          company_id: route.params.company_id
                     }),
                },
                ...category_routes,
                ...measurement_unit_routes,
+               ...variant_routes,
+               ...product_routes,
+               ...final_product_routes,
           ],
      }
 ];

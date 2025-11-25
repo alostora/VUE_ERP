@@ -38,12 +38,11 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      :lazy="true"
+      :lazy="false"
       class="p-datatable-sm"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
-      @sort="onSort"
     >
       <Column field="id" :header="$t('categories.id')" style="min-width: 100px">
         <template #body="slotProps">
@@ -75,6 +74,17 @@
       >
         <template #body="slotProps">
           <span class="font-medium">{{ slotProps.data.name }}</span>
+        </template>
+      </Column>
+
+      <Column
+        field="name_ar"
+        :header="$t('categories.nameAr')"
+        sortable
+        style="min-width: 150px"
+      >
+        <template #body="slotProps">
+          <span class="font-medium">{{ slotProps.data.name_ar }}</span>
         </template>
       </Column>
 

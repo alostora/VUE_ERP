@@ -107,4 +107,6 @@ export default {
      businessInfo: "Business Information",
      noCoverImage: "No cover image available",
      measurementUnits: "Measurement Units",
+     variants: "Variants",
+     finalProducts: "Final Products",
 }

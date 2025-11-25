@@ -11,9 +11,10 @@ import enGovernorate from './locales/en/governorate'
 import enCities from './locales/en/city'
 import enCompanies from './locales/en/company'
 import enCategories from './locales/en/category'
-
 import enMeasurementUnits from './locales/en/measurementUnit'
-
+import enVariants from './locales/en/variant'
+import enProducts from './locales/en/product'
+import enFinalProducts from './locales/en/final_product'
 
 // Import Arabic translations
 import arUsers from './locales/ar/users'
@@ -26,8 +27,12 @@ import arGovernorate from './locales/ar/governorate'
 import arCities from './locales/ar/city'
 import arCompanies from './locales/ar/company'
 import arCategories from './locales/ar/category'
-
 import arMeasuremartUnits from './locales/ar/measurementUnit'
+import arVariants from './locales/ar/variant'
+import arProducts from './locales/ar/product'
+import arFinalProducts from './locales/ar/final_product'
+
+
 
 const messages = {
      en: {
@@ -41,7 +46,10 @@ const messages = {
           cities: enCities,
           companies: enCompanies,
           categories: enCategories,
-          measurementUnits: enMeasurementUnits
+          measurementUnits: enMeasurementUnits,
+          variants: enVariants,
+          products: enProducts,
+          final_product: enFinalProducts
      },
      ar: {
           ...arCommon,
@@ -54,7 +62,10 @@ const messages = {
           cities: arCities,
           companies: arCompanies,
           categories: arCategories,
-          measurementUnits: arMeasuremartUnits
+          measurementUnits: arMeasuremartUnits,
+          variants: arVariants,
+          products: arProducts,
+          final_product: arFinalProducts
      }
 }
 

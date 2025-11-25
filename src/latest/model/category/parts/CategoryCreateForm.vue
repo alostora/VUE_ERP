@@ -20,6 +20,22 @@
       </div>
 
       <div class="field mb-3">
+        <label for="name_ar" class="font-bold block mb-2">
+          {{ $t("categories.categoryNameAr") }} *
+        </label>
+        <InputText
+          id="name_ar"
+          v-model="formData.name_ar"
+          :class="{ 'p-invalid': errors.name_ar }"
+          class="w-full"
+          :placeholder="$t('categories.nameArPlaceholder')"
+        />
+        <small v-if="errors.name_ar" class="p-error">{{
+          errors.name_ar
+        }}</small>
+      </div>
+
+      <div class="field mb-3">
         <label for="image" class="font-bold block mb-2">
           {{ $t("categories.categoryImage") }}
         </label>
@@ -129,6 +145,7 @@ export default {
       selectedFile: null,
       formData: {
         name: "",
+        name_ar: "",
         file_id: "", // Correct field name for API
       },
       errors: {},
@@ -138,6 +155,7 @@ export default {
     resetForm() {
       this.formData = {
         name: "",
+        name_ar: "",
         file_id: "",
       };
       this.imagePreview = null;
@@ -232,6 +250,10 @@ export default {
         this.errors.name = this.$t("categories.nameRequired");
       }
 
+      if (!this.formData.name_ar?.trim()) {
+        this.errors.name_ar = this.$t("categories.nameArRequired");
+      }
+
       return Object.keys(this.errors).length === 0;
     },
 
@@ -250,6 +272,7 @@ export default {
         const payload = {
           company_id: this.effectiveCompanyId,
           name: this.formData.name,
+          name_ar: this.formData.name_ar,
           file_id: this.formData.file_id, // Only include if file was uploaded
         };
 
@@ -339,6 +362,8 @@ export default {
       errorMessages.forEach((message) => {
         if (message.includes("name")) {
           this.errors.name = message;
+        } else if (message.includes("name_ar")) {
+          this.errors.name_ar = message;
         } else if (
           message.includes("file") ||
           message.includes("image") ||

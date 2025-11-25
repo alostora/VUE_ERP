@@ -19,6 +19,21 @@
       </div>
 
       <div class="field mb-3">
+        <label for="name_ar" class="font-bold block mb-2">
+          {{ $t("categories.categoryNameAr") }} *
+        </label>
+        <InputText
+          id="name_ar"
+          v-model="formData.name_ar"
+          :class="{ 'p-invalid': errors.name_ar }"
+          class="w-full"
+        />
+        <small v-if="errors.name_ar" class="p-error">{{
+          errors.name_ar
+        }}</small>
+      </div>
+
+      <div class="field mb-3">
         <label for="image" class="font-bold block mb-2">
           {{ $t("categories.categoryImage") }}
         </label>
@@ -162,6 +177,7 @@ export default {
       formData: {
         id: "",
         name: "",
+        name_ar: "",
         file: null,
         file_id: "", // Store current file_id
       },
@@ -187,6 +203,7 @@ export default {
 
       this.formData = {
         id: category.id || "",
+        name_ar: category.name_ar || "",
         name: category.name || "",
         file: category.file || null,
         file_id: category.file?.id || "", // Store current file_id
@@ -203,6 +220,7 @@ export default {
       this.formData = {
         id: "",
         name: "",
+        name_ar: "",
         file: null,
         file_id: "",
       };
@@ -299,6 +317,10 @@ export default {
         this.errors.name = this.$t("validation.nameRequired");
       }
 
+      if (!this.formData.name_ar?.trim()) {
+        this.errors.name_ar = this.$t("validation.nameArRequired");
+      }
+
       return Object.keys(this.errors).length === 0;
     },
 
@@ -316,6 +338,7 @@ export default {
         // CORRECT PAYLOAD STRUCTURE for UPDATE:
         const payload = {
           name: this.formData.name,
+          name_ar: this.formData.name_ar,
           file_id: this.newFileId || this.currentFileId, // Use new file ID if uploaded, otherwise keep current
         };
 
@@ -403,6 +426,8 @@ export default {
       errorMessages.forEach((message) => {
         if (message.includes("name")) {
           this.errors.name = message;
+        } else if (message.includes("name_ar")) {
+          this.errors.name_ar = message;
         } else if (
           message.includes("file") ||
           message.includes("image") ||
