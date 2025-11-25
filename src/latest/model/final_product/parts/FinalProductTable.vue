@@ -74,7 +74,7 @@
       :total-records="meta.total"
       :rows-per-page-options="[5, 10, 25, 50, 100]"
       :loading="loading"
-      :lazy="false"
+      :lazy="true"
       class="p-datatable-sm"
       paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       current-page-report-template="{first} to {last} of {totalRecords}"
