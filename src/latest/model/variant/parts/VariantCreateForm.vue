@@ -68,7 +68,7 @@
         <div
           v-for="(variant, index) in multipleFormData.variants"
           :key="index"
-          class="variant-group mb-4 p-3 border-round border-1 surface-border"
+          class="variant-group mb-4 p-3 border-round border surface-border"
         >
           <div class="flex justify-content-between align-items-center mb-3">
             <h4 class="m-0">
