@@ -41,13 +41,15 @@ export default {
      },
      common: {
           cancel: "إلغاء",
+          close: "إغلاق",
           update: "تحديث",
           create: "إنشاء",
           save: "حفظ",
           back: "رجوع",
           edit: "تعديل",
           retry: "إعادة المحاولة",
-          add: "اضافة"
+          add: "اضافة",
+          upload: "رفع الملف",
      },
      footer: {
           copyright: 'حقوق النشر',

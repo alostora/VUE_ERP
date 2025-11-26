@@ -40,7 +40,7 @@
         clear-icon="pi pi-times"
       />
 
-      <!-- Product Filter - Always enabled but filtered by category when selected -->
+      <!-- Product Filter -->
       <Select
         v-model="selectedProduct"
         :options="filteredProducts"
@@ -71,13 +71,13 @@
       :value="tableItems"
       :paginator="true"
       :rows="per_page"
-      :total-records="meta.total"
-      :rows-per-page-options="[5, 10, 25, 50, 100]"
+      :totalRecords="meta.total"
+      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
       :lazy="true"
       class="p-datatable-sm"
-      paginator-template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      current-page-report-template="{first} to {last} of {totalRecords}"
+      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+      currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
     >
       <!-- ID Column -->
@@ -213,10 +213,11 @@
       </Column>
 
       <!-- Actions Column -->
+      <!-- Actions Column -->
       <Column
         :header="$t('final_product.actions')"
         :exportable="false"
-        style="min-width: 150px"
+        style="min-width: 200px"
       >
         <template #body="slotProps">
           <div class="flex gap-1">
@@ -231,6 +232,19 @@
               class="p-button-text p-button-sm p-button-danger"
               @click="deleteRow(slotProps.data)"
               v-tooltip.top="$t('final_product.delete')"
+            />
+            <Button
+              icon="pi pi-palette"
+              class="p-button-text p-button-sm p-button-info"
+              @click="openVariantsModal(slotProps.data)"
+              v-tooltip.top="'Manage Variants'"
+            />
+            <!-- Add Images Button -->
+            <Button
+              icon="pi pi-images"
+              class="p-button-text p-button-sm p-button-help"
+              @click="openImagesModal(slotProps.data)"
+              v-tooltip.top="'Manage Images'"
             />
           </div>
         </template>
@@ -272,6 +286,21 @@
       @final-product-updated="handleFinalProductUpdated"
     />
 
+    <!-- Variants Modal -->
+    <FinalProductVariantTableModal
+      ref="variantsModal"
+      :company_id="effectiveCompanyId"
+      :final_product_id="selectedFinalProductId"
+      :final_product_name="selectedFinalProductName"
+    />
+
+    <FinalProductImageTableModal
+      ref="imagesModal"
+      :company_id="effectiveCompanyId"
+      :final_product_id="selectedFinalProductId"
+      :final_product_name="selectedFinalProductName"
+    />
+
     <Toast />
     <ConfirmDialog />
   </div>
@@ -290,6 +319,8 @@ import Chip from "primevue/chip";
 
 import FinalProductCreateModal from "./FinalProductCreateModal.vue";
 import FinalProductEditModal from "./FinalProductEditModal.vue";
+import FinalProductVariantTableModal from "../variants/parts/FinalProductVariantTableModal.vue";
+import FinalProductImageTableModal from "../images/parts/FinalProductImageTableModal.vue";
 
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
@@ -301,6 +332,8 @@ export default {
   components: {
     FinalProductCreateModal,
     FinalProductEditModal,
+    FinalProductVariantTableModal,
+    FinalProductImageTableModal,
     DataTable,
     Column,
     InputText,
@@ -329,10 +362,12 @@ export default {
       selectedCategory: null,
       selectedProduct: null,
       categories: [],
-      allProducts: [], // كل المنتجات
+      allProducts: [],
       loadingCategories: false,
       loadingProducts: false,
       searchTimeout: null,
+      selectedFinalProductId: null,
+      selectedFinalProductName: null,
     };
   },
 
@@ -372,15 +407,12 @@ export default {
       return `${general_request.BASE_URL}/admin/company/product/final-product`;
     },
 
-    // المنتجات بتكون مفلترة حسب الـ Category لو موجود، أو كل المنتجات لو مش موجود
     filteredProducts() {
       if (this.selectedCategory) {
-        // لو في category مختار، نرجع المنتجات الخاصة بيها فقط
         return this.allProducts.filter(
           (product) => product.category_id === this.selectedCategory
         );
       }
-      // لو مفيش category مختار، نرجع كل المنتجات
       return this.allProducts;
     },
   },
@@ -388,7 +420,7 @@ export default {
   mounted() {
     if (this.effectiveCompanyId) {
       this.loadCategories();
-      this.loadAllProducts(); // نحمل كل المنتجات من الأول
+      this.loadAllProducts();
       this.getData();
     } else {
       console.error("No company ID found!");
@@ -435,7 +467,6 @@ export default {
       }
     },
 
-    // نحمل كل المنتجات من غير تصفية
     async loadAllProducts() {
       this.loadingProducts = true;
       try {
@@ -460,7 +491,6 @@ export default {
     },
 
     onCategoryChange() {
-      // لما ال category يتغير، نعمل reset للـ product المختار
       this.selectedProduct = null;
       this.meta.current_page = 1;
       this.getData();
@@ -518,6 +548,18 @@ export default {
       );
     },
 
+    openVariantsModal(finalProduct) {
+      this.selectedFinalProductId = finalProduct.id;
+      this.selectedFinalProductName = finalProduct.name;
+      this.$refs.variantsModal.openModal();
+    },
+
+    openImagesModal(finalProduct) {
+      this.selectedFinalProductId = finalProduct.id;
+      this.selectedFinalProductName = finalProduct.name;
+      // this.$refs.imagesModal.openModal();
+    },
+
     formatCurrency(amount) {
       if (!amount) return "-";
       return new Intl.NumberFormat("en-US", {
@@ -535,6 +577,12 @@ export default {
           life: 3000,
         });
       }
+    },
+
+    openImagesModal(finalProduct) {
+      this.selectedFinalProductId = finalProduct.id;
+      this.selectedFinalProductName = finalProduct.name;
+      this.$refs.imagesModal.openModal();
     },
   },
 };

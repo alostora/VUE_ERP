@@ -48,7 +48,6 @@
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
-      
     >
       <!-- ID Column -->
       <Column field="id" :header="$t('companies.id')" style="min-width: 100px">

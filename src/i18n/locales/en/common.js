@@ -34,6 +34,7 @@ export default {
      },
      common: {
           cancel: "Cancel",
+          close: "Close",
           update: "Update",
           create: "Create",
           save: "Save",
@@ -44,6 +45,7 @@ export default {
           edit: "Edit",
           retry: "Retry",
           add: "Add",
+          upload: "Upload",
      },
      footer: {
           copyright: 'Copyright',
