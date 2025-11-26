@@ -124,6 +124,21 @@ export default {
           icon: "pi pi-tags",
           route: `/company/${this.$route.params.company_id}/final-products`,
         },
+        {
+          label: "companies.branches",
+          icon: "pi pi-map-marker",
+          route: `/company/${this.$route.params.company_id}/branches`,
+        },
+        {
+          label: "companies.invoiceStages",
+          icon: "pi pi-receipt",
+          route: `/company/${this.$route.params.company_id}/invoice-stages`,
+        },
+        {
+          label: "companies.taxes",
+          icon: "pi pi-percentage",
+          route: `/company/${this.$route.params.company_id}/taxes`,
+        },
         /* 
         {
           label: "companies.branches",

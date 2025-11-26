@@ -109,5 +109,8 @@ export default {
      measurementUnits: "وحدات القياس",
      variants: "المتغيرات",
      finalProducts: "المنتجات النهائية",
+     branches: "الفروع",
+     invoiceStages: "مراحل الفاتورة",
+     taxes: "الضرائب",
 
 }

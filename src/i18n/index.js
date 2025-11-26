@@ -17,6 +17,10 @@ import enProducts from './locales/en/product'
 import enFinalProducts from './locales/en/final_product'
 import enFinalProductVariants from './locales/en/final_product_variant'
 import enFinalProductImages from './locales/en/final_product_image'
+import enBranch from './locales/en/branch'
+import enInvoiceStages from './locales/en/invoice_stage'
+import enTax from './locales/en/tax'
+
 
 // Import Arabic translations
 import arUsers from './locales/ar/users'
@@ -35,6 +39,9 @@ import arProducts from './locales/ar/product'
 import arFinalProducts from './locales/ar/final_product'
 import arFinalProductVariants from './locales/ar/final_product_variant'
 import arFinalProductImages from './locales/ar/final_product_image'
+import arBranch from './locales/ar/branch'
+import arInvoiceStages from './locales/ar/invoice_stage'
+import arTax from './locales/ar/tax'
 
 
 
@@ -55,7 +62,10 @@ const messages = {
           products: enProducts,
           final_product: enFinalProducts,
           final_product_variants: enFinalProductVariants,
-          final_product_images: enFinalProductImages
+          final_product_images: enFinalProductImages,
+          branches: enBranch,
+          invoice_stages: enInvoiceStages,
+          taxes: enTax
      },
      ar: {
           ...arCommon,
@@ -73,7 +83,10 @@ const messages = {
           products: arProducts,
           final_product: arFinalProducts,
           final_product_variants: arFinalProductVariants,
-          final_product_images: arFinalProductImages
+          final_product_images: arFinalProductImages,
+          branches: arBranch,
+          invoice_stages: arInvoiceStages,
+          taxes: arTax
      }
 }
 

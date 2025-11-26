@@ -1,0 +1,55 @@
+export default {
+     title: "Invoice Stages",
+     addInvoiceStage: "Add Invoice Stage",
+     editInvoiceStage: "Edit Invoice Stage",
+     createInvoiceStage: "Create Invoice Stage",
+     updateInvoiceStage: "Update Invoice Stage",
+     invoiceStageName: "Invoice Stage Name",
+     invoiceStageNameAr: "Invoice Stage Name (Arabic)",
+     search: "Search invoice stages...",
+     show: "Show",
+     actions: "Actions",
+     id: "ID",
+     name: "Name",
+     name_ar: "Arabic Name",
+     details: "Details",
+     details_ar: "Details (Arabic)",
+     is_default: "Is Default",
+     createdAt: "Created At",
+     edit: "Edit",
+     delete: "Delete",
+     setDefault: "Set as Default",
+     view: "View",
+     invoiceStageCreated: "Invoice stage created successfully",
+     invoiceStageUpdated: "Invoice stage updated successfully",
+     invoiceStageDeleted: "Invoice stage deleted successfully",
+     invoiceStageSetDefault: "Invoice stage set as default successfully",
+     createError: "Error creating invoice stage",
+     updateError: "Error updating invoice stage",
+     deleteError: "Error deleting invoice stage",
+     setDefaultError: "Error setting invoice stage as default",
+     networkError: "Network error occurred",
+
+     // Form labels
+     namePlaceholder: "Enter invoice stage name",
+     nameArPlaceholder: "Enter invoice stage name in Arabic",
+     detailsPlaceholder: "Enter details",
+     detailsArPlaceholder: "Enter details in Arabic",
+     isDefaultLabel: "Set as default stage",
+
+     // Validation
+     nameRequired: "Invoice stage name is required",
+     nameArRequired: "Arabic invoice stage name is required",
+
+     // Success messages
+     success: "Success",
+
+     // Table
+     noInvoiceStages: "No invoice stages found",
+     createFirstInvoiceStage: "Create your first invoice stage to get started",
+     defaultStage: "Default",
+     setAsDefault: "Set as Default",
+     confirmSetDefault: "Set this as default invoice stage?",
+     manageInvoiceStages: "Manage invoice stages and statuses",
+     defaultStageHelp: "This is the current default stage. Use 'Set as Default' action in the table to change it.",
+}

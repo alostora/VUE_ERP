@@ -109,4 +109,7 @@ export default {
      measurementUnits: "Measurement Units",
      variants: "Variants",
      finalProducts: "Final Products",
+     branches: "Branches",
+     invoiceStages: "Invoice Stages",
+     taxes: "Taxes",
 }

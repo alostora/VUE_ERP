@@ -1,0 +1,52 @@
+export default {
+     title: "الفروع",
+     addBranch: "إضافة فرع",
+     editBranch: "تعديل الفرع",
+     createBranch: "إنشاء فرع",
+     updateBranch: "تحديث الفرع",
+     branchName: "اسم الفرع",
+     branchNameAr: "اسم الفرع بالعربية",
+     search: "البحث في الفروع...",
+     show: "عرض",
+     actions: "الإجراءات",
+     id: "المعرف",
+     name: "الاسم",
+     name_ar: "الاسم بالعربية",
+     phone: "الهاتف",
+     address: "العنوان",
+     address_ar: "العنوان بالعربية",
+     createdAt: "تاريخ الإنشاء",
+     edit: "تعديل",
+     delete: "حذف",
+     view: "عرض",
+     branchCreated: "تم إنشاء الفرع بنجاح",
+     branchUpdated: "تم تحديث الفرع بنجاح",
+     branchDeleted: "تم حذف الفرع بنجاح",
+     createError: "خطأ في إنشاء الفرع",
+     updateError: "خطأ في تحديث الفرع",
+     deleteError: "خطأ في حذف الفرع",
+     networkError: "حدث خطأ في الشبكة",
+
+     // Form labels
+     namePlaceholder: "أدخل اسم الفرع",
+     nameArPlaceholder: "أدخل اسم الفرع بالعربية",
+     phonePlaceholder: "أدخل رقم الهاتف",
+     addressPlaceholder: "أدخل العنوان",
+     addressArPlaceholder: "أدخل العنوان بالعربية",
+
+     // Validation
+     nameRequired: "اسم الفرع مطلوب",
+     nameArRequired: "اسم الفرع بالعربية مطلوب",
+     phoneRequired: "رقم الهاتف مطلوب",
+     addressRequired: "العنوان مطلوب",
+
+     // Success messages
+     success: "نجاح",
+
+     // Table
+     noBranches: "لا توجد فروع",
+     createFirstBranch: "أنشئ أول فرع للبدء",
+     creatingBranch: "جارٍ إنشاء الفرع...",
+     manageBranches: "إدارة فروع الشركة والمواقع",
+     loadError: "فشل في تحميل الفروع",
+}

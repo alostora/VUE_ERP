@@ -1,0 +1,55 @@
+export default {
+     title: "مراحل الفاتورة",
+     addInvoiceStage: "إضافة مرحلة فاتورة",
+     editInvoiceStage: "تعديل مرحلة الفاتورة",
+     createInvoiceStage: "إنشاء مرحلة فاتورة",
+     updateInvoiceStage: "تحديث مرحلة الفاتورة",
+     invoiceStageName: "اسم مرحلة الفاتورة",
+     invoiceStageNameAr: "اسم مرحلة الفاتورة بالعربية",
+     search: "البحث في مراحل الفاتورة...",
+     show: "عرض",
+     actions: "الإجراءات",
+     id: "المعرف",
+     name: "الاسم",
+     name_ar: "الاسم بالعربية",
+     details: "التفاصيل",
+     details_ar: "التفاصيل بالعربية",
+     is_default: "افتراضي",
+     createdAt: "تاريخ الإنشاء",
+     edit: "تعديل",
+     delete: "حذف",
+     setDefault: "تعيين كافتراضي",
+     view: "عرض",
+     invoiceStageCreated: "تم إنشاء مرحلة الفاتورة بنجاح",
+     invoiceStageUpdated: "تم تحديث مرحلة الفاتورة بنجاح",
+     invoiceStageDeleted: "تم حذف مرحلة الفاتورة بنجاح",
+     invoiceStageSetDefault: "تم تعيين مرحلة الفاتورة كافتراضية بنجاح",
+     createError: "خطأ في إنشاء مرحلة الفاتورة",
+     updateError: "خطأ في تحديث مرحلة الفاتورة",
+     deleteError: "خطأ في حذف مرحلة الفاتورة",
+     setDefaultError: "خطأ في تعيين مرحلة الفاتورة كافتراضية",
+     networkError: "حدث خطأ في الشبكة",
+
+     // Form labels
+     namePlaceholder: "أدخل اسم مرحلة الفاتورة",
+     nameArPlaceholder: "أدخل اسم مرحلة الفاتورة بالعربية",
+     detailsPlaceholder: "أدخل التفاصيل",
+     detailsArPlaceholder: "أدخل التفاصيل بالعربية",
+     isDefaultLabel: "تعيين كمرحلة افتراضية",
+
+     // Validation
+     nameRequired: "اسم مرحلة الفاتورة مطلوب",
+     nameArRequired: "اسم مرحلة الفاتورة بالعربية مطلوب",
+
+     // Success messages
+     success: "نجاح",
+
+     // Table
+     noInvoiceStages: "لا توجد مراحل فاتورة",
+     createFirstInvoiceStage: "أنشئ أول مرحلة فاتورة للبدء",
+     defaultStage: "افتراضي",
+     setAsDefault: "تعيين كافتراضي",
+     confirmSetDefault: "تعيين هذه المرحلة كمرحلة افتراضية؟",
+     manageInvoiceStages: "إدارة مراحل الفاتورة والحالات",
+     defaultStageHelp: "هذه هي المرحلة الافتراضية الحالية. استخدم إجراء 'تعيين كافتراضي' في الجدول لتغييرها.",
+}

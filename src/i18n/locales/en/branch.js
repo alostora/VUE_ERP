@@ -1,0 +1,52 @@
+export default {
+     title: "Branches",
+     addBranch: "Add Branch",
+     editBranch: "Edit Branch",
+     createBranch: "Create Branch",
+     updateBranch: "Update Branch",
+     branchName: "Branch Name",
+     branchNameAr: "Branch Name (Arabic)",
+     search: "Search branches...",
+     show: "Show",
+     actions: "Actions",
+     id: "ID",
+     name: "Name",
+     name_ar: "Arabic Name",
+     phone: "Phone",
+     address: "Address",
+     address_ar: "Address (Arabic)",
+     createdAt: "Created At",
+     edit: "Edit",
+     delete: "Delete",
+     view: "View",
+     branchCreated: "Branch created successfully",
+     branchUpdated: "Branch updated successfully",
+     branchDeleted: "Branch deleted successfully",
+     createError: "Error creating branch",
+     updateError: "Error updating branch",
+     deleteError: "Error deleting branch",
+     networkError: "Network error occurred",
+
+     // Form labels
+     namePlaceholder: "Enter branch name",
+     nameArPlaceholder: "Enter branch name in Arabic",
+     phonePlaceholder: "Enter phone number",
+     addressPlaceholder: "Enter address",
+     addressArPlaceholder: "Enter address in Arabic",
+
+     // Validation
+     nameRequired: "Branch name is required",
+     nameArRequired: "Arabic branch name is required",
+     phoneRequired: "Phone number is required",
+     addressRequired: "Address is required",
+
+     // Success messages
+     success: "Success",
+
+     // Table
+     noBranches: "No branches found",
+     createFirstBranch: "Create your first branch to get started",
+     creatingBranch: "Creating branch...",
+     manageBranches: "Manage company branches and locations",
+     loadError: "Failed to load branches",
+}

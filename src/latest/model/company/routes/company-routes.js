@@ -5,6 +5,9 @@ import measurement_unit_routes from "../../measurement_unit/routes/measurement_u
 import variant_routes from "../../variant/routes/variant_routes";
 import product_routes from "../../product/routes/product_routes";
 import final_product_routes from "../../final_product/routes/final_product_routes";
+import branch_routes from "../../branch/routes/branch_routes";
+import invoice_stage_routes from "../../invoice_stage/routes/invoice_stage_routes";
+import tax_routes from "../../tax/routes/tax_routes";
 import CompanyDetails from "../parts/CompanyDetails.vue";
 
 const company_routes = [
@@ -36,6 +39,9 @@ const company_routes = [
                ...variant_routes,
                ...product_routes,
                ...final_product_routes,
+               ...branch_routes,
+               ...invoice_stage_routes,
+               ...tax_routes,
           ],
      }
 ];
