@@ -52,6 +52,17 @@ export default {
      loadingProducts: "جاري تحميل المنتجات...",
      creatingDiscount: "جاري إنشاء الخصم...",
 
+     // Branches table & modal
+     searchBranches: "البحث في الفروع...",
+     branchName: "اسم الفرع",
+     viewBranches: "عرض الفروع",
+     noBranches: "لا توجد فروع",
+     addBranchesHint: "أضف فروعًا إلى هذا الخصم لتفعيله",
+     branchDeleted: "تم حذف الفرع بنجاح",
+     branchDeleteError: "خطأ أثناء حذف الفرع",
+     addBranches: "إضافة فروع",
+     creatingBranches: "جاري إضافة الفروع...",
+
      // Validation
      nameRequired: "اسم الخصم مطلوب",
      nameArRequired: "الاسم العربي مطلوب",
@@ -76,6 +87,9 @@ export default {
      filterByType: "تصفية حسب النوع",
      dateFrom: "من تاريخ",
      dateTo: "إلى تاريخ",
+     to: "إلى",
+     clearDateFilter: "مسح فلتر التاريخ",
+     viewRelatedProducts: "عرض المنتجات المرتبطة",
 
      // Read-only messages
      cannotChangeBranches: "لا يمكن تغيير الفروع أثناء التعديل",

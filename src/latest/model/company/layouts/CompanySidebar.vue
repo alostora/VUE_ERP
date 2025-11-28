@@ -141,7 +141,7 @@ export default {
         },
         {
           label: "companies.discounts",
-          icon: "pi pi-percentage",
+          icon: "pi pi-pound",
           route: `/company/${this.$route.params.company_id}/discounts`,
         },
         /* 

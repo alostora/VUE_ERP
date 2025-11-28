@@ -52,6 +52,17 @@ export default {
      loadingProducts: "Loading products...",
      creatingDiscount: "Creating discount...",
 
+     // Branches table & modal
+     searchBranches: "Search branches...",
+     branchName: "Branch Name",
+     viewBranches: "View Branches",
+     noBranches: "No branches found",
+     addBranchesHint: "Add branches to this discount to enable it",
+     branchDeleted: "Branch removed successfully",
+     branchDeleteError: "Error removing branch",
+     addBranches: "Add Branches",
+     creatingBranches: "Adding branches...",
+
      // Validation
      nameRequired: "Discount name is required",
      nameArRequired: "Arabic name is required",
@@ -76,6 +87,9 @@ export default {
      filterByType: "Filter by type",
      dateFrom: "From Date",
      dateTo: "To Date",
+     to: "to",
+     clearDateFilter: "Clear date filter",
+     viewRelatedProducts: "View Related Products",
 
      // Read-only messages
      cannotChangeBranches: "Branches cannot be changed when editing",

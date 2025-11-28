@@ -190,6 +190,14 @@
               v-tooltip.top="$t('discounts.delete')"
             />
           </div>
+          <!-- View Related Branches Button -->
+          <Button
+            icon="pi pi-sitemap"
+            class="p-button-text p-button-sm p-button-azure"
+            @click="openBranchesModal(slotProps.data)"
+            v-tooltip.top="$t('discounts.viewBranches')"
+          />
+
           <!-- View Related Products Button -->
           <Button
             icon="pi pi-shopping-bag"
@@ -241,6 +249,13 @@
       :discount_name="selectedDiscountName"
     />
 
+    <DiscountBranchesTableModal
+      ref="branchesModal"
+      :company_id="effectiveCompanyId"
+      :discount_id="selectedDiscountForBranches"
+      :discount_name="selectedDiscountNameForBranches"
+    />
+
     <Toast />
     <ConfirmDialog />
   </div>
@@ -260,6 +275,7 @@ import Tag from "primevue/tag";
 
 import DiscountCreateModal from "./DiscountCreateModal.vue";
 import DiscountEditModal from "./DiscountEditModal.vue";
+import DiscountBranchesTableModal from "../branches/parts/DiscountBranchesTableModal.vue";
 
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
@@ -282,6 +298,7 @@ export default {
     ConfirmDialog,
     Tag,
     DiscountFinalProductsTableModal,
+    DiscountBranchesTableModal,
   },
 
   directives: {
@@ -307,6 +324,8 @@ export default {
       dateFilterTimeout: null,
       selectedDiscountForProducts: null,
       selectedDiscountName: "",
+      selectedDiscountForBranches: null,
+      selectedDiscountNameForBranches: "",
     };
   },
 
@@ -467,6 +486,15 @@ export default {
       this.selectedDiscountName = discount.name;
       this.$nextTick(() => {
         this.$refs.finalProductsModal.openModal();
+      });
+    },
+    openBranchesModal(discount) {
+      this.selectedDiscountForBranches = discount.id;
+      this.selectedDiscountNameForBranches = discount.name;
+      this.$nextTick(() => {
+        if (this.$refs.branchesModal && typeof this.$refs.branchesModal.openModal === 'function') {
+          this.$refs.branchesModal.openModal();
+        }
       });
     },
   },
