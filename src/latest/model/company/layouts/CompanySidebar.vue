@@ -139,6 +139,11 @@ export default {
           icon: "pi pi-percentage",
           route: `/company/${this.$route.params.company_id}/taxes`,
         },
+        {
+          label: "companies.discounts",
+          icon: "pi pi-percentage",
+          route: `/company/${this.$route.params.company_id}/discounts`,
+        },
         /* 
         {
           label: "companies.branches",

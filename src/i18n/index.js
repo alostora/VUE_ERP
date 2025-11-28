@@ -20,6 +20,7 @@ import enFinalProductImages from './locales/en/final_product_image'
 import enBranch from './locales/en/branch'
 import enInvoiceStages from './locales/en/invoice_stage'
 import enTax from './locales/en/tax'
+import enDiscounts from './locales/en/discount'
 
 
 // Import Arabic translations
@@ -42,6 +43,7 @@ import arFinalProductImages from './locales/ar/final_product_image'
 import arBranch from './locales/ar/branch'
 import arInvoiceStages from './locales/ar/invoice_stage'
 import arTax from './locales/ar/tax'
+import arDiscounts from './locales/ar/discount'
 
 
 
@@ -65,7 +67,8 @@ const messages = {
           final_product_images: enFinalProductImages,
           branches: enBranch,
           invoice_stages: enInvoiceStages,
-          taxes: enTax
+          taxes: enTax,
+          discounts: enDiscounts
      },
      ar: {
           ...arCommon,
@@ -86,7 +89,8 @@ const messages = {
           final_product_images: arFinalProductImages,
           branches: arBranch,
           invoice_stages: arInvoiceStages,
-          taxes: arTax
+          taxes: arTax,
+          discounts: arDiscounts
      }
 }
 

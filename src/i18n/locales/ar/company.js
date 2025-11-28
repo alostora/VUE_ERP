@@ -112,5 +112,6 @@ export default {
      branches: "الفروع",
      invoiceStages: "مراحل الفاتورة",
      taxes: "الضرائب",
+     discounts: "الخصومات",
 
 }

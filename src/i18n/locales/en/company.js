@@ -112,4 +112,5 @@ export default {
      branches: "Branches",
      invoiceStages: "Invoice Stages",
      taxes: "Taxes",
+     discounts: "Discounts",
 }
