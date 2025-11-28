@@ -50,6 +50,8 @@ export default {
           retry: "إعادة المحاولة",
           add: "اضافة",
           upload: "رفع الملف",
+          yes: "نعم",
+          no: "لا",
      },
      footer: {
           copyright: 'حقوق النشر',

@@ -113,5 +113,6 @@ export default {
      invoiceStages: "مراحل الفاتورة",
      taxes: "الضرائب",
      discounts: "الخصومات",
+     contacts: "جهات الاتصال",
 
 }

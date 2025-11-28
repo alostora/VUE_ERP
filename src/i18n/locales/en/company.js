@@ -113,4 +113,5 @@ export default {
      invoiceStages: "Invoice Stages",
      taxes: "Taxes",
      discounts: "Discounts",
+     contacts: "Contacts",
 }

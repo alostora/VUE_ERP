@@ -9,6 +9,7 @@ import branch_routes from "../../branch/routes/branch_routes";
 import invoice_stage_routes from "../../invoice_stage/routes/invoice_stage_routes";
 import tax_routes from "../../tax/routes/tax_routes";
 import discount_routes from "../../discount/routes/discount_routes";
+import contact_routes from "../../contact/routes/contact_routes";
 import CompanyDetails from "../parts/CompanyDetails.vue";
 
 const company_routes = [
@@ -41,6 +42,7 @@ const company_routes = [
                ...product_routes,
                ...final_product_routes,
                ...branch_routes,
+               ...contact_routes,
                ...invoice_stage_routes,
                ...tax_routes,
                ...discount_routes,

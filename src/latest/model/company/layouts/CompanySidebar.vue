@@ -125,6 +125,11 @@ export default {
           route: `/company/${this.$route.params.company_id}/final-products`,
         },
         {
+          label: "companies.contacts",
+          icon: "pi pi-address-book",
+          route: `/company/${this.$route.params.company_id}/contacts`,
+        },
+        {
           label: "companies.branches",
           icon: "pi pi-map-marker",
           route: `/company/${this.$route.params.company_id}/branches`,

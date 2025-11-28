@@ -46,6 +46,8 @@ export default {
           retry: "Retry",
           add: "Add",
           upload: "Upload",
+          yes: "Yes",
+          no: "No",
      },
      footer: {
           copyright: 'Copyright',
