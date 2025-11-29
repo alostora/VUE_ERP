@@ -7,5 +7,6 @@ export default {
   validationError: 'يرجى تصحيح الأخطاء في النموذج',
   unauthorized: 'غير مصرح لك بالقيام بهذا الإجراء',
   notFound: 'العنصر غير موجود',
-  serverError: 'خطأ في الخادم'
+  serverError: 'خطأ في الخادم',
+  failedToLoadBranch: 'فشل في تحميل تفاصيل الفرع'
 }

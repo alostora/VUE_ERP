@@ -48,6 +48,8 @@ export default {
           back: "رجوع",
           edit: "تعديل",
           retry: "إعادة المحاولة",
+          loading: "جاري التحميل",
+          createdAt: "تاريخ الإنشاء",
           add: "اضافة",
           upload: "رفع الملف",
           yes: "نعم",

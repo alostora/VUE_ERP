@@ -7,5 +7,6 @@ export default {
   validationError: 'Please correct the errors in the form',
   unauthorized: 'You are not authorized to perform this action',
   notFound: 'Item not found',
-  serverError: 'Server error'
+  serverError: 'Server error',
+  failedToLoadBranch: 'Failed to load branch details'
 }

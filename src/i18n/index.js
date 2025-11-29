@@ -22,6 +22,7 @@ import enInvoiceStages from './locales/en/invoice_stage'
 import enTax from './locales/en/tax'
 import enDiscounts from './locales/en/discount'
 import enContacts from './locales/en/contact'
+import enWarehouses from './locales/en/warehouse'
 
 
 // Import Arabic translations
@@ -46,6 +47,7 @@ import arInvoiceStages from './locales/ar/invoice_stage'
 import arTax from './locales/ar/tax'
 import arDiscounts from './locales/ar/discount'
 import arContacts from './locales/ar/contact'
+import arWarehouses from './locales/ar/warehouse'
 
 
 
@@ -70,8 +72,9 @@ const messages = {
           branches: enBranch,
           invoice_stages: enInvoiceStages,
           taxes: enTax,
-          discounts: enDiscounts
-         , contacts: enContacts
+          discounts: enDiscounts,
+          contacts: enContacts,
+          warehouses: enWarehouses,
      },
      ar: {
           ...arCommon,
@@ -93,8 +96,9 @@ const messages = {
           branches: arBranch,
           invoice_stages: arInvoiceStages,
           taxes: arTax,
-          discounts: arDiscounts
-         , contacts: arContacts
+          discounts: arDiscounts,
+          contacts: arContacts,
+          warehouses: arWarehouses,
      }
 }
 

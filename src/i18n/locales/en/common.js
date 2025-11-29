@@ -44,6 +44,8 @@ export default {
           back: "Back",
           edit: "Edit",
           retry: "Retry",
+          loading: "Loading",
+          createdAt: "Created At",
           add: "Add",
           upload: "Upload",
           yes: "Yes",

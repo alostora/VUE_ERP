@@ -1,6 +1,12 @@
 <template>
   <div class="branch-table-page">
-    <div class="mb-4">
+    <div class="mb-4 flex gap-2">
+      <Button
+        :label="$t('companies.viewCompany')"
+        icon="pi pi-building"
+        class="p-button-text"
+        @click="goBackToCompany"
+      />
       <Button
         :label="$t('branches.addBranch')"
         icon="pi pi-plus"
@@ -121,6 +127,12 @@
               class="p-button-text p-button-sm p-button-primary"
               @click="editBranchModal(slotProps.data)"
               v-tooltip.top="$t('branches.edit')"
+            />
+            <Button
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm"
+              @click="goToBranchShow(slotProps.data)"
+              v-tooltip.top="$t('branches.show')"
             />
             <Button
               icon="pi pi-trash"
@@ -309,6 +321,23 @@ export default {
     },
 
     /**
+     * Navigate to branch show page
+     */
+    goToBranchShow(branch) {
+      const companyId = this.effectiveCompanyId;
+      const branchId = branch?.id;
+      if (!companyId || !branchId) {
+        this.showToast(
+          "error",
+          this.$t("common.error") || "Error",
+          this.$t("branches.missingIds") || "Missing company or branch ID"
+        );
+        return;
+      }
+      this.$router.push(`/company/${companyId}/branches/${branchId}`);
+    },
+
+    /**
      * Show toast notification
      */
     showToast(severity, summary, detail) {
@@ -319,6 +348,31 @@ export default {
           detail: detail,
           life: 3000,
         });
+      }
+    },
+    goBackToCompany() {
+      const companyId = this.effectiveCompanyId;
+      if (!companyId) {
+        if (this.$toast) {
+          this.$toast.add({
+            severity: "warn",
+            summary: this.$t("common.error") || "Error",
+            detail: this.$t("branches.missingIds") || "Missing company ID",
+            life: 3000,
+          });
+        }
+        return;
+      }
+      // Try navigating via named child route to avoid redirects
+      try {
+        console.debug("Navigating to company-details for company", companyId);
+        this.$router.push({
+          name: "company-details",
+          params: { company_id: companyId },
+        });
+      } catch (e) {
+        console.warn("Named route navigation failed, falling back to path", e);
+        this.$router.push(`/company/${companyId}/show`);
       }
     },
   },

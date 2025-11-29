@@ -7,6 +7,7 @@ import country_routes from "../latest/model/country/routes/country-routes";
 import governorate_routes from "../latest/model/governorate/routes/governorate-routes";
 import city_routes from "../latest/model/city/routes/city-routes";
 import company_routes from "../latest/model/company/routes/company-routes";
+import branch_routes from "../latest/model/branch/routes/branch_routes";
 import MVVMContent from "../latest/views/layouts/MVVMContent.vue";
 
 
@@ -29,6 +30,7 @@ const router = createRouter({
         ...governorate_routes,
         ...city_routes,
         ...company_routes,
+        ...branch_routes,
       ],
     },
     {
