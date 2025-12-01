@@ -54,6 +54,8 @@ export default {
           upload: "رفع الملف",
           yes: "نعم",
           no: "لا",
+          creating: "انشاء...",
+          updating: "تحديث...",
      },
      footer: {
           copyright: 'حقوق النشر',

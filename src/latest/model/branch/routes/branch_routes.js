@@ -2,6 +2,7 @@ import BranchTable from "../parts/BranchTable.vue";
 import BranchDetails from "../parts/details/BranchDetails.vue";
 import BranchShow from "../parts/BranchShow.vue";
 import WarehouseTable from "../../warehouse/parts/WarehouseTable.vue";
+import EmployeeTable from "../../employee/parts/EmployeeTable.vue";
 
 const branch_routes = [
      {
@@ -27,6 +28,12 @@ const branch_routes = [
                     path: "warehouses",
                     name: "branch-warehouses",
                     component: WarehouseTable,
+                    props: true,
+               },
+               {
+                    path: "employees",
+                    name: "branch-employees",
+                    component: EmployeeTable,
                     props: true,
                },
           ]

@@ -21,7 +21,7 @@ export default {
           reports: 'Reports',
           settings: 'Settings',
           getStarted: 'Get Started',
-          learnMore: 'Learn More'
+          learnMore: 'Learn More',
      },
      content: {
           welcome: 'Welcome Back',
@@ -50,6 +50,8 @@ export default {
           upload: "Upload",
           yes: "Yes",
           no: "No",
+          creating: "Creating...",
+          updating: "Updating...",
      },
      footer: {
           copyright: 'Copyright',

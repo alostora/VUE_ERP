@@ -92,6 +92,11 @@ export default {
           route: `/company/${this.$route.params.company_id}/branches/${this.$route.params.branch_id}/warehouses`,
         },
         {
+          label: "employees.employees",
+          icon: "pi pi-building",
+          route: `/company/${this.$route.params.company_id}/branches/${this.$route.params.branch_id}/employees`,
+        },
+        {
           label: "branches.backToList",
           icon: "pi pi-arrow-left",
           route: `/company/${this.$route.params.company_id}/branches`,
