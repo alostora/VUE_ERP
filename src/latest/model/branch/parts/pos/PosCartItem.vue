@@ -100,7 +100,6 @@
           />
         </div>
       </div>
-
       <!-- Item Total -->
       <div class="item-total font-bold text-lg">
         {{ formatCurrency(itemTotal) }}
@@ -448,6 +447,7 @@ export default {
   color: #007bff;
   min-width: 80px;
   text-align: right;
+  margin-top: 65px;
 }
 
 .stock-info {

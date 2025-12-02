@@ -579,7 +579,7 @@ export default {
 .cart-items-container {
   flex: 1;
   overflow-y: auto;
-  min-height: 200px;
+  min-height: 1030px;
   border: 1px solid #dee2e6;
   border-radius: 6px;
   padding: 10px;
@@ -592,7 +592,7 @@ export default {
 }
 
 .cart-items-list {
-  max-height: 400px;
+  max-height: 1000px;
   overflow-y: auto;
 }
 
@@ -644,7 +644,7 @@ export default {
 /* Scrollbar styling */
 .cart-items-container::-webkit-scrollbar,
 .cart-items-list::-webkit-scrollbar {
-  width: 6px;
+  width: 15px;
 }
 
 .cart-items-container::-webkit-scrollbar-track,
