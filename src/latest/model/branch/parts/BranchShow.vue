@@ -26,10 +26,18 @@
         @click="toggleSidebar"
       ></div>
       <!-- Main Content -->
+
       <main
         class="branch-main-content"
         :class="{ 'sidebar-collapsed': sidebarCollapsed }"
       >
+        <Button
+          :label="$t('branch.openPos')"
+          icon="pi pi-shopping-cart"
+          @click="openPosModal"
+          class="p-button-success mb-3"
+          v-if="hasPosAccess"
+        />
         <div class="branch-show-page">
           <!-- Nested routes if needed -->
           <RouterView :branch="branch" :branch_id="branch_id" />
@@ -37,6 +45,7 @@
       </main>
     </div>
 
+    <PosModal ref="posModal" :company-id="companyId" :branch-id="branchId" />
     <Toast />
   </div>
 </template>
@@ -48,6 +57,7 @@ import general_request from "../../../views/layouts/constants/general_request";
 import BranchHeader from "../layouts/BranchHeader.vue";
 import BranchSidebar from "../layouts/BranchSidebar.vue";
 import BranchEditModal from "./BranchEditModal.vue";
+import PosModal from "./pos/PosModal.vue";
 
 export default {
   name: "BranchShow",
@@ -56,6 +66,7 @@ export default {
     BranchHeader,
     BranchSidebar,
     BranchEditModal,
+    PosModal,
   },
   props: {
     branch_id: {
@@ -76,9 +87,16 @@ export default {
       sidebarCollapsed: false,
       isMobile: false,
       currentLanguage: localStorage.getItem("language") || "en",
+      hasPosAccess: true, // Set to true to always show, false to hide
     };
   },
   computed: {
+    companyId() {
+      return this.$route.params.company_id;
+    },
+    branchId() {
+      return this.$route.params.branch_id;
+    },
     currentDirection() {
       return this.currentLanguage === "ar" ? "rtl" : "ltr";
     },
@@ -203,6 +221,12 @@ export default {
     showToast(severity, summary, detail) {
       if (this.$toast) {
         this.$toast.add({ severity, summary, detail, life: 3000 });
+      }
+    },
+
+    openPosModal() {
+      if (this.$refs.posModal) {
+        this.$refs.posModal.openModal();
       }
     },
   },

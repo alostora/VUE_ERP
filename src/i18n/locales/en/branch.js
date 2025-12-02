@@ -55,4 +55,5 @@ export default {
      branchDetails: "Branch Details",
      backToList: "Back to Branches",
      missingIds: "Missing company or branch ID",
+     openPos: "Open Point of Sale"
 }

@@ -93,7 +93,7 @@ export default {
         },
         {
           label: "employees.employees",
-          icon: "pi pi-building",
+          icon: "pi pi-wrench",
           route: `/company/${this.$route.params.company_id}/branches/${this.$route.params.branch_id}/employees`,
         },
         {

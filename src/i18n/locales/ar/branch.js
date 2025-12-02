@@ -55,4 +55,5 @@ export default {
      branchDetails: "تفاصيل الفرع",
      backToList: "الرجوع إلى الفروع",
      missingIds: "المعرف الخاص بالشركة أو الفرع مفقود",
+     openPos: "فتح نقطة البيع",
 }

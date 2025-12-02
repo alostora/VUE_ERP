@@ -24,6 +24,7 @@ import enDiscounts from './locales/en/discount'
 import enContacts from './locales/en/contact'
 import enWarehouses from './locales/en/warehouse'
 import enEmployees from './locales/en/employee'
+import enPos from './locales/en/pos.js';
 
 
 // Import Arabic translations
@@ -50,6 +51,7 @@ import arDiscounts from './locales/ar/discount'
 import arContacts from './locales/ar/contact'
 import arWarehouses from './locales/ar/warehouse'
 import arEmployees from './locales/ar/employee'
+import arPos from './locales/ar/pos.js'
 
 
 
@@ -78,6 +80,7 @@ const messages = {
           contacts: enContacts,
           warehouses: enWarehouses,
           employees: enEmployees,
+          pos: enPos,
      },
      ar: {
           ...arCommon,
@@ -103,6 +106,7 @@ const messages = {
           contacts: arContacts,
           warehouses: arWarehouses,
           employees: arEmployees,
+          pos: arPos,
      }
 }
 
