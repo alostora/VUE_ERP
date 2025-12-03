@@ -6,6 +6,13 @@
         :class="{ 'sidebar-collapsed': sidebarCollapsed }"
       >
         <div class="branch-show-page">
+          <Button
+            :label="$t('branches.openPos')"
+            icon="pi pi-shopping-cart"
+            @click="openPosModal"
+            class="p-button-success mb-3"
+            v-if="hasPosAccess"
+          />
           <!-- Loading State -->
           <div
             v-if="loading"
@@ -163,6 +170,7 @@
       @branch-updated="handleBranchUpdated"
     />
 
+    <PosModal ref="posModal" :company-id="companyId" :branch-id="branchId" />
     <Toast />
   </div>
 </template>
@@ -176,6 +184,7 @@ import ProgressSpinner from "primevue/progressspinner";
 import Message from "primevue/message";
 import Toast from "primevue/toast";
 import Divider from "primevue/divider";
+import PosModal from "../pos/PosModal.vue";
 
 export default {
   name: "BranchDetails",
@@ -186,6 +195,7 @@ export default {
     Message,
     Toast,
     Divider,
+    PosModal,
   },
   props: {
     branch_id: {
@@ -206,6 +216,7 @@ export default {
       sidebarCollapsed: false,
       isMobile: false,
       currentLanguage: localStorage.getItem("language") || "en",
+      hasPosAccess: true, // Set to true to always show, false to hide
     };
   },
   computed: {
@@ -333,6 +344,11 @@ export default {
     showToast(severity, summary, detail) {
       if (this.$toast) {
         this.$toast.add({ severity, summary, detail, life: 3000 });
+      }
+    },
+    openPosModal() {
+      if (this.$refs.posModal) {
+        this.$refs.posModal.openModal();
       }
     },
   },

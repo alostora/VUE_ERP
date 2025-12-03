@@ -43,8 +43,13 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
+      
       :lazy="true"
-      class="p-datatable-sm"
+      resizableColumns
+      columnResizeMode="fit"
+      showGridlines
+      tableStyle="min-width: 50rem"
+      class="p-datatable-sm table-scroll-container"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
@@ -205,6 +210,7 @@ import Tooltip from "primevue/tooltip";
 
 import CompanyCreateModal from "./CompanyCreateModal.vue";
 import CompanyEditModal from "./CompanyEditModal.vue";
+import ScrollableTable from "@/components/ScrollableTable.vue";
 
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
@@ -223,6 +229,7 @@ export default {
     Select,
     Toast,
     ConfirmDialog,
+    ScrollableTable,
   },
 
   directives: {

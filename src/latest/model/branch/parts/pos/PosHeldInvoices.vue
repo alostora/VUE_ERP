@@ -11,7 +11,7 @@
         :value="heldInvoices"
         :paginator="true"
         :rows="10"
-        class="p-datatable-sm"
+        class="p-datatable-sm table-scroll-container"
       >
         <Column field="invoiceNumber" :header="$t('pos.invoiceNumber')">
           <template #body="slotProps">

@@ -16,7 +16,12 @@
       :rows="per_page"
       :totalRecords="meta.total"
       :loading="loading"
+      
       :lazy="true"
+      resizableColumns
+      columnResizeMode="fit"
+      showGridlines
+      tableStyle="min-width: 50rem"
     >
       <Column field="email" :header="$t('contacts.email')" />
       <Column field="is_default" :header="$t('contacts.isDefault')">

@@ -230,7 +230,7 @@ class PosService {
                     discount_value: "10.00",
                     price_after_discount: 1350,
                     category: { id: "cat1", name: "Electronics", name_ar: "إلكترونيات" },
-                    main_image: { file: { file_path: "https://via.placeholder.com/150" } },
+                    main_image: { file: { file_path: "https://fastly.picsum.photos/id/8/5000/3333.jpg?hmac=OeG5ufhPYQBd6Rx1TAldAuF92lhCzAhKQKttGfawWuA" } },
                     stock: 15,
                     details: "High performance laptop",
                     details_ar: "لابتوب عالي الأداء"
@@ -243,7 +243,7 @@ class PosService {
                     has_discount: false,
                     price_after_discount: 50,
                     category: { id: "cat1", name: "Electronics", name_ar: "إلكترونيات" },
-                    main_image: { file: { file_path: "https://via.placeholder.com/150" } },
+                    main_image: { file: { file_path: "https://fastly.picsum.photos/id/7/4728/3168.jpg?hmac=c5B5tfYFM9blHHMhuu4UKmhnbZoJqrzNOP9xjkV4w3o" } },
                     stock: 100,
                     details: "Wireless mouse",
                     details_ar: "ماوس لاسلكي"

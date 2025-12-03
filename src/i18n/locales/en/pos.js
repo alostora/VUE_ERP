@@ -303,6 +303,7 @@ export default {
      totalProfit: "Total Profit",
      totalDiscount: "Total Discount",
      totalTax: "Total Tax",
+     actions: "Actions",
 
      // Settings
      posSettings: "POS Settings",

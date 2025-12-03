@@ -62,7 +62,7 @@
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="{first} to {last} of {totalRecords}"
           @page="handlePageChange"
-          class="p-datatable-sm"
+          class="p-datatable-sm table-scroll-container"
           :class="{ 'embedded-table': embedded }"
         >
           <!-- Variant Type Column -->

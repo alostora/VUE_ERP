@@ -54,7 +54,7 @@
       <h4 class="m-0 mb-2">{{ $t("pos.items") }}</h4>
       <DataTable
         :value="invoice.items"
-        class="p-datatable-sm"
+        class="p-datatable-sm table-scroll-container"
         :showHeaders="false"
       >
         <Column field="name">

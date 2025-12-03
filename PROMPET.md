@@ -4164,8 +4164,13 @@ src\latest\model\user\parts\UserTable.vue
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
+      
       :lazy="true"
-      class="p-datatable-sm"
+      resizableColumns
+      columnResizeMode="fit"
+      showGridlines
+      tableStyle="min-width: 50rem"
+      class="p-datatable-sm table-scroll-container"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
@@ -6952,8 +6957,13 @@ src\latest\model\company\parts\CompanyTable.vue
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
+      
       :lazy="true"
-      class="p-datatable-sm"
+      resizableColumns
+      columnResizeMode="fit"
+      showGridlines
+      tableStyle="min-width: 50rem"
+      class="p-datatable-sm table-scroll-container"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
@@ -9781,8 +9791,13 @@ src\latest\model\final_product\parts\FinalProductTable.vue
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
+      
       :lazy="true"
-      class="p-datatable-sm"
+      resizableColumns
+      columnResizeMode="fit"
+      showGridlines
+      tableStyle="min-width: 50rem"
+      class="p-datatable-sm table-scroll-container"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
@@ -11422,7 +11437,7 @@ src\latest\model\final_product\variants\parts\FinalProductVariantsTable.vue
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="{first} to {last} of {totalRecords}"
           @page="handlePageChange"
-          class="p-datatable-sm"
+          class="p-datatable-sm table-scroll-container"
           :class="{ 'embedded-table': embedded }"
         >
           <!-- Variant Type Column -->

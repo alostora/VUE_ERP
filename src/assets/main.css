@@ -147,6 +147,133 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+/* Global table scroll styles */
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  margin-bottom: 1rem;
+}
+
+
+/* Enhanced Global table scroll styles */
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+/* Better scrollbar with smooth transition */
+.table-scroll-container::-webkit-scrollbar {
+  height: 10px;
+  transition: all 0.3s ease;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+  margin: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+  border: 2px solid #f1f1f1;
+  transition: background 0.3s ease;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* For Firefox - enhanced */
+.table-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+/* Table inside container - responsive */
+.table-scroll-container table,
+.table-scroll-container .p-datatable-table {
+  min-width: 1200px;
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Sticky headers for DataTable with shadow */
+.table-scroll-container .p-datatable-thead > tr > th {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  border-bottom: 2px solid #dee2e6;
+  box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure paginator stays below */
+.table-scroll-container + .p-paginator {
+  margin-top: 1rem;
+}
+
+/* Dark mode - enhanced */
+.dark .table-scroll-container {
+  border-color: #4a5568;
+  background: #2d3748;
+}
+
+.dark .table-scroll-container .p-datatable-thead > tr > th {
+  background: #2d3748;
+  border-bottom-color: #4a5568;
+  box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .table-scroll-container::-webkit-scrollbar-track {
+  background: #4a5568;
+}
+
+.dark .table-scroll-container::-webkit-scrollbar-thumb {
+  background: #718096;
+  border-color: #4a5568;
+}
+
+.dark .table-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #90a3c2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .table-scroll-container table,
+  .table-scroll-container .p-datatable-table {
+    min-width: 1000px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .table-scroll-container table,
+  .table-scroll-container .p-datatable-table {
+    min-width: 800px;
+  }
+}
+
+/* Optional: Add fade effect at edges */
+.table-scroll-container {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 20px,
+    black calc(100% - 20px),
+    transparent
+  );
+}
+
 /* Print styles */
 @media print {
   .no-print {

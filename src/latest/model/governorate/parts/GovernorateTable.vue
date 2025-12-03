@@ -73,8 +73,13 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
+      
       :lazy="true"
-      class="p-datatable-sm"
+      resizableColumns
+      columnResizeMode="fit"
+      showGridlines
+      tableStyle="min-width: 50rem"
+      class="p-datatable-sm table-scroll-container"
       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"

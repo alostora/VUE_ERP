@@ -284,6 +284,7 @@ export default {
      exchange: "تبديل",
      giftReceipt: "إيصال هدية",
      noReceipt: "بدون إيصال",
+     actions: "اجراءات",
 
      // Reports
      dailyReport: "تقرير يومي",

@@ -31,13 +31,7 @@
         class="branch-main-content"
         :class="{ 'sidebar-collapsed': sidebarCollapsed }"
       >
-        <Button
-          :label="$t('branch.openPos')"
-          icon="pi pi-shopping-cart"
-          @click="openPosModal"
-          class="p-button-success mb-3"
-          v-if="hasPosAccess"
-        />
+        
         <div class="branch-show-page">
           <!-- Nested routes if needed -->
           <RouterView :branch="branch" :branch_id="branch_id" />

@@ -12,12 +12,15 @@
   >
     <!-- Simple header -->
     <template #header>
-      <span class="text-xl font-bold text-white">{{ $t("pos.title") }}</span>
+      <span class="text-xl font-bold text-white dark:text-gray-100">{{
+        $t("pos.title")
+      }}</span>
     </template>
 
     <!-- POS Toolbar -->
     <div
-      class="pos-toolbar flex justify-content-between align-items-center mb-3 p-2"
+      class="pos-toolbar flex justify-content-between align-items-center mb-3 p-3 surface-ground border-round"
+      :class="{ 'dark-surface': isDarkMode }"
     >
       <div class="flex align-items-center gap-2">
         <Button
@@ -25,6 +28,7 @@
           icon="pi pi-pause"
           @click="holdCurrentInvoice"
           class="p-button-warning"
+          :class="{ 'dark-button-warning': isDarkMode }"
           :disabled="cartItems.length === 0"
         />
         <Button
@@ -32,27 +36,30 @@
           icon="pi pi-list"
           @click="showHeldInvoices"
           class="p-button-secondary"
+          :class="{ 'dark-button-secondary': isDarkMode }"
         />
         <Button
           :label="$t('pos.switchLayout')"
           :icon="layoutIcon"
           @click="toggleLayout"
           class="p-button-help"
+          :class="{ 'dark-button-help': isDarkMode }"
         />
       </div>
 
       <div class="flex align-items-center gap-2">
-        <span class="font-bold text-white"
-          >{{ $t("pos.invoiceNumber") }}: {{ invoiceNumber }}</span
-        >
+        <span class="font-bold text-color dark:text-gray-300">
+          {{ $t("pos.invoiceNumber") }}: {{ invoiceNumber }}
+        </span>
 
-        <!-- Maximize/Minimize Button - NOW WORKING -->
+        <!-- Maximize/Minimize Button -->
         <Button
           :icon="
             isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
           "
           @click="toggleMaximize"
           class="p-button-rounded custom-maximize-btn"
+          :class="{ 'dark-button': isDarkMode }"
           v-tooltip.top="isMaximized ? $t('pos.minimize') : $t('pos.maximize')"
         />
 
@@ -61,6 +68,7 @@
           icon="pi pi-times"
           @click="closeModal"
           class="p-button-rounded custom-close-btn"
+          :class="{ 'dark-close-btn': isDarkMode }"
           v-tooltip.top="$t('common.close')"
         />
       </div>
@@ -78,11 +86,12 @@
         @add-to-cart="addToCart"
         @category-change="selectedCategory = $event"
         @search="searchQuery = $event"
-        :class="
+        :class="[
           layoutClass.includes('horizontal')
             ? 'products-panel-horizontal'
-            : 'products-panel-vertical'
-        "
+            : 'products-panel-vertical',
+          { 'dark-panel': isDarkMode },
+        ]"
       />
 
       <!-- Cart Panel -->
@@ -108,11 +117,12 @@
         @remove-additional-cost="removeInvoiceAdditionalCost"
         @checkout="processCheckout"
         @clear-cart="clearCart"
-        :class="
+        :class="[
           layoutClass.includes('horizontal')
             ? 'cart-panel-horizontal'
-            : 'cart-panel-vertical'
-        "
+            : 'cart-panel-vertical',
+          { 'dark-panel': isDarkMode },
+        ]"
       />
     </div>
 
@@ -130,6 +140,7 @@
       :header="$t('pos.receipt')"
       :modal="true"
       :style="{ width: '400px' }"
+      :class="{ 'dark-dialog': isDarkMode }"
     >
       <PosReceipt
         :invoice="currentInvoice"
@@ -142,19 +153,25 @@
           icon="pi pi-print"
           @click="printReceipt"
           class="p-button-primary"
+          :class="{ 'dark-button-primary': isDarkMode }"
         />
         <Button
           :label="$t('common.close')"
           @click="showReceipt = false"
           class="p-button-text"
+          :class="{ 'dark-button-text': isDarkMode }"
         />
       </template>
     </Dialog>
 
     <!-- Loading Overlay -->
-    <div v-if="loading" class="loading-overlay">
+    <div
+      v-if="loading"
+      class="loading-overlay"
+      :class="{ 'dark-overlay': isDarkMode }"
+    >
       <ProgressSpinner />
-      <p class="mt-2">{{ loadingMessage }}</p>
+      <p class="mt-2 text-color dark:text-gray-300">{{ loadingMessage }}</p>
     </div>
   </Dialog>
 </template>
@@ -198,8 +215,9 @@ export default {
   data() {
     return {
       visible: false,
-      isMaximized: false, // Start minimized by default
-      layout: "horizontal", // 'horizontal' or 'vertical'
+      isMaximized: false,
+      layout: "horizontal",
+      isDarkMode: false,
 
       // Dialog dimensions
       dialogWidth: "95vw",
@@ -219,8 +237,8 @@ export default {
       selectedCategory: null,
       searchQuery: "",
 
-      // Tax (TODO: Get from API)
-      taxRate: 14, // Example tax rate
+      // Tax
+      taxRate: 14,
 
       // Invoice
       invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
@@ -271,19 +289,36 @@ export default {
   created() {
     this.posService = new PosService(this.companyId, this.branchId);
     this.initializeData();
+    this.checkDarkMode();
   },
   mounted() {
-    // Store original dimensions
     this.originalWidth = this.dialogWidth;
     this.originalHeight = this.dialogHeight;
+
+    // Listen for dark mode changes
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", this.checkDarkMode);
+  },
+  beforeDestroy() {
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .removeEventListener("change", this.checkDarkMode);
   },
   methods: {
+    checkDarkMode() {
+      this.isDarkMode =
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      console.log("Dark mode:", this.isDarkMode);
+    },
+
     openModal() {
       this.visible = true;
       this.resetCart();
       this.generateInvoiceNumber();
-      // Start minimized by default
       this.isMaximized = false;
+      this.checkDarkMode();
     },
 
     closeModal() {
@@ -302,12 +337,8 @@ export default {
       this.isMaximized = !this.isMaximized;
       console.log("Maximize toggled:", this.isMaximized);
 
-      // Force dialog reposition after state change
       this.$nextTick(() => {
-        // Trigger window resize to reposition dialog
         window.dispatchEvent(new Event("resize"));
-
-        // If using PrimeVue Dialog with ref, you might need to call reposition
         if (this.$refs.dialog) {
           this.$refs.dialog.$el.style.transform = "none";
         }
@@ -316,19 +347,14 @@ export default {
 
     toggleLayout() {
       this.layout = this.layout === "horizontal" ? "vertical" : "horizontal";
-      // Save preference to localStorage
       localStorage.setItem("pos_layout_preference", this.layout);
     },
 
     async initializeData() {
-      // Load layout preference
       const savedLayout = localStorage.getItem("pos_layout_preference");
       if (savedLayout) {
         this.layout = savedLayout;
       }
-
-      // TODO: Load real data from APIs
-      // For now, use dummy data
       this.selectedWarehouse = { id: "warehouse1", name: "Main Warehouse" };
     },
 
@@ -352,7 +378,7 @@ export default {
           quantity: 1,
           measurement_unit_id:
             product.product?.sales_measurement_unit?.id || null,
-          additional_costs: [], // For item-level additional costs
+          additional_costs: [],
         });
       }
 
@@ -506,7 +532,6 @@ export default {
       this.loadingMessage = this.$t("pos.processingPayment");
 
       try {
-        // Prepare final products for API
         const finalProducts = this.cartItems.map((item) => ({
           final_product_id: item.id,
           measurement_unit_id:
@@ -515,7 +540,6 @@ export default {
           quantity: item.quantity || 1,
         }));
 
-        // Prepare invoice data
         const invoiceData = {
           warehouse_id: this.selectedWarehouse.id,
           contact_id: this.selectedCustomer?.id || null,
@@ -532,13 +556,8 @@ export default {
           })),
         };
 
-        // TODO: Uncomment when API is ready
-        // const result = await this.posService.createInvoice(invoiceData);
-
-        // For now, simulate success
         await new Promise((resolve) => setTimeout(resolve, 1500));
 
-        // Create receipt data
         const totals = this.posService.calculateInvoiceTotals(
           this.cartItems,
           this.invoiceDiscounts,
@@ -558,10 +577,7 @@ export default {
           totals: totals,
         };
 
-        // Show receipt
         this.showReceipt = true;
-
-        // Clear cart
         this.clearCart();
         this.generateInvoiceNumber();
 
@@ -592,10 +608,14 @@ export default {
           <head>
             <title>${this.$t("pos.receipt")}</title>
             <style>
-              body { font-family: Arial, sans-serif; font-size: 12px; }
+              body { font-family: Arial, sans-serif; font-size: 12px; background: ${
+                this.isDarkMode ? "#1a1a1a" : "#ffffff"
+              }; color: ${this.isDarkMode ? "#e0e0e0" : "#000000"}; }
               .receipt-header { text-align: center; margin-bottom: 20px; }
               .receipt-items { width: 100%; border-collapse: collapse; margin: 10px 0; }
-              .receipt-items th, .receipt-items td { border: 1px solid #ddd; padding: 5px; }
+              .receipt-items th, .receipt-items td { border: 1px solid ${
+                this.isDarkMode ? "#444" : "#ddd"
+              }; padding: 5px; }
               .receipt-totals { margin-top: 20px; text-align: right; }
               .receipt-footer { margin-top: 30px; text-align: center; font-size: 10px; }
               @media print {
@@ -679,13 +699,22 @@ export default {
   box-shadow: none !important;
 }
 
+/* POS Toolbar - Light Mode */
 .pos-toolbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border-radius: 8px;
   margin: 0 1rem;
+  transition: all 0.3s ease;
 }
 
+.pos-toolbar.dark-surface {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+/* Horizontal Layout */
 .horizontal-layout {
   display: flex;
   height: calc(100% - 80px);
@@ -693,6 +722,7 @@ export default {
   margin: 0 1rem;
 }
 
+/* Vertical Layout */
 .vertical-layout {
   display: flex;
   flex-direction: column;
@@ -701,9 +731,14 @@ export default {
   margin: 0 1rem;
 }
 
+/* Products Panel */
 .products-panel-horizontal {
   flex: 3;
   min-width: 0;
+}
+
+.products-panel-horizontal.dark-panel {
+  background: #1a202c !important;
 }
 
 .cart-panel-horizontal {
@@ -712,9 +747,17 @@ export default {
   max-width: 500px;
 }
 
+.cart-panel-horizontal.dark-panel {
+  background: #1a202c !important;
+}
+
 .products-panel-vertical {
   flex: 2;
   min-height: 300px;
+}
+
+.products-panel-vertical.dark-panel {
+  background: #1a202c !important;
 }
 
 .cart-panel-vertical {
@@ -722,6 +765,11 @@ export default {
   min-height: 400px;
 }
 
+.cart-panel-vertical.dark-panel {
+  background: #1a202c !important;
+}
+
+/* Loading Overlay */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -734,6 +782,14 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}
+
+.loading-overlay.dark-overlay {
+  background: rgba(26, 32, 44, 0.95);
+}
+
+.loading-overlay.dark-overlay .p-progress-spinner-circle {
+  stroke: #667eea !important;
 }
 
 /* Custom button styles for visibility */
@@ -762,11 +818,35 @@ export default {
   transform: scale(0.95) !important;
 }
 
+/* Dark mode button styles */
+.custom-maximize-btn.dark-button,
+.custom-close-btn.dark-close-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #e2e8f0 !important;
+}
+
+.custom-maximize-btn.dark-button:hover,
+.custom-close-btn.dark-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.custom-close-btn.dark-close-btn {
+  color: #fc8181 !important;
+}
+
 /* Dialog header styling */
 :deep(.p-dialog-header) {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   padding: 1rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Dark mode dialog header */
+:deep(.dark-dialog .p-dialog-header) {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Hide default header icons */
@@ -781,6 +861,13 @@ export default {
   flex-direction: column;
   overflow: hidden;
   height: 100%;
+  transition: background-color 0.3s ease;
+}
+
+/* Dark mode dialog content */
+:deep(.dark-dialog .p-dialog-content) {
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
 }
 
 /* Ensure proper spacing */
@@ -810,5 +897,58 @@ export default {
 /* Fix for dialog positioning */
 :deep(.p-dialog) {
   transition: all 0.3s ease !important;
+}
+
+/* Dark mode button overrides */
+:deep(.dark-button-warning) {
+  background-color: #d69e2e !important;
+  border-color: #d69e2e !important;
+  color: white !important;
+}
+
+:deep(.dark-button-warning:hover) {
+  background-color: #b7791f !important;
+  border-color: #b7791f !important;
+}
+
+:deep(.dark-button-secondary) {
+  background-color: #718096 !important;
+  border-color: #718096 !important;
+  color: white !important;
+}
+
+:deep(.dark-button-secondary:hover) {
+  background-color: #4a5568 !important;
+  border-color: #4a5568 !important;
+}
+
+:deep(.dark-button-help) {
+  background-color: #805ad5 !important;
+  border-color: #805ad5 !important;
+  color: white !important;
+}
+
+:deep(.dark-button-help:hover) {
+  background-color: #6b46c1 !important;
+  border-color: #6b46c1 !important;
+}
+
+:deep(.dark-button-primary) {
+  background-color: #4299e1 !important;
+  border-color: #4299e1 !important;
+  color: white !important;
+}
+
+:deep(.dark-button-primary:hover) {
+  background-color: #3182ce !important;
+  border-color: #3182ce !important;
+}
+
+:deep(.dark-button-text) {
+  color: #e2e8f0 !important;
+}
+
+:deep(.dark-button-text:hover) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 </style>

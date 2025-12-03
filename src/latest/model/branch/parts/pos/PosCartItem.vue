@@ -1,5 +1,8 @@
 <template>
-  <div class="pos-cart-item p-3 surface-100 border-round">
+  <div
+    class="pos-cart-item p-3"
+    :class="{ 'light-item': !isDarkMode, 'dark-item': isDarkMode }"
+  >
     <!-- Item Header -->
     <div class="flex justify-content-between align-items-start mb-2">
       <div class="flex align-items-start gap-2" style="flex: 1">
@@ -11,15 +14,23 @@
             :alt="item.name"
             class="border-round"
           />
-          <div v-else class="no-image">
+          <div v-else class="no-image" :class="{ 'dark-no-image': isDarkMode }">
             <i class="pi pi-image"></i>
           </div>
         </div>
 
         <!-- Product Info -->
         <div style="flex: 1">
-          <h4 class="m-0 mb-1">{{ item.name }}</h4>
-          <p class="text-sm text-color-secondary m-0 mb-1">
+          <h4 class="m-0 mb-1" :class="{ 'dark-text': isDarkMode }">
+            {{ item.name }}
+          </h4>
+          <p
+            class="text-sm m-0 mb-1"
+            :class="{
+              'text-color-secondary': !isDarkMode,
+              'dark-text-secondary': isDarkMode,
+            }"
+          >
             {{ item.name_ar }}
           </p>
 
@@ -27,11 +38,18 @@
           <div class="flex align-items-center gap-2 mb-1">
             <span
               v-if="item.has_discount"
-              class="original-price text-line-through text-color-secondary"
+              class="original-price text-line-through"
+              :class="{
+                'text-color-secondary': !isDarkMode,
+                'dark-text-secondary': isDarkMode,
+              }"
             >
               {{ formatCurrency(item.price) }}
             </span>
-            <span class="current-price font-bold">
+            <span
+              class="current-price font-bold"
+              :class="{ 'dark-price': isDarkMode }"
+            >
               {{
                 formatCurrency(
                   item.has_discount ? item.price_after_discount : item.price
@@ -56,6 +74,7 @@
               placeholder="Select Unit"
               class="w-10rem"
               size="small"
+              :class="{ 'dark-dropdown': isDarkMode }"
               @change="updateMeasurementUnit"
             />
           </div>
@@ -67,6 +86,7 @@
         icon="pi pi-times"
         @click="$emit('remove')"
         class="p-button-danger p-button-text p-button-sm"
+        :class="{ 'dark-remove-btn': isDarkMode }"
         v-tooltip.top="$t('pos.removeItem')"
       />
     </div>
@@ -74,12 +94,20 @@
     <!-- Quantity Controls -->
     <div class="flex justify-content-between align-items-center mb-2">
       <div class="flex align-items-center gap-2">
-        <span class="font-bold">{{ $t("pos.quantity") }}:</span>
-        <div class="quantity-controls flex align-items-center gap-1">
+        <span
+          class="font-bold"
+          :class="{ 'dark-text': isDarkMode, 'light-text': !isDarkMode }"
+          >{{ $t("pos.quantity") }}:</span
+        >
+        <div
+          class="quantity-controls flex align-items-center gap-1"
+          :class="{ 'dark-quantity-controls': isDarkMode }"
+        >
           <Button
             icon="pi pi-minus"
             @click="decreaseQuantity"
             class="p-button-rounded p-button-text p-button-sm"
+            :class="{ 'dark-quantity-btn': isDarkMode }"
             :disabled="item.quantity <= 1"
           />
           <InputNumber
@@ -92,16 +120,21 @@
             decrementButtonIcon="pi pi-minus"
             @input="updateQuantity"
             class="quantity-input"
+            :class="{ 'dark-input': isDarkMode }"
           />
           <Button
             icon="pi pi-plus"
             @click="increaseQuantity"
             class="p-button-rounded p-button-text p-button-sm"
+            :class="{ 'dark-quantity-btn': isDarkMode }"
           />
         </div>
       </div>
       <!-- Item Total -->
-      <div class="item-total font-bold text-lg">
+      <div
+        class="item-total font-bold text-lg"
+        :class="{ 'dark-total': isDarkMode }"
+      >
         {{ formatCurrency(itemTotal) }}
       </div>
     </div>
@@ -113,7 +146,11 @@
         :severity="getStockSeverity(item.stock)"
         size="small"
       />
-      <small v-if="item.quantity > item.stock" class="p-error ml-2">
+      <small
+        v-if="item.quantity > item.stock"
+        class="ml-2"
+        :class="{ 'p-error': !isDarkMode, 'dark-error': isDarkMode }"
+      >
         {{ $t("pos.insufficientStock") }}
       </small>
     </div>
@@ -121,8 +158,8 @@
     <!-- Item-Level Additional Costs -->
     <div class="item-additional-costs">
       <div class="flex justify-content-between align-items-center mb-2">
-        <h5 class="m-0">
-          <i class="pi pi-wrench mr-1"></i>
+        <h5 class="m-0" :class="{ 'dark-text': isDarkMode }">
+          <i class="pi pi-wrench mr-1" :class="{ 'dark-icon': isDarkMode }"></i>
           {{ $t("pos.itemOperations") }}
         </h5>
         <Button
@@ -130,6 +167,7 @@
           icon="pi pi-plus"
           @click="addAdditionalCost"
           class="p-button-warning p-button-sm"
+          :class="{ 'dark-warning-btn': isDarkMode }"
           size="small"
         />
       </div>
@@ -141,7 +179,11 @@
         <div
           v-for="(cost, index) in item.additional_costs"
           :key="cost.id || index"
-          class="cost-item p-2 mb-2 surface-50 border-round"
+          class="cost-item p-2 mb-2 border-round"
+          :class="{
+            'light-cost-item': !isDarkMode,
+            'dark-cost-item': isDarkMode,
+          }"
         >
           <div class="grid">
             <div class="col-12 md:col-4">
@@ -150,6 +192,7 @@
                 :placeholder="$t('pos.operationName')"
                 class="w-full"
                 size="small"
+                :class="{ 'dark-input': isDarkMode }"
                 @input="updateAdditionalCost(cost)"
               />
             </div>
@@ -162,6 +205,7 @@
                 locale="en-US"
                 class="w-full"
                 size="small"
+                :class="{ 'dark-input': isDarkMode }"
                 @input="updateAdditionalCost(cost)"
               />
             </div>
@@ -171,6 +215,7 @@
                 @click="uploadOperationImage(cost)"
                 class="p-button-text p-button-sm"
                 size="small"
+                :class="{ 'dark-icon-btn': isDarkMode }"
                 v-tooltip.top="$t('pos.uploadImage')"
               />
             </div>
@@ -180,6 +225,7 @@
                 @click="removeAdditionalCost(index)"
                 class="p-button-danger p-button-text p-button-sm"
                 size="small"
+                :class="{ 'dark-remove-btn': isDarkMode }"
               />
             </div>
 
@@ -191,6 +237,7 @@
                 rows="2"
                 class="w-full"
                 size="small"
+                :class="{ 'dark-textarea': isDarkMode }"
                 @input="updateAdditionalCost(cost)"
               />
             </div>
@@ -204,6 +251,7 @@
                   @click="removeOperationImage(cost)"
                   class="p-button-danger p-button-text p-button-sm remove-image-btn"
                   size="small"
+                  :class="{ 'dark-remove-btn': isDarkMode }"
                 />
               </div>
             </div>
@@ -211,7 +259,14 @@
         </div>
       </div>
 
-      <div v-else class="text-color-secondary text-sm p-2">
+      <div
+        v-else
+        class="text-sm p-2"
+        :class="{
+          'text-color-secondary': !isDarkMode,
+          'dark-text-secondary': isDarkMode,
+        }"
+      >
         {{ $t("pos.noOperationsAdded") }}
       </div>
     </div>
@@ -224,6 +279,7 @@
         rows="1"
         class="w-full"
         size="small"
+        :class="{ 'dark-textarea': isDarkMode }"
         @input="updateItemNotes"
       />
     </div>
@@ -248,6 +304,10 @@ export default {
     item: {
       type: Object,
       required: true,
+    },
+    isDarkMode: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -384,17 +444,59 @@ export default {
 </script>
 
 <style scoped>
+/* Base styles */
 .pos-cart-item {
   border: 1px solid #dee2e6;
-  background: white;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .pos-cart-item:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Light Mode */
+.light-item {
+  background: white;
+  border-color: #dee2e6;
+}
+
+.light-item:hover {
   border-color: #007bff;
 }
 
+.light-cost-item {
+  border-left: 3px solid #ffc107;
+  background: #fff8e1;
+}
+
+.light-cost-item:nth-child(even) {
+  border-left-color: #fd7e14;
+  background: #fff3e0;
+}
+
+/* Dark Mode */
+.dark-item {
+  background: #2d3748;
+  border-color: #4a5568;
+}
+
+.dark-item:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-cost-item {
+  border-left: 3px solid #d69e2e;
+  background: #4a5568;
+}
+
+.dark-cost-item:nth-child(even) {
+  border-left-color: #ed8936;
+  background: #2d3748;
+}
+
+/* Image */
 .item-image {
   width: 60px;
   height: 60px;
@@ -413,25 +515,75 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
   border: 1px dashed #dee2e6;
   border-radius: 6px;
+}
+
+.light-item .no-image {
+  background: #f8f9fa;
   color: #6c757d;
 }
 
+.dark-item .no-image {
+  background: #4a5568;
+  color: #a0aec0;
+}
+
+/* Text Colors */
+.dark-text {
+  color: #e2e8f0 !important;
+}
+
+.dark-text-secondary {
+  color: #a0aec0 !important;
+}
+
+.dark-price {
+  color: #68d391 !important;
+}
+
+.dark-total {
+  color: #667eea !important;
+}
+
+/* Original Price */
 .original-price {
   font-size: 0.85rem;
 }
 
+.light-item .original-price {
+  color: #6c757d;
+}
+
+.dark-item .original-price {
+  color: #a0aec0;
+}
+
+/* Current Price */
 .current-price {
   font-size: 1rem;
+}
+
+.light-item .current-price {
   color: #28a745;
 }
 
+.dark-item .current-price {
+  color: #68d391;
+}
+
+/* Quantity Controls */
 .quantity-controls {
-  background: #f8f9fa;
   padding: 4px;
   border-radius: 6px;
+}
+
+.light-item .quantity-controls {
+  background: #f8f9fa;
+}
+
+.dark-item .quantity-controls {
+  background: #4a5568;
 }
 
 .quantity-input {
@@ -443,29 +595,124 @@ export default {
   font-weight: bold;
 }
 
+/* Input Fields */
+:deep(.dark-input .p-inputtext) {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+:deep(.dark-input .p-inputtext:focus) {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+}
+
+:deep(.dark-input .p-inputnumber-button) {
+  background-color: #4a5568 !important;
+  border-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Dropdown */
+:deep(.dark-dropdown .p-dropdown) {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+:deep(.dark-dropdown .p-dropdown-panel) {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+}
+
+:deep(.dark-dropdown .p-dropdown-item) {
+  color: #e2e8f0 !important;
+}
+
+:deep(.dark-dropdown .p-dropdown-item:hover) {
+  background-color: #4a5568 !important;
+}
+
+/* Textarea */
+:deep(.dark-textarea .p-inputtextarea) {
+  background-color: #2d3748 !important;
+  border-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+:deep(.dark-textarea .p-inputtextarea:focus) {
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+}
+
+/* Buttons */
+:deep(.dark-quantity-btn.p-button) {
+  background-color: #4a5568 !important;
+  border-color: #4a5568 !important;
+  color: #e2e8f0 !important;
+}
+
+:deep(.dark-quantity-btn.p-button:hover) {
+  background-color: #667eea !important;
+  border-color: #667eea !important;
+}
+
+:deep(.dark-warning-btn.p-button) {
+  background-color: #d69e2e !important;
+  border-color: #d69e2e !important;
+  color: white !important;
+}
+
+:deep(.dark-warning-btn.p-button:hover) {
+  background-color: #b7791f !important;
+  border-color: #b7791f !important;
+}
+
+:deep(.dark-remove-btn.p-button) {
+  color: #fc8181 !important;
+}
+
+:deep(.dark-remove-btn.p-button:hover) {
+  background-color: rgba(252, 129, 129, 0.1) !important;
+}
+
+:deep(.dark-icon-btn.p-button) {
+  color: #a0aec0 !important;
+}
+
+:deep(.dark-icon-btn.p-button:hover) {
+  background-color: rgba(160, 174, 192, 0.1) !important;
+}
+
+.dark-icon {
+  color: #a0aec0 !important;
+}
+
+/* Item Total */
 .item-total {
-  color: #007bff;
   min-width: 80px;
   text-align: right;
   margin-top: 65px;
 }
 
+.light-item .item-total {
+  color: #007bff;
+}
+
+.dark-item .item-total {
+  color: #667eea;
+}
+
+/* Stock Info */
 .stock-info {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.cost-item {
-  border-left: 3px solid #ffc107;
-  background: #fff8e1;
+.dark-error {
+  color: #fc8181 !important;
 }
 
-.cost-item:nth-child(even) {
-  border-left-color: #fd7e14;
-  background: #fff3e0;
-}
-
+/* Image Preview */
 .image-preview {
   position: relative;
   width: 100px;
@@ -487,6 +734,15 @@ export default {
   height: 24px;
 }
 
+.light-text {
+  color: #2d3748 !important; /* Dark gray for light mode */
+}
+
+.dark-text {
+  color: #e2e8f0 !important; /* Light gray for dark mode */
+}
+
+/* Utility Classes */
 :deep(.p-button.p-button-sm) {
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
