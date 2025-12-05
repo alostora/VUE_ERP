@@ -165,7 +165,6 @@ export default {
           headers: general_request.headers,
         });
 
-        console.log("Country created successfully:", response.data);
         this.$emit("country-created", response.data.data);
 
         this.showToast(

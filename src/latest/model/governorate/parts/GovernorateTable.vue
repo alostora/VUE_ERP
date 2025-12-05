@@ -296,7 +296,6 @@ export default {
         );
         this.countries = response.data.data || [];
       } catch (error) {
-        console.error("Error loading countries:", error);
       }
     },
 
@@ -310,7 +309,6 @@ export default {
         );
         this.countryName = response.data.data?.name || "Unknown Country";
       } catch (error) {
-        console.error("Error loading country name:", error);
         this.countryName = "Unknown Country";
       }
     },

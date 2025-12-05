@@ -344,7 +344,6 @@ export default {
         // ✅ CORRECT: Use the API response directly
         this.discountTypes = response.data.data || [];
       } catch (error) {
-        console.error("Error loading discount types:", error);
         this.error = this.$t("discounts.loadingTypesError");
       } finally {
         this.loadingTypes = false;
@@ -361,7 +360,6 @@ export default {
         );
         this.branches = response.data.data || [];
       } catch (error) {
-        console.error("Error loading branches:", error);
         this.error = this.$t("discounts.loadingBranchesError");
       } finally {
         this.loadingBranches = false;
@@ -378,7 +376,6 @@ export default {
         );
         this.products = response.data.data || [];
       } catch (error) {
-        console.error("Error loading products:", error);
         this.error = this.$t("discounts.loadingProductsError");
       } finally {
         this.loadingProducts = false;

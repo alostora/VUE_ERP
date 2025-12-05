@@ -1,71 +1,61 @@
 <template>
   <div class="pos-customer-selector">
-    <!-- Customer Search & Select -->
-    <div class="customer-search">
-      <AutoComplete
-        v-model="searchQuery"
-        :suggestions="filteredCustomers"
-        :placeholder="$t('pos.searchCustomer')"
-        field="name"
-        :dropdown="true"
-        @complete="searchCustomers"
-        @item-select="selectCustomer"
-        class="w-full mb-2"
+    <!-- Customer Selector -->
+    <div class="customer-selector mb-3">
+      <label class="block font-bold text-sm mb-2">
+        <i class="pi pi-user mr-1"></i>
+        {{ $t("pos.customer") }}
+      </label>
+
+      <Select
+        v-model="selectedCustomerModel"
+        :options="customers"
+        optionLabel="name"
+        :placeholder="$t('pos.selectCustomer')"
+        :filter="true"
+        filterPlaceholder="Search..."
+        :showClear="true"
+        @change="onCustomerChange"
+        @clear="clearCustomer"
+        class="w-full"
+        :loading="loadingCustomers"
       >
-        <template #item="slotProps">
-          <div class="customer-option">
-            <div class="flex align-items-center gap-2">
-              <i class="pi pi-user"></i>
-              <div>
-                <div class="font-bold">{{ slotProps.item.name }}</div>
-                <div class="text-sm text-color-secondary">
-                  {{ slotProps.item.phone }} • {{ slotProps.item.email }}
-                </div>
+        <template #option="slotProps">
+          <div class="flex align-items-center gap-2 p-2">
+            <i class="pi pi-user text-primary"></i>
+            <div>
+              <div class="font-bold">{{ slotProps.option.name }}</div>
+              <div class="text-xs text-color-secondary">
+                {{ slotProps.option.phone }}
+                <span v-if="slotProps.option.email">
+                  • {{ slotProps.option.email }}</span
+                >
               </div>
             </div>
           </div>
         </template>
-      </AutoComplete>
 
-      <!-- Selected Customer Display -->
-      <div
-        v-if="selectedCustomer"
-        class="selected-customer p-3 surface-100 border-round mb-3"
-      >
-        <div class="flex justify-content-between align-items-center">
-          <div>
-            <h5 class="m-0 mb-1">{{ selectedCustomer.name }}</h5>
-            <p class="m-0 text-sm text-color-secondary">
-              <i class="pi pi-phone mr-1"></i>{{ selectedCustomer.phone }}
-              <span v-if="selectedCustomer.email"> • </span>
-              <i v-if="selectedCustomer.email" class="pi pi-envelope mr-1"></i
-              >{{ selectedCustomer.email }}
-            </p>
-            <p
-              v-if="selectedCustomer.address"
-              class="m-0 text-sm text-color-secondary mt-1"
-            >
-              <i class="pi pi-map-marker mr-1"></i
-              >{{ selectedCustomer.address }}
-            </p>
+        <template #value="slotProps">
+          <div v-if="slotProps.value" class="flex align-items-center gap-2">
+            <i class="pi pi-user text-primary"></i>
+            <div>
+              <div class="font-bold">{{ slotProps.value.name }}</div>
+              <div class="text-xs text-color-secondary">
+                {{ slotProps.value.phone }}
+              </div>
+            </div>
           </div>
-          <Button
-            icon="pi pi-times"
-            @click="clearCustomer"
-            class="p-button-text p-button-danger"
-          />
-        </div>
-      </div>
+        </template>
+      </Select>
 
-      <!-- Quick Create Customer -->
-      <div v-if="!selectedCustomer" class="quick-create mt-2">
-        <Button
-          :label="$t('pos.createNewCustomer')"
-          icon="pi pi-user-plus"
-          @click="showCreateModal = true"
-          class="p-button-outlined p-button-sm w-full"
-        />
-      </div>
+      <!-- Create Customer Button -->
+      <Button
+        :label="$t('pos.createNewCustomer')"
+        icon="pi pi-user-plus"
+        @click="showCreateModal = true"
+        class="p-button-outlined p-button-primary w-full mt-2"
+        :disabled="!companyId"
+      />
     </div>
 
     <!-- Create Customer Modal -->
@@ -73,59 +63,47 @@
       v-model:visible="showCreateModal"
       :header="$t('pos.createNewCustomer')"
       :modal="true"
-      :style="{ width: '500px' }"
+      :style="{ width: '400px' }"
     >
-      <div class="create-customer-form">
-        <div class="grid">
-          <div class="col-12 field">
-            <label class="block font-bold mb-2"
-              >{{ $t("pos.customerName") }} *</label
-            >
-            <InputText
-              v-model="newCustomer.name"
-              :placeholder="$t('pos.enterCustomerName')"
-              class="w-full"
-              :class="{ 'p-invalid': errors.name }"
-            />
-            <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
-          </div>
+      <div class="p-fluid">
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.name") }} *</label>
+          <InputText
+            v-model="newCustomer.name"
+            :placeholder="$t('pos.enterName')"
+            class="w-full"
+            :class="{ 'p-invalid': errors.name }"
+          />
+          <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+        </div>
 
-          <div class="col-12 md:col-6 field">
-            <label class="block font-bold mb-2">{{ $t("pos.phone") }} *</label>
-            <InputText
-              v-model="newCustomer.phone"
-              :placeholder="$t('pos.enterPhone')"
-              class="w-full"
-              :class="{ 'p-invalid': errors.phone }"
-            />
-            <small v-if="errors.phone" class="p-error">{{
-              errors.phone
-            }}</small>
-          </div>
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.phone") }} *</label>
+          <InputText
+            v-model="newCustomer.phone"
+            :placeholder="$t('pos.enterPhone')"
+            class="w-full"
+            :class="{ 'p-invalid': errors.phone }"
+          />
+          <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
+        </div>
 
-          <div class="col-12 md:col-6 field">
-            <label class="block font-bold mb-2">{{ $t("pos.email") }}</label>
-            <InputText
-              v-model="newCustomer.email"
-              :placeholder="$t('pos.enterEmail')"
-              type="email"
-              class="w-full"
-              :class="{ 'p-invalid': errors.email }"
-            />
-            <small v-if="errors.email" class="p-error">{{
-              errors.email
-            }}</small>
-          </div>
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.email") }}</label>
+          <InputText
+            v-model="newCustomer.email"
+            :placeholder="$t('pos.enterEmail')"
+            class="w-full"
+          />
+        </div>
 
-          <div class="col-12 field">
-            <label class="block font-bold mb-2">{{ $t("pos.address") }}</label>
-            <Textarea
-              v-model="newCustomer.address"
-              :placeholder="$t('pos.enterAddress')"
-              rows="2"
-              class="w-full"
-            />
-          </div>
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.address") }}</label>
+          <InputText
+            v-model="newCustomer.address"
+            :placeholder="$t('pos.enterAddress')"
+            class="w-full"
+          />
         </div>
       </div>
 
@@ -136,7 +114,7 @@
           class="p-button-text"
         />
         <Button
-          :label="$t('common.create')"
+          :label="$t('common.save')"
           @click="createCustomer"
           class="p-button-primary"
           :loading="creatingCustomer"
@@ -147,18 +125,18 @@
 </template>
 
 <script>
-import AutoComplete from "primevue/autocomplete";
+import Select from "primevue/select";
 import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
+
+import PosService from "./PosService.js";
 
 export default {
   name: "PosCustomerSelector",
   components: {
-    AutoComplete,
+    Select,
     InputText,
-    Textarea,
     Button,
     Dialog,
   },
@@ -174,11 +152,8 @@ export default {
   },
   data() {
     return {
-      searchQuery: "",
-      filteredCustomers: [],
+      selectedCustomerModel: this.selectedCustomer,
       customers: [],
-
-      // Create Customer
       showCreateModal: false,
       newCustomer: {
         name: "",
@@ -188,56 +163,51 @@ export default {
       },
       errors: {},
       creatingCustomer: false,
+      loadingCustomers: false,
+      posService: null,
     };
   },
-  created() {
-    this.loadCustomers();
+  watch: {
+    selectedCustomer(newVal) {
+      this.selectedCustomerModel = newVal;
+    },
+    companyId(newCompanyId) {
+      if (newCompanyId) {
+        this.loadCustomers();
+      }
+    },
+  },
+  mounted() {
+    if (this.companyId) {
+      this.loadCustomers();
+    }
   },
   methods: {
     async loadCustomers() {
+      if (!this.companyId) return;
+
+      this.loadingCustomers = true;
       try {
-        // TODO: Replace with real API
-        this.customers = [
-          {
-            id: "cust1",
-            name: "John Doe",
-            phone: "0123456789",
-            email: "john@example.com",
-            address: "123 Main St",
-          },
-          {
-            id: "cust2",
-            name: "Jane Smith",
-            phone: "0987654321",
-            email: "jane@example.com",
-            address: "456 Oak Ave",
-          },
-          {
-            id: "cust3",
-            name: "Bob Johnson",
-            phone: "0555555555",
-            email: "bob@example.com",
-            address: "789 Pine Rd",
-          },
-        ];
+        this.posService = new PosService(this.companyId, null);
+        const customersData = await this.posService.getContacts();
+
+        this.customers = customersData.map((customer) => ({
+          id: customer.id,
+          name: customer.name || "",
+          phone: customer.phone || "",
+          email: customer.email || "",
+          address: customer.address || "",
+        }));
       } catch (error) {
         console.error("Error loading customers:", error);
+        this.customers = [];
+      } finally {
+        this.loadingCustomers = false;
       }
     },
 
-    searchCustomers(event) {
-      const query = event.query.toLowerCase();
-      this.filteredCustomers = this.customers.filter(
-        (customer) =>
-          customer.name.toLowerCase().includes(query) ||
-          customer.phone.includes(query) ||
-          customer.email?.toLowerCase().includes(query)
-      );
-    },
-
-    selectCustomer(event) {
+    onCustomerChange(event) {
       this.$emit("select-customer", event.value);
-      this.searchQuery = "";
     },
 
     clearCustomer() {
@@ -248,70 +218,62 @@ export default {
       this.errors = {};
 
       if (!this.newCustomer.name.trim()) {
-        this.errors.name = this.$t("pos.customerNameRequired");
+        this.errors.name = this.$t("pos.nameRequired");
       }
 
       if (!this.newCustomer.phone.trim()) {
         this.errors.phone = this.$t("pos.phoneRequired");
       }
 
-      if (
-        this.newCustomer.email &&
-        !this.isValidEmail(this.newCustomer.email)
-      ) {
-        this.errors.email = this.$t("pos.invalidEmail");
-      }
-
       return Object.keys(this.errors).length === 0;
     },
 
-    isValidEmail(email) {
-      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return re.test(email);
-    },
-
     async createCustomer() {
-      if (!this.validateCustomer()) {
-        return;
-      }
+      if (!this.validateCustomer()) return;
 
       this.creatingCustomer = true;
 
       try {
-        // Emit the new customer data to parent
-        this.$emit("create-customer", { ...this.newCustomer });
+        const customerData = {
+          company_id: this.companyId,
+          name: this.newCustomer.name.trim(),
+          phone: this.newCustomer.phone.trim(),
+          email: this.newCustomer.email.trim() || "",
+          address: this.newCustomer.address.trim() || "",
+        };
 
-        // Close modal and reset form
-        this.showCreateModal = false;
-        this.resetNewCustomerForm();
+        const createdCustomer = await this.posService.createContact(
+          customerData
+        );
 
-        this.$toast.add({
-          severity: "success",
-          summary: this.$t("pos.customerCreated"),
-          detail: this.$t("pos.newCustomerAddedSuccessfully"),
-          life: 3000,
-        });
+        if (createdCustomer) {
+          // Add to local list
+          this.customers.unshift({
+            id: createdCustomer.id,
+            name: createdCustomer.name,
+            phone: createdCustomer.phone,
+            email: createdCustomer.email || "",
+            address: createdCustomer.address || "",
+          });
+
+          // Select the new customer
+          this.$emit("select-customer", createdCustomer);
+
+          // Close modal and reset
+          this.showCreateModal = false;
+          this.newCustomer = {
+            name: "",
+            phone: "",
+            email: "",
+            address: "",
+          };
+          this.errors = {};
+        }
       } catch (error) {
         console.error("Error creating customer:", error);
-        this.$toast.add({
-          severity: "error",
-          summary: this.$t("pos.createError"),
-          detail: error.message || this.$t("pos.failedToCreateCustomer"),
-          life: 3000,
-        });
       } finally {
         this.creatingCustomer = false;
       }
-    },
-
-    resetNewCustomerForm() {
-      this.newCustomer = {
-        name: "",
-        phone: "",
-        email: "",
-        address: "",
-      };
-      this.errors = {};
     },
   },
 };
@@ -322,33 +284,23 @@ export default {
   width: 100%;
 }
 
-.customer-option {
-  padding: 0.5rem;
-  border-bottom: 1px solid #dee2e6;
+:deep(.p-select) {
+  width: 100%;
 }
 
-.customer-option:last-child {
-  border-bottom: none;
+:deep(.p-select .p-select-label) {
+  padding: 0.5rem 0.75rem;
+}
+
+:deep(.p-select-items-wrapper) {
+  max-height: 200px;
+}
+
+.customer-option {
+  transition: background-color 0.2s;
 }
 
 .customer-option:hover {
-  background: #f8f9fa;
-}
-
-.selected-customer {
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  border: 1px solid #bbdefb;
-}
-
-.create-customer-form .field {
-  margin-bottom: 1rem;
-}
-
-:deep(.p-autocomplete) {
-  width: 100%;
-}
-
-:deep(.p-autocomplete-input) {
-  width: 100%;
+  background-color: #f8f9fa;
 }
 </style>

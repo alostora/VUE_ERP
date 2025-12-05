@@ -244,17 +244,14 @@ export default {
   computed: {
     effectiveCompanyId() {
       const companyId = this.company_id || this.$route.params.company_id;
-      console.log("🏢 Effective Company ID:", companyId);
       return companyId;
     },
 
     propSearchUrl() {
       if (!this.effectiveCompanyId) {
-        console.warn("⚠️ Company ID is undefined, cannot build search URL");
         return "";
       }
       const url = `${general_request.BASE_URL}/admin/company/invoice-stages/search/${this.effectiveCompanyId}?paginate=true`;
-      console.log("🌐 Search URL:", url);
       return url;
     },
 
@@ -264,11 +261,9 @@ export default {
   },
 
   mounted() {
-    console.log("🚀 InvoiceStageTable mounted");
     if (this.effectiveCompanyId) {
       this.getData();
     } else {
-      console.warn("⚠️ No company ID found on mount");
     }
   },
 
@@ -276,7 +271,6 @@ export default {
     "$route.params.company_id": {
       immediate: true,
       handler(newCompanyId) {
-        console.log("🔄 Route company_id changed:", newCompanyId);
         if (newCompanyId) {
           this.getData();
         }
@@ -365,7 +359,6 @@ export default {
               this.$t("invoice_stages.invoiceStageSetDefault")
             );
           } catch (error) {
-            console.error("Error setting default:", error);
             this.showToast(
               "error",
               this.$t("common.error"),

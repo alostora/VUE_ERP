@@ -112,7 +112,6 @@ export default {
   },
   methods: {
     populateForm(measurementUnit) {
-      console.log("📝 Populating form with measurement unit:", measurementUnit);
 
       this.formData = {
         id: measurementUnit.id || "",
@@ -120,7 +119,6 @@ export default {
         name_ar: measurementUnit.name_ar || "",
       };
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -163,13 +161,10 @@ export default {
           name_ar: this.formData.name_ar,
         };
 
-        console.log("📤 Updating measurement unit with payload:", payload);
-
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Measurement unit updated successfully:", response.data);
         this.$emit("measurement-unit-updated", response.data.data);
 
         this.showToast(
@@ -190,8 +185,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

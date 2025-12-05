@@ -203,16 +203,11 @@ export default {
   },
   methods: {
     openModal() {
-      console.log("🔧 Modal opened with:", {
-        company_id: this.company_id,
-        final_product_id: this.final_product_id,
-      });
 
       this.visible = true;
       this.errors = {};
 
       if (!this.company_id) {
-        console.error("❌ Company ID is undefined!");
         this.showError("Company ID is missing");
         return;
       }
@@ -277,16 +272,13 @@ export default {
       this.loadingVariants = true;
       try {
         const url = `${general_request.BASE_URL}/admin/company/variants/list/${this.company_id}?final_product_id=${this.final_product_id}`;
-        console.log("🌐 Loading variants from:", url);
 
         const response = await this.$http.get(url, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Variants loaded:", response.data.data?.length || 0);
         this.variants = response.data.data || [];
       } catch (error) {
-        console.error("❌ Error loading variants:", error);
         this.showError("Failed to load variants");
       } finally {
         this.loadingVariants = false;
@@ -299,7 +291,6 @@ export default {
       this.loadingVariantValues = true;
       try {
         const url = `${general_request.BASE_URL}/admin/company/variant-values/search/${variantId}`;
-        console.log("🌐 Loading variant values from:", url);
 
         const response = await this.$http.get(url, {
           headers: general_request.headers,
@@ -311,10 +302,8 @@ export default {
           [variantId]: variantValuesData,
         };
 
-        console.log("✅ Variant values loaded:", variantValuesData.length);
         this.$forceUpdate();
       } catch (error) {
-        console.error("❌ Error loading variant values:", error);
         this.variantValues = {
           ...this.variantValues,
           [variantId]: [],
@@ -367,21 +356,16 @@ export default {
             })),
         };
 
-        console.log("📤 Submitting variants:", payload);
-
         const url = `${general_request.BASE_URL}/admin/company/product/final-product-variant-value`;
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
-
-        console.log("✅ Variants added successfully:", response.data.data);
 
         this.$emit("variants-added", response.data.data);
         this.closeModal();
 
         this.showSuccess(this.$t("final_product_variants.variantsAdded"));
       } catch (error) {
-        console.error("❌ Error adding variants:", error);
         this.showError(
           error.response?.data?.message || "Failed to add variants"
         );

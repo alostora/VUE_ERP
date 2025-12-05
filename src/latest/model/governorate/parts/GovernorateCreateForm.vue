@@ -167,7 +167,6 @@ export default {
         );
         this.countries = response.data.data || [];
       } catch (error) {
-        console.error("Error loading countries:", error);
         this.error = this.$t("governorates.loadCountriesError");
       } finally {
         this.loadingCountries = false;

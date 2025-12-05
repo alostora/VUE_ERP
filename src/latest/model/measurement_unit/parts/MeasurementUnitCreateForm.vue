@@ -130,13 +130,9 @@ export default {
           name_ar: this.formData.name_ar,
         };
 
-        console.log("📤 Creating measurement unit with payload:", payload);
-
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
-
-        console.log("✅ Measurement unit created successfully:", response.data);
 
         this.resetForm();
         this.$emit("measurement-unit-created", response.data.data);
@@ -159,8 +155,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

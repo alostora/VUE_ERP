@@ -235,7 +235,6 @@ export default {
   },
 
   mounted() {
-    console.log("Countries component mounted");
     this.getData();
   },
 

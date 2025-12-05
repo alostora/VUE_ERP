@@ -3369,7 +3369,6 @@ export default {
       if (error.response?.data) {
         const responseData = error.response.data;
 
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);
@@ -3864,13 +3863,11 @@ export default {
           payload.password = this.formData.password;
         }
 
-        console.log("Updating user with payload:", payload);
 
         const response = await this.$http[method](url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("User updated successfully:", response.data);
         this.$emit("user-updated", response.data.data);
 
         this.showToast(
@@ -3893,7 +3890,6 @@ export default {
       if (error.response?.data) {
         const responseData = error.response.data;
 
-        console.log("API Error Response:", responseData);
 
         // Handle different error response formats
         if (responseData.status_code === 400) {
@@ -4364,7 +4360,6 @@ export default {
   },
 
   mounted() {
-    console.log("Users component mounted");
     this.getData();
   },
 
@@ -4416,7 +4411,6 @@ export default {
      * View user details
      */
     viewUserDetails(user) {
-      console.log("View user details:", user);
       this.showToast(
         "info",
         "User Details",
@@ -5255,7 +5249,6 @@ export default {
           payload.cover_id = coverId;
         }
 
-        console.log("🚀 Creating company with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company`;
         const response = await this.$http.post(url, payload, {
@@ -6106,7 +6099,6 @@ export default {
     },
 
     populateForm(company) {
-      console.log("🔍 Populating form with company data:", company);
 
       this.resetForm();
 
@@ -6138,7 +6130,6 @@ export default {
       // Set client name for display
       this.clientName = company.client?.name || "Unknown Client";
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -6328,7 +6319,6 @@ export default {
           payload.cover_id = coverId;
         }
 
-        console.log("🚀 Updating company with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company/${this.formData.id}`;
         const response = await this.$http.post(url, payload, {
@@ -7161,7 +7151,6 @@ export default {
   },
 
   mounted() {
-    console.log("Companies component mounted");
     this.getData();
   },
 
@@ -7217,7 +7206,6 @@ export default {
     },
 
     viewCompany(company) {
-      console.log("Navigating to company:", company.id, company.name);
       this.$router.push({
         name: "company-show",
         params: { company_id: company.id },
@@ -9405,7 +9393,6 @@ export default {
 
   methods: {
     populateForm(finalProduct) {
-      console.log("📝 Populating form with final product:", finalProduct);
 
       this.formData = {
         id: finalProduct.id || "",
@@ -9416,7 +9403,6 @@ export default {
         details_ar: finalProduct.details_ar || "",
       };
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -9460,14 +9446,12 @@ export default {
           details_ar: this.formData.details_ar,
         };
 
-        console.log("📤 Updating final product with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company/product/final-product/${this.formData.id}`;
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Final product updated successfully:", response.data);
 
         this.$emit("final-product-updated", response.data.data);
 
@@ -9490,7 +9474,6 @@ export default {
       if (error.response?.data) {
         const responseData = error.response.data;
 
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);
@@ -10198,7 +10181,6 @@ export default {
           }
         );
         this.allProducts = response.data.data || [];
-        console.log("📦 Loaded all products:", this.allProducts.length);
       } catch (error) {
         console.error("Error loading products:", error);
         this.showToast(
@@ -11122,7 +11104,6 @@ export default {
   },
   methods: {
     openModal() {
-      console.log("🔧 Modal opened with:", {
         company_id: this.company_id,
         final_product_id: this.final_product_id,
       });
@@ -11196,13 +11177,11 @@ export default {
       this.loadingVariants = true;
       try {
         const url = `${general_request.BASE_URL}/admin/company/variants/list/${this.company_id}?final_product_id=${this.final_product_id}`;
-        console.log("🌐 Loading variants from:", url);
 
         const response = await this.$http.get(url, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Variants loaded:", response.data.data?.length || 0);
         this.variants = response.data.data || [];
       } catch (error) {
         console.error("❌ Error loading variants:", error);
@@ -11218,7 +11197,6 @@ export default {
       this.loadingVariantValues = true;
       try {
         const url = `${general_request.BASE_URL}/admin/company/variant-values/search/${variantId}`;
-        console.log("🌐 Loading variant values from:", url);
 
         const response = await this.$http.get(url, {
           headers: general_request.headers,
@@ -11230,7 +11208,6 @@ export default {
           [variantId]: variantValuesData,
         };
 
-        console.log("✅ Variant values loaded:", variantValuesData.length);
         this.$forceUpdate();
       } catch (error) {
         console.error("❌ Error loading variant values:", error);
@@ -11286,14 +11263,12 @@ export default {
             })),
         };
 
-        console.log("📤 Submitting variants:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company/product/final-product-variant-value`;
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Variants added successfully:", response.data.data);
 
         this.$emit("variants-added", response.data.data);
         this.closeModal();
@@ -11610,7 +11585,6 @@ export default {
     },
   },
   mounted() {
-    console.log("🔍 Variants Table Mounted with embedded:", this.embedded, {
       company_id: this.company_id,
       final_product_id: this.final_product_id,
     });
@@ -11640,7 +11614,6 @@ export default {
           }
         );
         this.finalProduct = response.data.data;
-        console.log("✅ Final product loaded:", this.finalProduct?.name);
       } catch (error) {
         console.error("Error loading final product:", error);
         if (!this.embedded) {
@@ -11654,7 +11627,6 @@ export default {
     },
 
     openCreateModal() {
-      console.log("🔧 Opening create modal with:", {
         company_id: this.effectiveCompanyId,
         final_product_id: this.effectiveFinalProductId,
       });
@@ -11672,7 +11644,6 @@ export default {
     },
 
     handleVariantsAdded(newVariants) {
-      console.log("✅ New variants added:", newVariants);
 
       // Add new variants to the table
       newVariants.forEach((variant) => {
@@ -11899,7 +11870,6 @@ export default {
   },
   methods: {
     openModal() {
-      console.log("🔧 Opening variants modal with:", {
         company_id: this.company_id,
         final_product_id: this.final_product_id,
       });

@@ -274,14 +274,12 @@ export default {
         // ✅ CORRECT: Use the API response directly
         this.discountTypes = response.data.data || [];
       } catch (error) {
-        console.error("Error loading discount types:", error);
         this.error = this.$t("discounts.loadingTypesError");
       } finally {
         this.loadingTypes = false;
       }
     },
     populateForm(discount) {
-      console.log("📝 Populating form with discount:", discount);
 
       this.formData = {
         id: discount.id || "",
@@ -297,7 +295,6 @@ export default {
 
       this.selectedType = discount.type?.id || null;
 
-      console.log("✅ Form data after population:", this.formData);
     },
     resetForm() {
       this.formData = {
@@ -371,14 +368,11 @@ export default {
           details_ar: this.formData.details_ar,
         };
 
-        console.log("📤 Updating discount with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company/discount/${this.formData.id}`;
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
-
-        console.log("✅ Discount updated successfully:", response.data);
 
         this.$emit("discount-updated", response.data.data);
 
@@ -403,8 +397,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

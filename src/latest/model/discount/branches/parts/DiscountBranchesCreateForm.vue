@@ -87,7 +87,6 @@ export default {
         const response = await this.$http.get(url, { headers: general_request.headers });
         this.availableBranches = response.data.data || [];
       } catch (err) {
-        console.error('Error loading branches:', err);
         this.error = this.$t('discounts.loadingBranchesError') || this.$t('discounts.loadingBranches');
       } finally {
         this.loadingBranches = false;
@@ -114,7 +113,6 @@ export default {
         this.$emit('branches-added', response.data.data || []);
         this.showToast('success', this.$t('common.success'), this.$t('discounts.branchDeleted') ? this.$t('discounts.branchDeleted') : this.$t('discounts.branches'));
       } catch (err) {
-        console.error('Error creating discount branches:', err);
         this.handleSaveError(err);
       } finally { this.loading = false; }
     },

@@ -238,7 +238,6 @@ export default {
 
   methods: {
     populateForm(finalProduct) {
-      console.log("📝 Populating form with final product:", finalProduct);
 
       this.formData = {
         id: finalProduct.id || "",
@@ -249,7 +248,6 @@ export default {
         details_ar: finalProduct.details_ar || "",
       };
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -293,14 +291,10 @@ export default {
           details_ar: this.formData.details_ar,
         };
 
-        console.log("📤 Updating final product with payload:", payload);
-
         const url = `${general_request.BASE_URL}/admin/company/product/final-product/${this.formData.id}`;
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
-
-        console.log("✅ Final product updated successfully:", response.data);
 
         this.$emit("final-product-updated", response.data.data);
 
@@ -322,8 +316,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

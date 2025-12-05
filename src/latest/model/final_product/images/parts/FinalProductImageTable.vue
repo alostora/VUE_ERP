@@ -237,20 +237,13 @@ export default {
     },
   },
   mounted() {
-    console.log("🖼️ Images Table Mounted with embedded:", this.embedded, {
-      company_id: this.company_id,
-      final_product_id: this.final_product_id,
-    });
 
     // Ensure we have the IDs
     this.effectiveCompanyId = this.company_id;
     this.effectiveFinalProductId = this.final_product_id;
 
     if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
-      console.error("❌ Missing required IDs:", {
-        company_id: this.effectiveCompanyId,
-        final_product_id: this.effectiveFinalProductId,
-      });
+      
       return;
     }
 
@@ -267,9 +260,7 @@ export default {
           }
         );
         this.finalProduct = response.data.data;
-        console.log("✅ Final product loaded:", this.finalProduct?.name);
       } catch (error) {
-        console.error("Error loading final product:", error);
         if (!this.embedded) {
           this.showToast(
             "error",
@@ -281,10 +272,6 @@ export default {
     },
 
     openUploadModal() {
-      console.log("📤 Opening upload modal with:", {
-        company_id: this.effectiveCompanyId,
-        final_product_id: this.effectiveFinalProductId,
-      });
 
       if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
         this.showToast(
@@ -325,7 +312,6 @@ export default {
           this.$t("final_product_images.setMainSuccess")
         );
       } catch (error) {
-        console.error("Error setting main image:", error);
         this.showToast(
           "error",
           this.$t("common.error"),
@@ -346,8 +332,6 @@ export default {
     },
 
     handleImagesUploaded(newImages) {
-      console.log("✅ New images uploaded:", newImages);
-
       // Add new images to the table
       newImages.forEach((image) => {
         this.tableItems.unshift(image);

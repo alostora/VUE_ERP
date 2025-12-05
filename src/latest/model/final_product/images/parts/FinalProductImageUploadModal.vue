@@ -240,8 +240,6 @@ export default {
     },
 
     onFileSelect(event) {
-      console.log("📁 Files selected:", event.files);
-
       // أخذ الملفات المختارة فقط بدون تكرار
       const newFiles = Array.from(event.files).map((file) => {
         this.fileCounter++;
@@ -331,7 +329,6 @@ export default {
 
             fileItem.progress = 100;
           } catch (error) {
-            console.error(`❌ Error uploading file ${fileItem.name}:`, error);
             fileItem.error = true;
             fileItem.progress = 0;
             throw error; // إيقاف العملية إذا فشل أي ملف
@@ -354,7 +351,6 @@ export default {
         );
         this.closeModal();
       } catch (error) {
-        console.error("❌ Upload process failed:", error);
         this.showToast(
           "error",
           this.$t("common.error"),

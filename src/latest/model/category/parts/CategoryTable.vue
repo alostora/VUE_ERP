@@ -194,7 +194,6 @@ export default {
   computed: {
     effectiveCompanyId() {
       const companyId = this.company_id || this.$route.params.company_id;
-      console.log("🏢 Effective Company ID:", companyId);
       return companyId;
     },
 

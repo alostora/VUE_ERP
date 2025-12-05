@@ -268,7 +268,6 @@ export default {
 
         this.categories = response.data.data || [];
       } catch (error) {
-        console.error("Error loading categories:", error);
         this.error = this.$t("products.fetchError");
       } finally {
         this.loadingCategories = false;
@@ -286,7 +285,6 @@ export default {
 
         this.measurementUnits = response.data.data || [];
       } catch (error) {
-        console.error("Error loading measurement units:", error);
         this.error = this.$t("products.fetchError");
       } finally {
         this.loadingMeasurementUnits = false;
@@ -346,13 +344,10 @@ export default {
           details_ar: this.formData.details_ar,
         };
 
-        console.log("📤 Creating product with payload:", payload);
-
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Product created successfully:", response.data);
 
         this.resetForm();
         this.$emit("product-created", response.data.data);
@@ -375,8 +370,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

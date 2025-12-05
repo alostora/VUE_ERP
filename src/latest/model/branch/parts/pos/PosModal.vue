@@ -90,7 +90,6 @@
           layoutClass.includes('horizontal')
             ? 'products-panel-horizontal'
             : 'products-panel-vertical',
-          { 'dark-panel': isDarkMode },
         ]"
       />
 
@@ -104,6 +103,9 @@
         :invoice-discounts="invoiceDiscounts"
         :invoice-additional-costs="invoiceAdditionalCosts"
         :tax-rate="taxRate"
+        :company-id="companyId"
+        :branch-id="branchId"
+        :is-dark-mode="isDarkMode"
         @update-item="updateCartItem"
         @remove-item="removeCartItem"
         @customer-change="selectedCustomer = $event"
@@ -117,11 +119,11 @@
         @remove-additional-cost="removeInvoiceAdditionalCost"
         @checkout="processCheckout"
         @clear-cart="clearCart"
+        @totals-updated="handleTotalsUpdate"
         :class="[
           layoutClass.includes('horizontal')
             ? 'cart-panel-horizontal'
             : 'cart-panel-vertical',
-          { 'dark-panel': isDarkMode },
         ]"
       />
     </div>
@@ -134,44 +136,148 @@
       @load-invoice="loadHeldInvoice"
     />
 
-    <!-- Receipt Modal -->
+    <!-- Print Options Modal -->
+    <Dialog
+      v-model:visible="showPrintOptions"
+      :header="$t('pos.invoiceCompleted')"
+      :modal="true"
+      :style="{ width: '450px' }"
+      :closable="false"
+      class="print-dialog"
+    >
+      <div class="print-options text-center p-4">
+        <i class="pi pi-check-circle text-5xl text-green-500 mb-3"></i>
+        <h3 class="mb-2">{{ $t("pos.paymentSuccessful") }}</h3>
+        <p class="text-color-secondary mb-4">
+          {{ $t("pos.invoiceCreatedSuccessfully") }}
+        </p>
+
+        <div class="invoice-details mb-4 p-3 border-round bg-gray-50">
+          <div class="flex justify-content-between mb-2">
+            <span class="font-bold">{{ $t("pos.invoiceNumber") }}:</span>
+            <span class="font-bold text-primary">{{
+              currentInvoice?.invoice_number || invoiceNumber
+            }}</span>
+          </div>
+          <div class="flex justify-content-between mb-2">
+            <span class="font-bold">{{ $t("pos.total") }}:</span>
+            <span class="font-bold text-primary text-lg">{{
+              formatCurrency(currentTotals?.grandTotal || 0)
+            }}</span>
+          </div>
+          <div class="flex justify-content-between">
+            <span>{{ $t("pos.date") }}:</span>
+            <span>{{ formatDate(new Date()) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex flex-column gap-2 w-full">
+          <Button
+            :label="$t('pos.printAndFinish')"
+            icon="pi pi-print"
+            @click="printAndFinish"
+            class="p-button-success mb-2"
+          />
+          <Button
+            :label="$t('pos.finishOnly')"
+            icon="pi pi-check"
+            @click="finishOnly"
+            class="p-button-primary p-button-outlined"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Receipt Modal for Printing -->
     <Dialog
       v-model:visible="showReceipt"
-      :header="$t('pos.receipt')"
       :modal="true"
-      :style="{ width: '400px' }"
-      :class="{ 'dark-dialog': isDarkMode }"
+      :style="{ width: '420px' }"
+      :draggable="true"
+      :resizable="true"
+      class="receipt-dialog"
+      id="receiptDialog"
     >
-      <PosReceipt
-        :invoice="currentInvoice"
-        :company-id="companyId"
-        :branch-id="branchId"
-      />
+      <template #header>
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-receipt text-primary"></i>
+          <span class="text-lg font-bold">{{ $t("pos.receipt") }}</span>
+          <Tag value="PAID" severity="success" class="ml-2" />
+        </div>
+      </template>
+
+      <div class="receipt-container" ref="receiptContainer">
+        <PosReceipt
+          :invoice="currentInvoice"
+          :company-id="companyId"
+          :branch-id="branchId"
+          :is-dark-mode="isDarkMode"
+        />
+      </div>
+
       <template #footer>
-        <Button
-          :label="$t('pos.printReceipt')"
-          icon="pi pi-print"
-          @click="printReceipt"
-          class="p-button-primary"
-          :class="{ 'dark-button-primary': isDarkMode }"
-        />
-        <Button
-          :label="$t('common.close')"
-          @click="showReceipt = false"
-          class="p-button-text"
-          :class="{ 'dark-button-text': isDarkMode }"
-        />
+        <div class="flex justify-content-between align-items-center w-full">
+          <div class="text-xs text-color-secondary">
+            <i class="pi pi-info-circle mr-1"></i>
+            {{ $t("pos.printHint") }}
+          </div>
+          <div class="flex gap-2">
+            <Button
+              :label="$t('pos.downloadPDF')"
+              icon="pi pi-download"
+              @click="downloadReceipt"
+              class="p-button-outlined p-button-secondary"
+              :class="{ 'dark-button-outlined': isDarkMode }"
+            />
+            <Button
+              :label="$t('pos.printReceipt')"
+              icon="pi pi-print"
+              @click="printReceipt"
+              class="p-button-primary"
+              :class="{ 'dark-button-primary': isDarkMode }"
+            />
+            <Button
+              :label="$t('common.close')"
+              @click="showReceipt = false"
+              class="p-button-text"
+              :class="{ 'dark-button-text': isDarkMode }"
+            />
+          </div>
+        </div>
       </template>
     </Dialog>
 
     <!-- Loading Overlay -->
     <div
-      v-if="loading"
-      class="loading-overlay"
+      v-if="processingCheckout"
+      class="checkout-overlay"
       :class="{ 'dark-overlay': isDarkMode }"
     >
-      <ProgressSpinner />
-      <p class="mt-2 text-color dark:text-gray-300">{{ loadingMessage }}</p>
+      <div class="checkout-loading text-center">
+        <ProgressSpinner style="width: 60px; height: 60px" />
+        <h3 class="mt-3 mb-1">{{ $t("pos.processingPayment") }}</h3>
+        <p class="text-color-secondary">{{ $t("pos.pleaseWait") }}</p>
+
+        <div class="mt-4 p-3 bg-surface border-round" style="max-width: 300px">
+          <div class="flex justify-content-between mb-2">
+            <span>{{ $t("pos.items") }}:</span>
+            <span class="font-bold">{{ cartItems.length }}</span>
+          </div>
+          <div class="flex justify-content-between mb-2">
+            <span>{{ $t("pos.total") }}:</span>
+            <span class="font-bold text-primary">{{
+              formatCurrency(currentTotals?.grandTotal || 0)
+            }}</span>
+          </div>
+          <Divider />
+          <div class="text-xs text-color-secondary">
+            <i class="pi pi-info-circle mr-1"></i>
+            {{ $t("pos.processingHint") }}
+          </div>
+        </div>
+      </div>
     </div>
   </Dialog>
 </template>
@@ -180,13 +286,9 @@
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
+import Divider from "primevue/divider";
+import Tag from "primevue/tag";
 import Tooltip from "primevue/tooltip";
-
-import PosProductsPanel from "./PosProductsPanel.vue";
-import PosCartPanel from "./PosCartPanel.vue";
-import PosHeldInvoices from "./PosHeldInvoices.vue";
-import PosReceipt from "./PosReceipt.vue";
-import PosService from "./PosService.js";
 
 export default {
   name: "PosModal",
@@ -194,10 +296,8 @@ export default {
     Dialog,
     Button,
     ProgressSpinner,
-    PosProductsPanel,
-    PosCartPanel,
-    PosHeldInvoices,
-    PosReceipt,
+    Divider,
+    Tag,
   },
   directives: {
     tooltip: Tooltip,
@@ -232,6 +332,7 @@ export default {
       selectedPaymentMethod: null,
       invoiceDiscounts: [],
       invoiceAdditionalCosts: [],
+      currentTotals: null,
 
       // Products filtering
       selectedCategory: null,
@@ -244,13 +345,18 @@ export default {
       invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
       currentInvoice: null,
       showReceipt: false,
+      showPrintOptions: false,
 
       // Loading states
-      loading: false,
+      processingCheckout: false,
       loadingMessage: "",
 
-      // Service
+      // Service and components
       posService: null,
+      posProductsPanel: null,
+      posCartPanel: null,
+      posHeldInvoices: null,
+      posReceipt: null,
     };
   },
   computed: {
@@ -287,8 +393,6 @@ export default {
     },
   },
   created() {
-    this.posService = new PosService(this.companyId, this.branchId);
-    this.initializeData();
     this.checkDarkMode();
   },
   mounted() {
@@ -310,15 +414,48 @@ export default {
       this.isDarkMode =
         window.matchMedia &&
         window.matchMedia("(prefers-color-scheme: dark)").matches;
-      console.log("Dark mode:", this.isDarkMode);
     },
 
-    openModal() {
+    async openModal() {
       this.visible = true;
       this.resetCart();
       this.generateInvoiceNumber();
       this.isMaximized = false;
       this.checkDarkMode();
+
+      // Load components dynamically
+      await this.loadComponents();
+
+      // Initialize data when modal opens
+      await this.initializeData();
+    },
+
+    async loadComponents() {
+      try {
+        const [
+          { default: PosService },
+          { default: PosProductsPanel },
+          { default: PosCartPanel },
+          { default: PosHeldInvoices },
+          { default: PosReceipt },
+        ] = await Promise.all([
+          import("./PosService.js"),
+          import("./PosProductsPanel.vue"),
+          import("./PosCartPanel.vue"),
+          import("./PosHeldInvoices.vue"),
+          import("./PosReceipt.vue"),
+        ]);
+
+        this.posService = new PosService(this.companyId, this.branchId);
+
+        // Register components dynamically
+        this.$options.components.PosProductsPanel = PosProductsPanel;
+        this.$options.components.PosCartPanel = PosCartPanel;
+        this.$options.components.PosHeldInvoices = PosHeldInvoices;
+        this.$options.components.PosReceipt = PosReceipt;
+      } catch (error) {
+        console.error("Error loading components:", error);
+      }
     },
 
     closeModal() {
@@ -335,13 +472,9 @@ export default {
 
     toggleMaximize() {
       this.isMaximized = !this.isMaximized;
-      console.log("Maximize toggled:", this.isMaximized);
 
       this.$nextTick(() => {
         window.dispatchEvent(new Event("resize"));
-        if (this.$refs.dialog) {
-          this.$refs.dialog.$el.style.transform = "none";
-        }
       });
     },
 
@@ -355,7 +488,21 @@ export default {
       if (savedLayout) {
         this.layout = savedLayout;
       }
-      this.selectedWarehouse = { id: "warehouse1", name: "Main Warehouse" };
+
+      // Load initial warehouses and payment methods
+      try {
+        const warehouses = await this.posService.getWarehouses();
+        if (warehouses.length > 0) {
+          this.selectedWarehouse = warehouses[0];
+        }
+
+        const paymentMethods = await this.posService.getPaymentMethods();
+        if (paymentMethods.length > 0) {
+          this.selectedPaymentMethod = paymentMethods[0];
+        }
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
     },
 
     generateInvoiceNumber() {
@@ -366,20 +513,23 @@ export default {
 
     // Cart Methods
     addToCart(product) {
-      const existingItem = this.cartItems.find(
+      const existingItemIndex = this.cartItems.findIndex(
         (item) => item.id === product.id
       );
 
-      if (existingItem) {
-        existingItem.quantity = (existingItem.quantity || 1) + 1;
+      if (existingItemIndex !== -1) {
+        this.cartItems[existingItemIndex].quantity += 1;
+        this.cartItems = [...this.cartItems];
       } else {
-        this.cartItems.push({
+        const newItem = {
           ...product,
           quantity: 1,
           measurement_unit_id:
             product.product?.sales_measurement_unit?.id || null,
           additional_costs: [],
-        });
+          notes: "",
+        };
+        this.cartItems = [...this.cartItems, newItem];
       }
 
       this.$toast.add({
@@ -394,6 +544,7 @@ export default {
       const index = this.cartItems.findIndex((item) => item.id === itemId);
       if (index !== -1) {
         this.cartItems[index] = { ...this.cartItems[index], ...updates };
+        this.cartItems = [...this.cartItems];
       }
     },
 
@@ -407,13 +558,18 @@ export default {
       this.invoiceAdditionalCosts = [];
       this.selectedCustomer = null;
       this.selectedPaymentMethod = null;
+      this.currentTotals = null;
+    },
+
+    handleTotalsUpdate(totals) {
+      this.currentTotals = totals;
     },
 
     // Invoice Discounts & Additional Costs
     addInvoiceDiscount() {
       this.invoiceDiscounts.push({
         id: `disc_${Date.now()}`,
-        name: "",
+        name: this.$t("pos.discount"),
         value: 0,
       });
     },
@@ -427,7 +583,7 @@ export default {
     addInvoiceAdditionalCost() {
       this.invoiceAdditionalCosts.push({
         id: `cost_${Date.now()}`,
-        name: "",
+        name: this.$t("pos.additionalCost"),
         value: 0,
       });
     },
@@ -475,7 +631,9 @@ export default {
     },
 
     showHeldInvoices() {
-      this.$refs.heldInvoicesModal.openModal();
+      if (this.$refs.heldInvoicesModal) {
+        this.$refs.heldInvoicesModal.openModal();
+      }
     },
 
     loadHeldInvoice(invoice) {
@@ -486,7 +644,9 @@ export default {
       this.invoiceAdditionalCosts = invoice.additionalCosts || [];
       this.invoiceNumber = invoice.invoiceNumber || this.invoiceNumber;
 
-      this.$refs.heldInvoicesModal.closeModal();
+      if (this.$refs.heldInvoicesModal) {
+        this.$refs.heldInvoicesModal.closeModal();
+      }
 
       this.$toast.add({
         severity: "success",
@@ -496,97 +656,23 @@ export default {
       });
     },
 
-    // Checkout
+    // Checkout and Print
     async processCheckout() {
-      if (this.cartItems.length === 0) {
-        this.$toast.add({
-          severity: "error",
-          summary: this.$t("pos.emptyCart"),
-          detail: this.$t("pos.addItemsBeforeCheckout"),
-          life: 3000,
-        });
+      if (!this.validateCheckoutData()) {
         return;
       }
 
-      if (!this.selectedWarehouse) {
-        this.$toast.add({
-          severity: "error",
-          summary: this.$t("pos.warehouseRequired"),
-          detail: this.$t("pos.selectWarehouseFirst"),
-          life: 3000,
-        });
-        return;
-      }
-
-      if (!this.selectedPaymentMethod) {
-        this.$toast.add({
-          severity: "error",
-          summary: this.$t("pos.paymentMethodRequired"),
-          detail: this.$t("pos.selectPaymentMethodFirst"),
-          life: 3000,
-        });
-        return;
-      }
-
-      this.loading = true;
-      this.loadingMessage = this.$t("pos.processingPayment");
+      this.processingCheckout = true;
 
       try {
-        const finalProducts = this.cartItems.map((item) => ({
-          final_product_id: item.id,
-          measurement_unit_id:
-            item.measurement_unit_id ||
-            item.product?.sales_measurement_unit?.id,
-          quantity: item.quantity || 1,
-        }));
+        // Create invoice object
+        this.currentInvoice = this.createInvoiceObject();
 
-        const invoiceData = {
-          warehouse_id: this.selectedWarehouse.id,
-          contact_id: this.selectedCustomer?.id || null,
-          payment_method_id: this.selectedPaymentMethod.id,
-          details: this.$t("pos.posSale"),
-          final_products: finalProducts,
-          additional_costs: this.invoiceAdditionalCosts.map((cost) => ({
-            name: cost.name,
-            value: parseFloat(cost.value),
-          })),
-          discounts: this.invoiceDiscounts.map((discount) => ({
-            name: discount.name,
-            value: parseFloat(discount.value),
-          })),
-        };
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
-        const totals = this.posService.calculateInvoiceTotals(
-          this.cartItems,
-          this.invoiceDiscounts,
-          this.invoiceAdditionalCosts,
-          this.taxRate
-        );
-
-        this.currentInvoice = {
-          ...invoiceData,
-          id: `inv_${Date.now()}`,
-          invoice_number: this.invoiceNumber,
-          created_at: new Date().toISOString(),
-          customer: this.selectedCustomer,
-          warehouse: this.selectedWarehouse,
-          payment_method: this.selectedPaymentMethod,
-          items: this.cartItems,
-          totals: totals,
-        };
-
-        this.showReceipt = true;
-        this.clearCart();
-        this.generateInvoiceNumber();
-
-        this.$toast.add({
-          severity: "success",
-          summary: this.$t("pos.paymentSuccessful"),
-          detail: this.$t("pos.invoiceCreatedSuccessfully"),
-          life: 3000,
-        });
+        // Show print options
+        this.showPrintOptions = true;
       } catch (error) {
         console.error("Checkout error:", error);
         this.$toast.add({
@@ -596,49 +682,293 @@ export default {
           life: 3000,
         });
       } finally {
-        this.loading = false;
+        this.processingCheckout = false;
       }
     },
 
+    validateCheckoutData() {
+      if (this.cartItems.length === 0) {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.emptyCart"),
+          detail: this.$t("pos.addItemsBeforeCheckout"),
+          life: 3000,
+        });
+        return false;
+      }
+
+      if (!this.selectedWarehouse) {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.warehouseRequired"),
+          detail: this.$t("pos.selectWarehouseFirst"),
+          life: 3000,
+        });
+        return false;
+      }
+
+      if (!this.selectedPaymentMethod) {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.paymentMethodRequired"),
+          detail: this.$t("pos.selectPaymentMethodFirst"),
+          life: 3000,
+        });
+        return false;
+      }
+
+      return true;
+    },
+
+    createInvoiceObject() {
+      return {
+        id: `inv_${Date.now()}`,
+        invoice_number: this.invoiceNumber,
+        created_at: new Date().toISOString(),
+        status: "completed",
+        payment_status: "paid",
+        customer: this.selectedCustomer,
+        warehouse: this.selectedWarehouse,
+        payment_method: this.selectedPaymentMethod,
+        items: this.cartItems.map((item) => ({
+          ...item,
+          total: this.calculateItemTotal(item),
+        })),
+        discounts: this.invoiceDiscounts.filter((d) => d.value > 0),
+        additional_costs: this.invoiceAdditionalCosts.filter(
+          (c) => c.value > 0
+        ),
+        totals: this.currentTotals,
+        taxRate: this.taxRate,
+        details: "POS Sale",
+        cashier: "System User",
+      };
+    },
+
+    calculateItemTotal(item) {
+      const price = this.parsePrice(
+        item.has_discount ? item.price_after_discount : item.price
+      );
+      let total = price * (item.quantity || 1);
+
+      if (item.additional_costs && Array.isArray(item.additional_costs)) {
+        item.additional_costs.forEach((cost) => {
+          total += this.parsePrice(cost.value) || 0;
+        });
+      }
+
+      return parseFloat(total.toFixed(2));
+    },
+
+    parsePrice(price) {
+      if (!price && price !== 0) return 0;
+      if (typeof price === "string") {
+        return parseFloat(price.replace(/,/g, ""));
+      }
+      return parseFloat(price);
+    },
+
+    // Print Functions
+    printAndFinish() {
+      this.showPrintOptions = false;
+      this.showReceipt = true;
+      this.$nextTick(() => {
+        this.printReceipt();
+        setTimeout(() => {
+          this.finishSale();
+        }, 1000);
+      });
+    },
+
+    finishOnly() {
+      this.showPrintOptions = false;
+      this.finishSale();
+    },
+
+    finishSale() {
+      this.clearCart();
+      this.generateInvoiceNumber();
+      this.showReceipt = false;
+
+      this.$toast.add({
+        severity: "success",
+        summary: this.$t("pos.saleCompleted"),
+        detail: this.$t("pos.readyForNewSale"),
+        life: 3000,
+      });
+    },
+
     printReceipt() {
-      const printContent = document.querySelector(".pos-receipt").innerHTML;
-      const printWindow = window.open("", "_blank");
+      const receiptElement = this.$refs.receiptContainer;
+      if (!receiptElement) {
+        console.error("Receipt container not found");
+        return;
+      }
+
+      const printContent = receiptElement.innerHTML;
+      const originalContent = document.body.innerHTML;
+
+      const printWindow = window.open("", "_blank", "width=800,height=600");
+
+      const styles = `
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+          }
+          .pos-receipt {
+            max-width: 380px;
+            margin: 0 auto;
+            padding: 15px;
+            border: 1px solid #000;
+          }
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+          }
+          .receipt-header h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+          }
+          .receipt-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+          }
+          .receipt-items th {
+            background: #f0f0f0;
+            font-weight: bold;
+            padding: 5px;
+            border: 1px solid #000;
+            text-align: left;
+          }
+          .receipt-items td {
+            padding: 5px;
+            border: 1px solid #000;
+          }
+          .receipt-totals {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f8f8;
+            border: 1px solid #000;
+          }
+          .receipt-footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+          }
+          @media print {
+            body {
+              padding: 0;
+              margin: 0;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .pos-receipt {
+              border: none !important;
+              box-shadow: none !important;
+            }
+          }
+        </style>
+      `;
+
+      const buttons = `
+        <div class="no-print" style="margin-top: 20px; text-align: center;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; margin-right: 10px;">
+            ${this.$t("pos.print")}
+          </button>
+          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; cursor: pointer;">
+            ${this.$t("common.close")}
+          </button>
+        </div>
+      `;
+
       printWindow.document.write(`
         <html>
           <head>
-            <title>${this.$t("pos.receipt")}</title>
-            <style>
-              body { font-family: Arial, sans-serif; font-size: 12px; background: ${
-                this.isDarkMode ? "#1a1a1a" : "#ffffff"
-              }; color: ${this.isDarkMode ? "#e0e0e0" : "#000000"}; }
-              .receipt-header { text-align: center; margin-bottom: 20px; }
-              .receipt-items { width: 100%; border-collapse: collapse; margin: 10px 0; }
-              .receipt-items th, .receipt-items td { border: 1px solid ${
-                this.isDarkMode ? "#444" : "#ddd"
-              }; padding: 5px; }
-              .receipt-totals { margin-top: 20px; text-align: right; }
-              .receipt-footer { margin-top: 30px; text-align: center; font-size: 10px; }
-              @media print {
-                body { margin: 0; padding: 10px; }
-                .no-print { display: none; }
-              }
-            </style>
+            <title>${this.$t("pos.receipt")} - ${
+        this.currentInvoice?.invoice_number
+      }</title>
+            ${styles}
           </head>
           <body>
             ${printContent}
-            <div class="no-print" style="margin-top: 20px; text-align: center;">
-              <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer;">
-                ${this.$t("pos.print")}
-              </button>
-              <button onclick="window.close()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; cursor: pointer; margin-left: 10px;">
-                ${this.$t("common.close")}
-              </button>
-            </div>
+            ${buttons}
+            <script>
+              window.onload = function() {
+                // Auto print after 500ms
+                setTimeout(function() {
+                  window.print();
+                }, 500);
+              };
+            <\/script>
           </body>
         </html>
       `);
+
       printWindow.document.close();
       printWindow.focus();
+    },
+
+    downloadReceipt() {
+      const receiptElement = this.$refs.receiptContainer;
+      if (!receiptElement) {
+        console.error("Receipt container not found");
+        return;
+      }
+
+      const printContent = receiptElement.innerHTML;
+      const blob = new Blob(
+        [
+          `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .pos-receipt { max-width: 400px; margin: 0 auto; }
+            </style>
+          </head>
+          <body>${printContent}</body>
+        </html>
+      `,
+        ],
+        { type: "text/html" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receipt-${
+        this.currentInvoice?.invoice_number || "invoice"
+      }.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
+    formatCurrency(amount) {
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+
+    formatDate(date) {
+      if (!date) return new Date().toLocaleString();
+      if (typeof date === "string") {
+        date = new Date(date);
+      }
+      return date.toLocaleString();
     },
 
     resetCart() {
@@ -649,6 +979,10 @@ export default {
       this.invoiceAdditionalCosts = [];
       this.selectedCategory = null;
       this.searchQuery = "";
+      this.currentTotals = null;
+      this.currentInvoice = null;
+      this.showReceipt = false;
+      this.showPrintOptions = false;
     },
 
     onWarehouseChange(warehouse) {
@@ -735,64 +1069,64 @@ export default {
 .products-panel-horizontal {
   flex: 3;
   min-width: 0;
-}
-
-.products-panel-horizontal.dark-panel {
-  background: #1a202c !important;
+  overflow: hidden;
 }
 
 .cart-panel-horizontal {
   flex: 2;
   min-width: 400px;
   max-width: 500px;
-}
-
-.cart-panel-horizontal.dark-panel {
-  background: #1a202c !important;
+  overflow: hidden;
 }
 
 .products-panel-vertical {
   flex: 2;
   min-height: 300px;
-}
-
-.products-panel-vertical.dark-panel {
-  background: #1a202c !important;
+  overflow: hidden;
 }
 
 .cart-panel-vertical {
   flex: 3;
   min-height: 400px;
-}
-
-.cart-panel-vertical.dark-panel {
-  background: #1a202c !important;
+  overflow: hidden;
 }
 
 /* Loading Overlay */
-.loading-overlay {
+.checkout-overlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
-.loading-overlay.dark-overlay {
-  background: rgba(26, 32, 44, 0.95);
+.checkout-overlay.dark-overlay {
+  background: rgba(26, 32, 44, 0.98);
 }
 
-.loading-overlay.dark-overlay .p-progress-spinner-circle {
+.checkout-overlay.dark-overlay .p-progress-spinner-circle {
   stroke: #667eea !important;
 }
 
-/* Custom button styles for visibility */
+/* Print Options Dialog */
+.print-dialog :deep(.p-dialog-header) {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+}
+
+/* Receipt Dialog */
+.receipt-dialog :deep(.p-dialog-content) {
+  padding: 0 !important;
+  max-height: 80vh !important;
+}
+
+/* Custom button styles */
 .custom-maximize-btn,
 .custom-close-btn {
   width: 40px !important;
@@ -813,45 +1147,11 @@ export default {
   transform: scale(1.1) !important;
 }
 
-.custom-maximize-btn:active,
-.custom-close-btn:active {
-  transform: scale(0.95) !important;
-}
-
-/* Dark mode button styles */
-.custom-maximize-btn.dark-button,
-.custom-close-btn.dark-close-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #e2e8f0 !important;
-}
-
-.custom-maximize-btn.dark-button:hover,
-.custom-close-btn.dark-close-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-.custom-close-btn.dark-close-btn {
-  color: #fc8181 !important;
-}
-
 /* Dialog header styling */
 :deep(.p-dialog-header) {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   padding: 1rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-/* Dark mode dialog header */
-:deep(.dark-dialog .p-dialog-header) {
-  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Hide default header icons */
-:deep(.p-dialog .p-dialog-header-icons) {
-  display: none !important;
 }
 
 /* Dialog content area */
@@ -861,20 +1161,6 @@ export default {
   flex-direction: column;
   overflow: hidden;
   height: 100%;
-  transition: background-color 0.3s ease;
-}
-
-/* Dark mode dialog content */
-:deep(.dark-dialog .p-dialog-content) {
-  background-color: #1a202c !important;
-  color: #e2e8f0 !important;
-}
-
-/* Ensure proper spacing */
-:deep(.p-dialog .p-dialog-content) {
-  flex: 1;
-  overflow: auto;
-  padding-top: 0.5rem !important;
 }
 
 /* Maximized dialog styles */
@@ -897,58 +1183,5 @@ export default {
 /* Fix for dialog positioning */
 :deep(.p-dialog) {
   transition: all 0.3s ease !important;
-}
-
-/* Dark mode button overrides */
-:deep(.dark-button-warning) {
-  background-color: #d69e2e !important;
-  border-color: #d69e2e !important;
-  color: white !important;
-}
-
-:deep(.dark-button-warning:hover) {
-  background-color: #b7791f !important;
-  border-color: #b7791f !important;
-}
-
-:deep(.dark-button-secondary) {
-  background-color: #718096 !important;
-  border-color: #718096 !important;
-  color: white !important;
-}
-
-:deep(.dark-button-secondary:hover) {
-  background-color: #4a5568 !important;
-  border-color: #4a5568 !important;
-}
-
-:deep(.dark-button-help) {
-  background-color: #805ad5 !important;
-  border-color: #805ad5 !important;
-  color: white !important;
-}
-
-:deep(.dark-button-help:hover) {
-  background-color: #6b46c1 !important;
-  border-color: #6b46c1 !important;
-}
-
-:deep(.dark-button-primary) {
-  background-color: #4299e1 !important;
-  border-color: #4299e1 !important;
-  color: white !important;
-}
-
-:deep(.dark-button-primary:hover) {
-  background-color: #3182ce !important;
-  border-color: #3182ce !important;
-}
-
-:deep(.dark-button-text) {
-  color: #e2e8f0 !important;
-}
-
-:deep(.dark-button-text:hover) {
-  background-color: rgba(255, 255, 255, 0.1) !important;
 }
 </style>

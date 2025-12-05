@@ -539,13 +539,11 @@ export default {
 
         return response.data.data.id;
       } catch (error) {
-        console.error("Error uploading file:", error);
         throw new Error("Failed to upload file");
       }
     },
 
     populateForm(company) {
-      console.log("🔍 Populating form with company data:", company);
 
       this.resetForm();
 
@@ -577,7 +575,6 @@ export default {
       // Set client name for display
       this.clientName = company.client?.name || "Unknown Client";
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -623,7 +620,6 @@ export default {
         );
         this.countries = response.data.data || [];
       } catch (error) {
-        console.error("Error loading countries:", error);
         this.error = this.$t("companies.loadCountriesError");
       } finally {
         this.loadingCountries = false;
@@ -641,7 +637,6 @@ export default {
         );
         this.governorates = response.data.data || [];
       } catch (error) {
-        console.error("Error loading governorates:", error);
         this.error = this.$t("companies.loadGovernoratesError");
       } finally {
         this.loadingGovernorates = false;
@@ -659,7 +654,6 @@ export default {
         );
         this.cities = response.data.data || [];
       } catch (error) {
-        console.error("Error loading cities:", error);
         this.error = this.$t("companies.loadCitiesError");
       } finally {
         this.loadingCities = false;
@@ -677,7 +671,6 @@ export default {
         );
         this.currencies = response.data.data || [];
       } catch (error) {
-        console.error("Error loading currencies:", error);
         this.error = this.$t("companies.loadCurrenciesError");
       } finally {
         this.loadingCurrencies = false;
@@ -767,7 +760,6 @@ export default {
           payload.cover_id = coverId;
         }
 
-        console.log("🚀 Updating company with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company/${this.formData.id}`;
         const response = await this.$http.post(url, payload, {

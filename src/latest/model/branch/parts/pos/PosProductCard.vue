@@ -60,15 +60,15 @@
           </div>
         </div>
 
-        <!-- Stock -->
-        <div class="product-stock mb-3">
+        <!-- Stock - Removed since API doesn't provide stock -->
+        <!-- <div class="product-stock mb-3">
           <Tag
             :value="product.stock || 0"
             :severity="getStockSeverity(product.stock)"
             size="small"
             class="w-full justify-content-center"
           />
-        </div>
+        </div> -->
 
         <!-- Add to Cart Button -->
         <Button
@@ -76,7 +76,7 @@
           icon="pi pi-cart-plus"
           @click.stop="addToCart"
           class="w-full p-button-sm"
-          :disabled="!product.stock || product.stock <= 0"
+          :disabled="false"
           :loading="addingToCart"
         >
           <template #loading>
@@ -125,11 +125,12 @@ export default {
       return `$${parseFloat(amount).toFixed(2)}`;
     },
 
-    getStockSeverity(stock) {
-      if (!stock || stock <= 0) return "danger";
-      if (stock <= 10) return "warning";
-      return "success";
-    },
+    // Removed getStockSeverity since API doesn't provide stock
+    // getStockSeverity(stock) {
+    //   if (!stock || stock <= 0) return "danger";
+    //   if (stock <= 10) return "warning";
+    //   return "success";
+    // },
   },
 };
 </script>

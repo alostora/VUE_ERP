@@ -63,7 +63,7 @@ export default {
     openModal() {
       this.effectiveCompanyId = this.company_id;
       this.effectiveDiscountId = this.discount_id;
-      if (!this.effectiveCompanyId || !this.effectiveDiscountId) return console.error('Missing IDs for branches modal');
+      if (!this.effectiveCompanyId || !this.effectiveDiscountId) return;
       this.visible = true;
     },
     closeModal() { this.visible = false; this.$emit('modal-closed'); },

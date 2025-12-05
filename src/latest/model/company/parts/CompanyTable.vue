@@ -248,7 +248,6 @@ export default {
   },
 
   mounted() {
-    console.log("Companies component mounted");
     this.getData();
   },
 
@@ -304,7 +303,6 @@ export default {
     },
 
     viewCompany(company) {
-      console.log("Navigating to company:", company.id, company.name);
       this.$router.push({
         name: "company-show",
         params: { company_id: company.id },

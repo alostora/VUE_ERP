@@ -170,7 +170,7 @@
       @branch-updated="handleBranchUpdated"
     />
 
-    <PosModal ref="posModal" :company-id="companyId" :branch-id="branchId" />
+    <PosModal ref="posModal" :company-id="company_id" :branch-id="branch_id" />
     <Toast />
   </div>
 </template>
@@ -266,7 +266,6 @@ export default {
           throw new Error("Invalid response format");
         }
       } catch (error) {
-        console.error("Error fetching branch:", error);
         this.error =
           error.response?.data?.message ||
           error.message ||

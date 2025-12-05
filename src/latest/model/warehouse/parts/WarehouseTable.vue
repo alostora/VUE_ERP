@@ -262,7 +262,6 @@ export default {
 
     propSearchUrl() {
       if (!this.effectiveCompanyId || !this.effectiveBranchId) {
-        console.warn("⚠️ Company ID or Branch ID is undefined");
         return "";
       }
 
@@ -281,11 +280,9 @@ export default {
   },
 
   mounted() {
-    console.log("🚀 WarehouseTable mounted");
     if (this.effectiveCompanyId && this.effectiveBranchId) {
       this.getData();
     } else {
-      console.warn("⚠️ Missing company or branch ID on mount");
     }
   },
 
@@ -339,8 +336,6 @@ export default {
         this.loading = true;
         const url = `${general_request.BASE_URL}/admin/company/branch/warehouse-set-default/${warehouse.id}`;
 
-        console.log("🌐 Setting warehouse as default:", url);
-
         const response = await this.$http.patch(
           url,
           {},
@@ -348,8 +343,6 @@ export default {
             headers: general_request.headers,
           }
         );
-
-        console.log("✅ Warehouse set as default response:", response.data);
 
         // Update ALL warehouses - set the selected one as default, others as false
         this.tableItems = this.tableItems.map((item) => ({
@@ -366,7 +359,6 @@ export default {
         // Refresh the data to ensure consistency
         this.getData();
       } catch (error) {
-        console.error("❌ Error setting warehouse as default:", error);
         this.showToast(
           "error",
           this.$t("common.error"),

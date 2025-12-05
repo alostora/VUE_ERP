@@ -38,7 +38,6 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -181,13 +180,11 @@ export default {
   computed: {
     effectiveCompanyId() {
       const companyId = this.company_id || this.$route.params.company_id;
-      console.log("🏢 Effective Company ID:", companyId);
       return companyId;
     },
 
     propSearchUrl() {
       if (!this.effectiveCompanyId) {
-        console.error("❌ No company ID found!");
         return "";
       }
       return `${general_request.BASE_URL}/admin/company/measurement-units/${this.effectiveCompanyId}?paginate=true`;
@@ -199,14 +196,9 @@ export default {
   },
 
   mounted() {
-    console.log("🚀 MeasurementUnitTable mounted()");
-    console.log("🏢 Effective Company ID:", this.effectiveCompanyId);
-
     if (this.effectiveCompanyId) {
-      console.log("✅ Company ID found, fetching measurement units...");
       this.getData();
     } else {
-      console.error("❌ No company ID found!");
     }
   },
 
@@ -214,9 +206,7 @@ export default {
     "$route.params.company_id": {
       immediate: true,
       handler(newCompanyId) {
-        console.log("🛣️ Route company_id changed:", newCompanyId);
         if (newCompanyId) {
-          console.log("✅ Company ID available, fetching data...");
           this.getData();
         }
       },

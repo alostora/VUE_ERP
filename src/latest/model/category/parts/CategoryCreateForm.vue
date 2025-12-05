@@ -215,7 +215,6 @@ export default {
         );
 
         // CORRECT: Get file_id from response
-        console.log("📁 File upload response:", response.data);
 
         // Handle different response structures
         if (response.data.data && response.data.data.id) {
@@ -226,7 +225,6 @@ export default {
           throw new Error("Invalid file upload response format");
         }
 
-        console.log("✅ File ID set to:", this.formData.file_id);
 
         this.showToast(
           "success",
@@ -234,7 +232,6 @@ export default {
           this.$t("categories.imageUploaded")
         );
       } catch (error) {
-        console.error("Error uploading file:", error);
         this.error = this.$t("categories.imageUploadError");
         this.removeImage();
       } finally {
@@ -276,13 +273,11 @@ export default {
           file_id: this.formData.file_id, // Only include if file was uploaded
         };
 
-        console.log("📤 Creating category with payload:", payload);
 
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Category created successfully:", response.data);
 
         this.resetForm();
         this.$emit("category-created", response.data.data);
@@ -306,7 +301,6 @@ export default {
       if (error.response?.data) {
         const responseData = error.response.data;
 
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

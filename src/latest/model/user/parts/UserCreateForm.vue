@@ -225,7 +225,6 @@ export default {
         );
         this.accountTypes = response.data.data || [];
       } catch (error) {
-        console.error("Error loading account types:", error);
         this.error = this.$t("users.loadAccountTypesError");
       } finally {
         this.loadingAccountTypes = false;
@@ -317,8 +316,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

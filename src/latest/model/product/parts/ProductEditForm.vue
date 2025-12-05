@@ -242,7 +242,6 @@ export default {
   },
   methods: {
     populateForm(product) {
-      console.log("📝 Populating form with product:", product);
 
       this.formData = {
         id: product.id || "",
@@ -260,7 +259,6 @@ export default {
         product.purchases_measurement_unit?.id || null;
       this.selectedSalesUnit = product.sales_measurement_unit?.id || null;
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -290,7 +288,6 @@ export default {
 
         this.measurementUnits = response.data.data || [];
       } catch (error) {
-        console.error("Error loading measurement units:", error);
         this.error = this.$t("products.fetchError");
       } finally {
         this.loadingMeasurementUnits = false;
@@ -344,13 +341,10 @@ export default {
           details_ar: this.formData.details_ar,
         };
 
-        console.log("📤 Updating product with payload:", payload);
-
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Product updated successfully:", response.data);
         this.$emit("product-updated", response.data.data);
 
         this.showToast(
@@ -371,8 +365,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

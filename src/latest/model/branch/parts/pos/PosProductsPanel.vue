@@ -28,7 +28,7 @@
             <span class="p-inputgroup-addon">
               <i class="pi pi-filter"></i>
             </span>
-            <Dropdown
+            <Select
               v-model="selectedCategoryId"
               :options="categories"
               optionLabel="name"
@@ -86,7 +86,7 @@
     </div>
 
     <!-- Products Grid -->
-    <div v-if="filteredProducts.length > 0" class="products-grid">
+    <div v-if="!loading && filteredProducts.length > 0" class="products-grid">
       <div class="grid">
         <div
           v-for="product in paginatedProducts"
@@ -117,8 +117,17 @@
       </div>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state text-center py-6">
+      <ProgressSpinner />
+      <p class="mt-2">{{ $t("pos.loadingProducts") }}</p>
+    </div>
+
     <!-- Empty State -->
-    <div v-else class="empty-state text-center py-6">
+    <div
+      v-else-if="!loading && filteredProducts.length === 0"
+      class="empty-state text-center py-6"
+    >
       <i class="pi pi-box text-6xl text-color-secondary mb-3"></i>
       <h3 class="text-color-secondary">
         {{ $t("pos.noProductsFound") }}
@@ -186,18 +195,10 @@
           </div>
 
           <div class="col-6">
-            <strong>{{ $t("pos.stock") }}:</strong>
-            <div class="mt-1">
-              <Tag
-                :value="selectedProduct.stock || 'N/A'"
-                :severity="getStockSeverity(selectedProduct.stock)"
-              />
-            </div>
-          </div>
-
-          <div class="col-12 mt-2">
             <strong>{{ $t("pos.category") }}:</strong>
-            <p>{{ selectedProduct.category?.name }}</p>
+            <div class="mt-1">
+              <span>{{ selectedProduct.category?.name || "N/A" }}</span>
+            </div>
           </div>
 
           <div v-if="selectedProduct.details" class="col-12 mt-2">
@@ -236,19 +237,13 @@
         />
       </template>
     </Dialog>
-
-    <!-- Loading -->
-    <div v-if="loading" class="loading-overlay">
-      <ProgressSpinner />
-      <p class="mt-2">{{ $t("pos.loadingProducts") }}</p>
-    </div>
   </div>
 </template>
 
 <script>
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
-import Dropdown from "primevue/dropdown";
+import Select from "primevue/select";
 import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
 import Chip from "primevue/chip";
@@ -263,7 +258,7 @@ export default {
   components: {
     InputText,
     Button,
-    Dropdown,
+    Select,
     Dialog,
     Tag,
     Chip,
@@ -350,38 +345,56 @@ export default {
     async loadData() {
       this.loading = true;
       try {
-        // Load categories
-        // TODO: Replace with real API
-        this.categories = this.posService.getDummyCategories();
+        // Load categories from API
+        this.categories = await this.posService.getCategories();
 
-        // Load products
-        // TODO: Replace with real API
-        this.products = this.posService.getDummyProducts();
-        this.filteredProducts = [...this.products];
+        // Load products from API with initial category filter
+        await this.loadProductsWithFilter();
       } catch (error) {
-        console.error("Error loading products:", error);
+        console.error("Error loading data:", error);
         this.$toast.add({
           severity: "error",
           summary: this.$t("pos.loadError"),
-          detail: this.$t("pos.failedToLoadProducts"),
+          detail: error.message || this.$t("pos.failedToLoadProducts"),
           life: 3000,
         });
+        this.products = [];
+        this.filteredProducts = [];
       } finally {
         this.loading = false;
       }
     },
 
-    filterProducts() {
-      let filtered = [...this.products];
+    async loadProductsWithFilter() {
+      try {
+        // Prepare query parameters
+        const params = {};
 
-      // Filter by category
-      if (this.selectedCategoryId) {
-        filtered = filtered.filter(
-          (product) => product.category?.id === this.selectedCategoryId
-        );
+        // Add category filter if selected
+        if (this.selectedCategoryId) {
+          params.category_id = this.selectedCategoryId;
+        }
+
+        // Load products with the filter
+        this.products = await this.posService.getProducts(params);
+
+        // Apply local search filter if any
+        this.filterProducts();
+      } catch (error) {
+        console.error("Error loading products:", error);
+        throw error;
+      }
+    },
+
+    filterProducts() {
+      if (!Array.isArray(this.products) || this.products.length === 0) {
+        this.filteredProducts = [];
+        return;
       }
 
-      // Filter by search
+      let filtered = [...this.products];
+
+      // Apply local search filter only (category filtering is done by backend)
       if (this.search) {
         const searchLower = this.search.toLowerCase();
         filtered = filtered.filter(
@@ -393,10 +406,30 @@ export default {
       }
 
       this.filteredProducts = filtered;
-      this.currentPage = 1; // Reset to first page on filter change
+      this.currentPage = 1; // Reset to first page
+    },
+
+    async handleCategoryChange() {
+      this.loading = true;
+      try {
+        // Reload products with the selected category filter
+        await this.loadProductsWithFilter();
+        this.$emit("category-change", this.selectedCategoryId);
+      } catch (error) {
+        console.error("Error filtering by category:", error);
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.loadError"),
+          detail: this.$t("pos.failedToLoadProducts"),
+          life: 3000,
+        });
+      } finally {
+        this.loading = false;
+      }
     },
 
     handleSearch() {
+      // Only apply local search filter (category filter is already applied via API)
       this.filterProducts();
       this.$emit("search", this.search);
     },
@@ -407,23 +440,14 @@ export default {
       this.$emit("search", "");
     },
 
-    handleCategoryChange() {
-      this.filterProducts();
-      this.$emit("category-change", this.selectedCategoryId);
-    },
-
-    selectCategory(categoryId) {
+    async selectCategory(categoryId) {
       this.selectedCategoryId = categoryId;
-      this.handleCategoryChange();
+      await this.handleCategoryChange();
     },
 
     searchByBarcode() {
       if (!this.barcode.trim()) return;
 
-      // TODO: Implement barcode search with API
-      console.log("Searching by barcode:", this.barcode);
-
-      // For now, simulate search
       const product = this.products.find(
         (p) =>
           p.id.toLowerCase().includes(this.barcode.toLowerCase()) ||
@@ -461,14 +485,8 @@ export default {
     },
 
     formatCurrency(amount) {
-      // TODO: Use actual currency from company settings
+      if (!amount && amount !== 0) return "$0.00";
       return `$${parseFloat(amount).toFixed(2)}`;
-    },
-
-    getStockSeverity(stock) {
-      if (!stock || stock <= 0) return "danger";
-      if (stock <= 10) return "warning";
-      return "success";
     },
   },
 };
@@ -552,18 +570,12 @@ export default {
   color: #28a745;
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
+.loading-state {
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
 }
 
 .empty-state {

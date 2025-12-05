@@ -145,19 +145,13 @@ export default {
       this.loadingProducts = true;
       try {
         const url = `${general_request.BASE_URL}/admin/company/product/final-products/list/${this.company_id}?discount_id=${this.discount_id}`;
-        console.log("Loading available products from:", url);
 
         const response = await this.$http.get(url, {
           headers: general_request.headers,
         });
 
-        console.log(
-          "Available products loaded:",
-          response.data.data?.length || 0
-        );
         this.availableProducts = response.data.data || [];
       } catch (error) {
-        console.error("Error loading available products:", error);
         this.error = this.$t("discounts.loadingProductsError");
       } finally {
         this.loadingProducts = false;
@@ -190,17 +184,11 @@ export default {
           final_product_ids: this.selectedProducts,
         };
 
-        console.log("Creating discount final products:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company/discount-final-product`;
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
-
-        console.log(
-          "Discount final products created successfully:",
-          response.data.data
-        );
 
         this.resetForm();
         this.$emit("final-products-added", response.data.data);

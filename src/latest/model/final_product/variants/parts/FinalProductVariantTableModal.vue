@@ -90,17 +90,11 @@ export default {
   },
   methods: {
     openModal() {
-      console.log("🔧 Opening variants modal with:", {
-        company_id: this.company_id,
-        final_product_id: this.final_product_id,
-      });
-
       // Ensure we have the IDs
       this.effectiveCompanyId = this.company_id;
       this.effectiveFinalProductId = this.final_product_id;
 
       if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
-        console.error("❌ Missing required IDs for modal");
         return;
       }
 

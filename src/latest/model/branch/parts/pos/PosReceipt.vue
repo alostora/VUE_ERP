@@ -2,10 +2,12 @@
   <div class="pos-receipt" ref="receiptContent">
     <!-- Receipt Header -->
     <div class="receipt-header text-center mb-3">
-      <h2 class="m-0">{{ companyName }}</h2>
-      <p class="m-0 text-sm" v-if="companyAddress">{{ companyAddress }}</p>
-      <p class="m-0 text-sm" v-if="companyPhone">
-        {{ $t("pos.phone") }}: {{ companyPhone }}
+      <h2 class="m-0">{{ companyInfo.name || "Company Name" }}</h2>
+      <p class="m-0 text-sm" v-if="companyInfo.address">
+        {{ companyInfo.address }}
+      </p>
+      <p class="m-0 text-sm" v-if="companyInfo.phone">
+        {{ $t("pos.phone") }}: {{ companyInfo.phone }}
       </p>
       <Divider />
     </div>
@@ -15,7 +17,7 @@
       <div class="grid">
         <div class="col-6">
           <strong>{{ $t("pos.invoiceNumber") }}:</strong>
-          <div>{{ invoice.invoice_number }}</div>
+          <div>{{ invoice.invoice_number || invoice.id }}</div>
         </div>
         <div class="col-6">
           <strong>{{ $t("pos.date") }}:</strong>
@@ -49,53 +51,54 @@
       </p>
     </div>
 
+    <!-- Warehouse Info -->
+    <div
+      v-if="invoice.warehouse"
+      class="warehouse-info mb-3 p-2 surface-100 border-round"
+    >
+      <h4 class="m-0 mb-1">{{ $t("pos.warehouse") }}</h4>
+      <p class="m-0">
+        <strong>{{ invoice.warehouse.name }}</strong>
+      </p>
+    </div>
+
     <!-- Items Table -->
     <div class="receipt-items mb-3">
       <h4 class="m-0 mb-2">{{ $t("pos.items") }}</h4>
-      <DataTable
-        :value="invoice.items"
-        class="p-datatable-sm table-scroll-container"
-        :showHeaders="false"
-      >
-        <Column field="name">
-          <template #body="slotProps">
-            <div>
-              <div class="font-bold">{{ slotProps.data.name }}</div>
-              <div class="text-sm text-color-secondary">
-                {{ slotProps.data.quantity }} ×
-                {{
-                  formatCurrency(
-                    slotProps.data.has_discount
-                      ? slotProps.data.price_after_discount
-                      : slotProps.data.price
-                  )
-                }}
-              </div>
-              <div
-                v-if="
-                  slotProps.data.additional_costs &&
-                  slotProps.data.additional_costs.length > 0
-                "
-                class="text-xs text-color-secondary mt-1"
-              >
-                <div
-                  v-for="cost in slotProps.data.additional_costs"
-                  :key="cost.id"
-                  class="ml-2"
-                >
-                  + {{ cost.name }}: {{ formatCurrency(cost.value) }}
-                </div>
-              </div>
-            </div>
-          </template>
-        </Column>
+      <div class="items-table">
+        <div
+          class="table-header flex justify-content-between font-bold mb-1 pb-1 border-bottom-1"
+        >
+          <div class="col-6">{{ $t("pos.item") }}</div>
+          <div class="col-2 text-center">{{ $t("pos.qty") }}</div>
+          <div class="col-2 text-right">{{ $t("pos.price") }}</div>
+          <div class="col-2 text-right">{{ $t("pos.total") }}</div>
+        </div>
 
-        <Column style="width: 80px">
-          <template #body="slotProps">
-            {{ formatCurrency(calculateItemTotal(slotProps.data)) }}
-          </template>
-        </Column>
-      </DataTable>
+        <div
+          v-for="(item, index) in invoice.items"
+          :key="index"
+          class="table-row flex justify-content-between py-1 border-bottom-1"
+        >
+          <div class="col-6">
+            <div class="font-bold">{{ item.name }}</div>
+            <div v-if="item.name_ar" class="text-sm text-color-secondary">
+              {{ item.name_ar }}
+            </div>
+          </div>
+          <div class="col-2 text-center">{{ item.quantity }}</div>
+          <div class="col-2 text-right">
+            {{
+              formatCurrency(
+                item.has_discount ? item.price_after_discount : item.price
+              )
+            }}
+          </div>
+          <div class="col-2 text-right">
+            {{ formatCurrency(calculateItemTotal(item)) }}
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Invoice-Level Adjustments -->
@@ -134,50 +137,58 @@
     </div>
 
     <!-- Totals -->
-    <div class="receipt-totals">
-      <div class="grid">
-        <div class="col-6">
-          <strong>{{ $t("pos.subtotal") }}:</strong>
-        </div>
-        <div class="col-6 text-right">
-          {{ formatCurrency(invoice.totals.subtotal) }}
-        </div>
+    <div class="receipt-totals p-3 surface-100 border-round">
+      <h4 class="m-0 mb-2">{{ $t("pos.summary") }}</h4>
 
-        <div v-if="invoice.totals.discountTotal > 0" class="col-6 text-red-500">
-          <strong>{{ $t("pos.discount") }}:</strong>
-        </div>
-        <div
-          v-if="invoice.totals.discountTotal > 0"
-          class="col-6 text-right text-red-500"
-        >
-          -{{ formatCurrency(invoice.totals.discountTotal) }}
+      <div class="totals-grid">
+        <div class="flex justify-content-between mb-1">
+          <span>{{ $t("pos.subtotal") }}:</span>
+          <span class="font-bold">{{
+            formatCurrency(invoice.totals?.subtotal || 0)
+          }}</span>
         </div>
 
         <div
-          v-if="invoice.totals.additionalCostsTotal > 0"
-          class="col-6 text-green-500"
+          v-if="invoice.totals?.discountTotal > 0"
+          class="flex justify-content-between mb-1 text-red-500"
         >
-          <strong>{{ $t("pos.additionalCosts") }}:</strong>
+          <span>{{ $t("pos.discount") }}:</span>
+          <span class="font-bold"
+            >-{{ formatCurrency(invoice.totals.discountTotal) }}</span
+          >
         </div>
+
         <div
-          v-if="invoice.totals.additionalCostsTotal > 0"
-          class="col-6 text-right text-green-500"
+          v-if="invoice.totals?.additionalCostsTotal > 0"
+          class="flex justify-content-between mb-1 text-green-500"
         >
-          +{{ formatCurrency(invoice.totals.additionalCostsTotal) }}
+          <span>{{ $t("pos.additionalCosts") }}:</span>
+          <span class="font-bold"
+            >+{{ formatCurrency(invoice.totals.additionalCostsTotal) }}</span
+          >
         </div>
 
-        <div class="col-6">
-          <strong>{{ $t("pos.tax") }} ({{ taxRate }}%):</strong>
-        </div>
-        <div class="col-6 text-right">
-          {{ formatCurrency(invoice.totals.taxAmount) }}
+        <div class="flex justify-content-between mb-1">
+          <span>{{ $t("pos.taxableAmount") }}:</span>
+          <span class="font-bold">{{
+            formatCurrency(invoice.totals?.taxableAmount || 0)
+          }}</span>
         </div>
 
-        <Divider class="col-12 my-2" />
+        <div class="flex justify-content-between mb-1">
+          <span>{{ $t("pos.tax") }} ({{ invoice.taxRate || 14 }}%):</span>
+          <span class="font-bold">{{
+            formatCurrency(invoice.totals?.taxAmount || 0)
+          }}</span>
+        </div>
 
-        <div class="col-6 font-bold text-xl">{{ $t("pos.total") }}:</div>
-        <div class="col-6 text-right font-bold text-xl text-primary">
-          {{ formatCurrency(invoice.totals.grandTotal) }}
+        <Divider class="my-2" />
+
+        <div
+          class="flex justify-content-between text-xl font-bold text-primary"
+        >
+          <span>{{ $t("pos.total") }}:</span>
+          <span>{{ formatCurrency(invoice.totals?.grandTotal || 0) }}</span>
         </div>
       </div>
     </div>
@@ -211,15 +222,12 @@
 </template>
 
 <script>
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
 import Divider from "primevue/divider";
+import PosService from "./PosService.js";
 
 export default {
   name: "PosReceipt",
   components: {
-    DataTable,
-    Column,
     Divider,
   },
   props: {
@@ -238,11 +246,13 @@ export default {
   },
   data() {
     return {
-      companyName: "Your Company Name",
-      companyAddress: "123 Business Street, City",
-      companyPhone: "0123456789",
+      companyInfo: {
+        name: "",
+        address: "",
+        phone: "",
+      },
       userName: "Cashier",
-      taxRate: 14,
+      posService: null,
     };
   },
   computed: {
@@ -255,27 +265,33 @@ export default {
     },
   },
   created() {
-    // TODO: Load company info from API
+    this.posService = new PosService(this.companyId, this.branchId);
     this.loadCompanyInfo();
   },
   methods: {
     async loadCompanyInfo() {
-      // TODO: Load company info from API
-      // For now, use dummy data
+      try {
+        // Load company info from API if needed
+        // For now, we'll use default values
+        this.companyInfo = {
+          name: "Your Company",
+          address: "123 Business Street, City",
+          phone: "0123456789",
+        };
+      } catch (error) {
+        console.error("Error loading company info:", error);
+      }
     },
 
     formatCurrency(amount) {
+      if (amount === undefined || amount === null) return "$0.00";
       return `$${parseFloat(amount).toFixed(2)}`;
     },
 
     formatDate(dateString) {
-      if (!dateString) return "";
+      if (!dateString) return new Date().toLocaleString();
       const date = new Date(dateString);
-      return (
-        date.toLocaleDateString() +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
+      return date.toLocaleString();
     },
 
     calculateItemTotal(item) {
@@ -303,6 +319,7 @@ export default {
   padding: 20px;
   max-width: 400px;
   margin: 0 auto;
+  color: #000;
 }
 
 .receipt-header {
@@ -315,45 +332,89 @@ export default {
   font-weight: bold;
 }
 
-.receipt-items :deep(.p-datatable) {
+.receipt-info {
   font-size: 11px;
 }
 
-.receipt-items :deep(.p-datatable-tbody tr) {
+.customer-info,
+.warehouse-info,
+.payment-info {
+  border-left: 3px solid #007bff;
+}
+
+.items-table {
+  width: 100%;
+}
+
+.table-header {
+  border-bottom: 2px solid #333;
+}
+
+.table-row {
   border-bottom: 1px dashed #ddd;
 }
 
-.receipt-items :deep(.p-datatable-tbody tr:last-child) {
+.table-row:last-child {
   border-bottom: none;
 }
 
-.receipt-totals .grid > div {
-  padding: 2px 0;
+.receipt-totals {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.totals-grid {
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
 }
 
 .payment-info {
-  border-left: 3px solid #007bff;
+  border: 1px solid #28a745;
+  background: #f8fff9;
 }
 
 .receipt-footer {
   border-top: 2px dashed #333;
   padding-top: 10px;
+  font-size: 10px;
 }
 
 /* Print styles */
 @media print {
   .pos-receipt {
     width: 80mm;
-    padding: 5mm;
+    padding: 0;
     font-size: 10px;
+    max-width: none;
   }
 
   .receipt-header h2 {
     font-size: 14px;
   }
 
-  .receipt-items :deep(.p-datatable) {
+  .receipt-info,
+  .customer-info,
+  .warehouse-info {
     font-size: 9px;
+  }
+
+  .table-header,
+  .table-row {
+    font-size: 9px;
+  }
+
+  .receipt-totals {
+    font-size: 10px;
+  }
+
+  .receipt-footer {
+    font-size: 8px;
+  }
+
+  /* Hide buttons and other non-printable elements */
+  .no-print {
+    display: none !important;
   }
 }
 </style>

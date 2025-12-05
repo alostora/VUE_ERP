@@ -244,7 +244,6 @@ export default {
   },
 
   mounted() {
-    console.log("Users component mounted");
     this.getData();
   },
 
@@ -296,7 +295,6 @@ export default {
      * View user details
      */
     viewUserDetails(user) {
-      console.log("View user details:", user);
       this.showToast(
         "info",
         "User Details",

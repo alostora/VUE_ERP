@@ -384,7 +384,6 @@ export default {
 
     propSearchUrl() {
       if (!this.effectiveCompanyId) {
-        console.error("No company ID found!");
         return "";
       }
 
@@ -428,7 +427,6 @@ export default {
       this.loadAllProducts();
       this.getData();
     } else {
-      console.error("No company ID found!");
     }
   },
 
@@ -461,7 +459,6 @@ export default {
         );
         this.categories = response.data.data || [];
       } catch (error) {
-        console.error("Error loading categories:", error);
         this.showToast(
           "error",
           this.$t("common.error"),
@@ -482,9 +479,7 @@ export default {
           }
         );
         this.allProducts = response.data.data || [];
-        console.log("📦 Loaded all products:", this.allProducts.length);
       } catch (error) {
-        console.error("Error loading products:", error);
         this.showToast(
           "error",
           this.$t("common.error"),

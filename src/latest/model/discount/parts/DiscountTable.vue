@@ -424,7 +424,6 @@ export default {
         );
         this.discountTypes = response.data.data || [];
       } catch (error) {
-        console.error("Error loading discount types:", error);
         this.showToast(
           "error",
           this.$t("common.error"),

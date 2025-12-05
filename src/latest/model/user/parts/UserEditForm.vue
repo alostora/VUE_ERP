@@ -235,7 +235,6 @@ export default {
         );
         this.accountTypes = response.data.data || [];
       } catch (error) {
-        console.error("Error loading account types:", error);
         this.error = this.$t("users.loadAccountTypesError");
       }
     },
@@ -296,13 +295,10 @@ export default {
           payload.password = this.formData.password;
         }
 
-        console.log("Updating user with payload:", payload);
-
         const response = await this.$http[method](url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("User updated successfully:", response.data);
         this.$emit("user-updated", response.data.data);
 
         this.showToast(
@@ -324,8 +320,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         // Handle different error response formats
         if (responseData.status_code === 400) {

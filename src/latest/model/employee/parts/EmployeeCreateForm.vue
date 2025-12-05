@@ -193,10 +193,8 @@ export default {
     },
 
     async submitForm() {
-      console.log("Submit form triggered");
 
       if (!this.validateForm()) {
-        console.log("Form validation failed");
         return;
       }
 
@@ -214,22 +212,16 @@ export default {
           address: this.formData.address?.trim() || "",
         };
 
-        console.log("Sending CREATE request with payload:", payload);
-
         const url = `${general_request.BASE_URL}/admin/company-employee`;
-        console.log("API URL:", url);
 
         const response = await this.$http.post(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ CREATE Response:", response.data);
-
         // TRANSFORM CREATE RESPONSE TO MATCH TABLE FORMAT
         const transformedEmployee = this.transformCreateResponse(
           response.data.data
         );
-        console.log("🔄 Transformed for table:", transformedEmployee);
 
         // Reset form
         this.formData = {
@@ -250,10 +242,8 @@ export default {
           this.$t("employees.employeeCreated")
         );
       } catch (error) {
-        console.error("❌ Error creating employee:", error);
 
         if (error.response) {
-          console.error("Response error:", error.response.data);
           this.error =
             error.response.data.message || this.$t("employees.createError");
 
@@ -263,10 +253,8 @@ export default {
             );
           }
         } else if (error.request) {
-          console.error("No response received:", error.request);
           this.error = this.$t("employees.networkError");
         } else {
-          console.error("Error:", error.message);
           this.error = error.message || this.$t("employees.createError");
         }
       } finally {
@@ -310,7 +298,6 @@ export default {
           life: 3000,
         });
       } else {
-        console.log(`Toast: ${severity} - ${summary}: ${detail}`);
       }
     },
   },

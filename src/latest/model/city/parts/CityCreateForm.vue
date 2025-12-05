@@ -227,7 +227,6 @@ export default {
         );
         this.countries = response.data.data || [];
       } catch (error) {
-        console.error("Error loading countries:", error);
         this.error = this.$t("cities.loadCountriesError");
       } finally {
         this.loadingCountries = false;
@@ -245,7 +244,6 @@ export default {
         );
         this.governorates = response.data.data || [];
       } catch (error) {
-        console.error("Error loading governorates:", error);
         this.error = this.$t("cities.loadGovernoratesError");
       } finally {
         this.loadingGovernorates = false;

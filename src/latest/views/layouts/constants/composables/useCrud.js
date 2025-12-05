@@ -26,7 +26,6 @@ export function useCrud() {
                                    this.tableItems = this.tableItems.filter(i => i.id !== item.id);
                                    this.showToast("success", "Success", successMessage);
                               } catch (error) {
-                                   console.error("Error deleting item:", error);
                                    this.showToast("error", "Error", errorMessage);
                               } finally {
                                    this.loading = false;

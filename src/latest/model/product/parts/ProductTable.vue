@@ -291,7 +291,6 @@ export default {
 
     propSearchUrl() {
       if (!this.effectiveCompanyId) {
-        console.error("❌ No company ID found!");
         return "";
       }
 
@@ -320,7 +319,6 @@ export default {
       this.loadCategories();
       this.getData();
     } else {
-      console.error("❌ No company ID found!");
     }
   },
 
@@ -348,7 +346,6 @@ export default {
 
         this.categories = response.data.data || [];
       } catch (error) {
-        console.error("Error loading categories:", error);
         this.showToast(
           "error",
           this.$t("common.error"),

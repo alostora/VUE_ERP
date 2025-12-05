@@ -107,15 +107,12 @@ export default {
   },
   methods: {
     populateForm(variant) {
-      console.log("📝 Populating form with variant:", variant);
-
       this.formData = {
         id: variant.id || "",
         name: variant.name || "",
         name_ar: variant.name_ar || "",
       };
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -158,13 +155,10 @@ export default {
           name_ar: this.formData.name_ar,
         };
 
-        console.log("📤 Updating variant with payload:", payload);
-
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Variant updated successfully:", response.data);
         this.$emit("variant-updated", response.data.data);
 
         this.showToast(
@@ -185,8 +179,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

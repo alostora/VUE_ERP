@@ -52,7 +52,6 @@ export function useTable() {
                          this.links = response.data.links || {};
                          this.meta = response.data.meta || { total: 0 };
                     } catch (error) {
-                         console.error("Error fetching data:", error);
                          const errorMessage = customErrorMessage || this.$t("errors.fetchError");
                          this.showToast("error", this.$t("common.error"), errorMessage);
                     } finally {
@@ -107,7 +106,6 @@ export function useTable() {
                                    this.tableItems = this.tableItems.filter(i => i.id !== item.id);
                                    this.showToast("success", this.$t("common.success"), successMessage);
                               } catch (error) {
-                                   console.error("Error deleting item:", error);
                                    const errorMessage = customErrorMessage || this.$t("errors.deleteError");
                                    this.showToast("error", this.$t("common.error"), errorMessage);
                               } finally {

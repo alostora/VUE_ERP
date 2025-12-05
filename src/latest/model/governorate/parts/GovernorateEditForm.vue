@@ -189,7 +189,6 @@ export default {
   },
   methods: {
     populateForm(governorate) {
-      console.log("Populating form with:", governorate); // Debug log
 
       this.formData = {
         id: governorate.id || "",
@@ -230,7 +229,6 @@ export default {
         );
         this.countries = response.data.data || [];
       } catch (error) {
-        console.error("Error loading countries:", error);
         this.error = this.$t("governorates.loadCountriesError");
       }
     },
@@ -245,7 +243,6 @@ export default {
         );
         this.countryName = response.data.data?.name || "Unknown Country";
       } catch (error) {
-        console.error("Error loading country name:", error);
         this.countryName = "Unknown Country";
       }
     },
@@ -290,13 +287,10 @@ export default {
           country_id: this.formData.country_id,
         };
 
-        console.log("Submitting form with payload:", payload); // Debug log
-
         const response = await this.$http[method](url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("Governorate updated successfully:", response.data);
         this.$emit("governorate-updated", response.data.data);
 
         this.showToast(
@@ -320,7 +314,6 @@ export default {
 
       if (error.response?.data) {
         const responseData = error.response.data;
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

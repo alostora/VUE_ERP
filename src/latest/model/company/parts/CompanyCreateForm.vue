@@ -487,7 +487,6 @@ export default {
 
         return response.data.data.id;
       } catch (error) {
-        console.error("Error uploading file:", error);
         throw new Error("Failed to upload file");
       }
     },
@@ -534,7 +533,6 @@ export default {
         );
         this.clients = response.data.data || [];
       } catch (error) {
-        console.error("Error loading clients:", error);
         this.error = this.$t("companies.loadClientsError");
       } finally {
         this.loadingClients = false;
@@ -552,7 +550,6 @@ export default {
         );
         this.countries = response.data.data || [];
       } catch (error) {
-        console.error("Error loading countries:", error);
         this.error = this.$t("companies.loadCountriesError");
       } finally {
         this.loadingCountries = false;
@@ -570,7 +567,6 @@ export default {
         );
         this.governorates = response.data.data || [];
       } catch (error) {
-        console.error("Error loading governorates:", error);
         this.error = this.$t("companies.loadGovernoratesError");
       } finally {
         this.loadingGovernorates = false;
@@ -588,7 +584,6 @@ export default {
         );
         this.cities = response.data.data || [];
       } catch (error) {
-        console.error("Error loading cities:", error);
         this.error = this.$t("companies.loadCitiesError");
       } finally {
         this.loadingCities = false;
@@ -606,7 +601,6 @@ export default {
         );
         this.currencies = response.data.data || [];
       } catch (error) {
-        console.error("Error loading currencies:", error);
         this.error = this.$t("companies.loadCurrenciesError");
       } finally {
         this.loadingCurrencies = false;
@@ -699,7 +693,6 @@ export default {
           payload.cover_id = coverId;
         }
 
-        console.log("🚀 Creating company with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company`;
         const response = await this.$http.post(url, payload, {

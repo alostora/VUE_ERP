@@ -243,11 +243,9 @@ export default {
 
     propSearchUrl() {
       if (!this.effectiveCompanyId) {
-        console.warn("⚠️ Company ID is undefined, cannot build search URL");
         return "";
       }
       const url = `${general_request.BASE_URL}/admin/company/branches/search/${this.effectiveCompanyId}?paginate=true`;
-      console.log("🌐 Search URL:", url);
       return url;
     },
 
@@ -257,11 +255,9 @@ export default {
   },
 
   mounted() {
-    console.log("🚀 BranchTable mounted");
     if (this.effectiveCompanyId) {
       this.getData();
     } else {
-      console.warn("⚠️ No company ID found on mount");
     }
   },
 
@@ -269,7 +265,6 @@ export default {
     "$route.params.company_id": {
       immediate: true,
       handler(newCompanyId) {
-        console.log("🔄 Route company_id changed:", newCompanyId);
         if (newCompanyId) {
           this.getData();
         }
@@ -376,7 +371,6 @@ export default {
           params: { company_id: companyId },
         });
       } catch (e) {
-        console.warn("Named route navigation failed, falling back to path", e);
         this.$router.push(`/company/${companyId}/show`);
       }
     },

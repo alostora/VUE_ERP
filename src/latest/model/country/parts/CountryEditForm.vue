@@ -215,7 +215,6 @@ export default {
           headers: general_request.headers,
         });
 
-        console.log("Country updated successfully:", response.data);
         this.$emit("country-updated", response.data.data);
 
         this.showToast(

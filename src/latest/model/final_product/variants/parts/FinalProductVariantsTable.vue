@@ -235,20 +235,13 @@ export default {
     },
   },
   mounted() {
-    console.log("🔍 Variants Table Mounted with embedded:", this.embedded, {
-      company_id: this.company_id,
-      final_product_id: this.final_product_id,
-    });
 
     // Ensure we have the IDs
     this.effectiveCompanyId = this.company_id;
     this.effectiveFinalProductId = this.final_product_id;
 
     if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
-      console.error("❌ Missing required IDs:", {
-        company_id: this.effectiveCompanyId,
-        final_product_id: this.effectiveFinalProductId,
-      });
+      
       return;
     }
 
@@ -265,9 +258,7 @@ export default {
           }
         );
         this.finalProduct = response.data.data;
-        console.log("✅ Final product loaded:", this.finalProduct?.name);
       } catch (error) {
-        console.error("Error loading final product:", error);
         if (!this.embedded) {
           this.showToast(
             "error",
@@ -279,10 +270,6 @@ export default {
     },
 
     openCreateModal() {
-      console.log("🔧 Opening create modal with:", {
-        company_id: this.effectiveCompanyId,
-        final_product_id: this.effectiveFinalProductId,
-      });
 
       if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
         this.showToast(
@@ -297,8 +284,6 @@ export default {
     },
 
     handleVariantsAdded(newVariants) {
-      console.log("✅ New variants added:", newVariants);
-
       // Add new variants to the table
       newVariants.forEach((variant) => {
         this.tableItems.unshift(variant);

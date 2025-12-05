@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="pos-cart-item p-3"
-    :class="{ 'light-item': !isDarkMode, 'dark-item': isDarkMode }"
-  >
+  <div class="pos-cart-item">
     <!-- Item Header -->
     <div class="flex justify-content-between align-items-start mb-2">
       <div class="flex align-items-start gap-2" style="flex: 1">
@@ -14,45 +11,32 @@
             :alt="item.name"
             class="border-round"
           />
-          <div v-else class="no-image" :class="{ 'dark-no-image': isDarkMode }">
+          <div v-else class="no-image">
             <i class="pi pi-image"></i>
           </div>
         </div>
 
         <!-- Product Info -->
         <div style="flex: 1">
-          <h4 class="m-0 mb-1" :class="{ 'dark-text': isDarkMode }">
-            {{ item.name }}
-          </h4>
-          <p
-            class="text-sm m-0 mb-1"
-            :class="{
-              'text-color-secondary': !isDarkMode,
-              'dark-text-secondary': isDarkMode,
-            }"
-          >
+          <h5 class="m-0 mb-1 text-sm">{{ item.name }}</h5>
+          <p class="text-xs m-0 mb-1 text-color-secondary">
             {{ item.name_ar }}
           </p>
 
           <!-- Price Display -->
-          <div class="flex align-items-center gap-2 mb-1">
+          <div class="flex align-items-center gap-1 mb-2">
             <span
               v-if="item.has_discount"
-              class="original-price text-line-through"
-              :class="{
-                'text-color-secondary': !isDarkMode,
-                'dark-text-secondary': isDarkMode,
-              }"
+              class="original-price text-line-through text-xs text-color-secondary"
             >
-              {{ formatCurrency(item.price) }}
+              {{ formatCurrency(parsePrice(item.price)) }}
             </span>
-            <span
-              class="current-price font-bold"
-              :class="{ 'dark-price': isDarkMode }"
-            >
+            <span class="current-price font-bold text-sm">
               {{
                 formatCurrency(
-                  item.has_discount ? item.price_after_discount : item.price
+                  parsePrice(
+                    item.has_discount ? item.price_after_discount : item.price
+                  )
                 )
               }}
             </span>
@@ -63,21 +47,6 @@
               size="small"
             />
           </div>
-
-          <!-- Measurement Unit -->
-          <div v-if="measurementUnits.length > 0" class="mb-1">
-            <Dropdown
-              v-model="selectedMeasurementUnit"
-              :options="measurementUnits"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Select Unit"
-              class="w-10rem"
-              size="small"
-              :class="{ 'dark-dropdown': isDarkMode }"
-              @change="updateMeasurementUnit"
-            />
-          </div>
         </div>
       </div>
 
@@ -86,188 +55,141 @@
         icon="pi pi-times"
         @click="$emit('remove')"
         class="p-button-danger p-button-text p-button-sm"
-        :class="{ 'dark-remove-btn': isDarkMode }"
-        v-tooltip.top="$t('pos.removeItem')"
+        v-tooltip="$t('pos.removeItem')"
       />
     </div>
 
     <!-- Quantity Controls -->
-    <div class="flex justify-content-between align-items-center mb-2">
+    <div class="flex justify-content-between align-items-center mb-3">
       <div class="flex align-items-center gap-2">
-        <span
-          class="font-bold"
-          :class="{ 'dark-text': isDarkMode, 'light-text': !isDarkMode }"
-          >{{ $t("pos.quantity") }}:</span
-        >
-        <div
-          class="quantity-controls flex align-items-center gap-1"
-          :class="{ 'dark-quantity-controls': isDarkMode }"
-        >
-          <Button
-            icon="pi pi-minus"
-            @click="decreaseQuantity"
-            class="p-button-rounded p-button-text p-button-sm"
-            :class="{ 'dark-quantity-btn': isDarkMode }"
-            :disabled="item.quantity <= 1"
-          />
-          <InputNumber
-            v-model="item.quantity"
-            :min="1"
-            :max="item.stock || 999"
-            showButtons
-            buttonLayout="horizontal"
-            incrementButtonIcon="pi pi-plus"
-            decrementButtonIcon="pi pi-minus"
-            @input="updateQuantity"
-            class="quantity-input"
-            :class="{ 'dark-input': isDarkMode }"
-          />
-          <Button
-            icon="pi pi-plus"
-            @click="increaseQuantity"
-            class="p-button-rounded p-button-text p-button-sm"
-            :class="{ 'dark-quantity-btn': isDarkMode }"
-          />
-        </div>
+        <span class="font-bold text-xs">{{ $t("pos.quantity") }}:</span>
+        <InputNumber
+          v-model="item.quantity"
+          :min="1"
+          :max="999"
+          showButtons
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          @input="updateQuantity"
+          class="quantity-input"
+          inputStyle="width: 60px"
+        />
       </div>
-      <!-- Item Total -->
-      <div
-        class="item-total font-bold text-lg"
-        :class="{ 'dark-total': isDarkMode }"
-      >
+
+      <!-- Item Total - عرض شامل لتكاليف العمليات -->
+      <div class="item-total font-bold text-sm">
         {{ formatCurrency(itemTotal) }}
+        <small
+          v-if="itemOperationsTotal > 0"
+          class="text-green-600 text-xs ml-1"
+        >
+          (+{{ formatCurrency(itemOperationsTotal) }})
+        </small>
       </div>
     </div>
 
-    <!-- Stock Info -->
-    <div v-if="item.stock !== undefined" class="stock-info mb-2">
-      <Tag
-        :value="`${$t('pos.stock')}: ${item.stock}`"
-        :severity="getStockSeverity(item.stock)"
-        size="small"
-      />
-      <small
-        v-if="item.quantity > item.stock"
-        class="ml-2"
-        :class="{ 'p-error': !isDarkMode, 'dark-error': isDarkMode }"
+    <!-- Item Operations Section -->
+    <div class="item-operations" v-if="showAdditionalCosts">
+      <div
+        class="operations-header flex justify-content-between align-items-center mb-2"
       >
-        {{ $t("pos.insufficientStock") }}
-      </small>
-    </div>
-
-    <!-- Item-Level Additional Costs -->
-    <div class="item-additional-costs">
-      <div class="flex justify-content-between align-items-center mb-2">
-        <h5 class="m-0" :class="{ 'dark-text': isDarkMode }">
-          <i class="pi pi-wrench mr-1" :class="{ 'dark-icon': isDarkMode }"></i>
+        <h6 class="m-0 text-xs font-bold">
+          <i class="pi pi-wrench mr-1"></i>
           {{ $t("pos.itemOperations") }}
-        </h5>
+          <small class="text-green-600 ml-1">
+            ({{ formatCurrency(itemOperationsTotal) }})
+          </small>
+        </h6>
         <Button
           :label="$t('pos.addOperation')"
           icon="pi pi-plus"
           @click="addAdditionalCost"
-          class="p-button-warning p-button-sm"
-          :class="{ 'dark-warning-btn': isDarkMode }"
-          size="small"
+          class="p-button-warning p-button-sm text-xs"
         />
       </div>
 
+      <!-- Additional Costs List -->
       <div
         v-if="item.additional_costs && item.additional_costs.length > 0"
-        class="costs-list"
+        class="operations-list"
       >
         <div
           v-for="(cost, index) in item.additional_costs"
           :key="cost.id || index"
-          class="cost-item p-2 mb-2 border-round"
-          :class="{
-            'light-cost-item': !isDarkMode,
-            'dark-cost-item': isDarkMode,
-          }"
+          class="operation-item p-2 mb-2 border-round"
         >
           <div class="grid">
-            <div class="col-12 md:col-4">
+            <div class="col-12 md:col-5 mb-1">
+              <label class="block text-xs font-bold mb-1">
+                {{ $t("pos.operationName") }}
+              </label>
               <InputText
                 v-model="cost.name"
-                :placeholder="$t('pos.operationName')"
-                class="w-full"
-                size="small"
-                :class="{ 'dark-input': isDarkMode }"
+                :placeholder="$t('pos.enterOperationName')"
+                class="w-full text-xs"
                 @input="updateAdditionalCost(cost)"
               />
             </div>
-            <div class="col-12 md:col-4">
+
+            <div class="col-12 md:col-4 mb-1">
+              <label class="block text-xs font-bold mb-1">
+                {{ $t("pos.costValue") }}
+              </label>
               <InputNumber
                 v-model="cost.value"
-                :placeholder="$t('pos.costValue')"
+                :placeholder="$t('pos.enterCostValue')"
                 mode="currency"
                 currency="USD"
                 locale="en-US"
-                class="w-full"
-                size="small"
-                :class="{ 'dark-input': isDarkMode }"
+                class="w-full text-xs"
                 @input="updateAdditionalCost(cost)"
               />
             </div>
-            <div class="col-12 md:col-2">
-              <Button
-                icon="pi pi-paperclip"
-                @click="uploadOperationImage(cost)"
-                class="p-button-text p-button-sm"
-                size="small"
-                :class="{ 'dark-icon-btn': isDarkMode }"
-                v-tooltip.top="$t('pos.uploadImage')"
-              />
-            </div>
-            <div class="col-12 md:col-2">
+
+            <div class="col-12 md:col-3 mb-1 flex align-items-end">
               <Button
                 icon="pi pi-times"
                 @click="removeAdditionalCost(index)"
-                class="p-button-danger p-button-text p-button-sm"
-                size="small"
-                :class="{ 'dark-remove-btn': isDarkMode }"
+                class="p-button-danger p-button-text p-button-sm w-full"
               />
             </div>
+          </div>
 
-            <!-- Description -->
-            <div class="col-12 mt-2">
-              <Textarea
-                v-model="cost.description"
-                :placeholder="$t('pos.operationDescription')"
-                rows="2"
-                class="w-full"
-                size="small"
-                :class="{ 'dark-textarea': isDarkMode }"
-                @input="updateAdditionalCost(cost)"
+          <!-- File Upload for Operation -->
+          <div class="mt-2">
+            <div class="file-upload-section">
+              <FileUpload
+                mode="basic"
+                :chooseLabel="$t('pos.uploadFile')"
+                :multiple="false"
+                :maxFileSize="5000000"
+                @select="onFileSelect($event, cost)"
+                class="w-full text-xs"
+                accept="image/*,.pdf,.doc,.docx"
               />
-            </div>
+              <small class="text-xs text-color-secondary">
+                {{ $t("pos.maxFileSize") }}: 5MB
+              </small>
 
-            <!-- Image Preview -->
-            <div v-if="cost.image" class="col-12 mt-2">
-              <div class="image-preview">
-                <img :src="cost.image" :alt="cost.name" class="border-round" />
-                <Button
-                  icon="pi pi-times"
-                  @click="removeOperationImage(cost)"
-                  class="p-button-danger p-button-text p-button-sm remove-image-btn"
-                  size="small"
-                  :class="{ 'dark-remove-btn': isDarkMode }"
-                />
+              <!-- Show uploaded file -->
+              <div v-if="cost.file" class="uploaded-file mt-1">
+                <div class="flex align-items-center gap-1">
+                  <i class="pi pi-file text-xs"></i>
+                  <span class="text-xs">{{ getFileName(cost.file) }}</span>
+                  <span class="text-xs text-color-secondary"
+                    >({{ formatFileSize(cost.file) }})</span
+                  >
+                  <Button
+                    icon="pi pi-times"
+                    @click="removeFile(cost)"
+                    class="p-button-danger p-button-text p-button-xs ml-2"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div
-        v-else
-        class="text-sm p-2"
-        :class="{
-          'text-color-secondary': !isDarkMode,
-          'dark-text-secondary': isDarkMode,
-        }"
-      >
-        {{ $t("pos.noOperationsAdded") }}
       </div>
     </div>
 
@@ -277,9 +199,8 @@
         v-model="item.notes"
         :placeholder="$t('pos.itemNotesPlaceholder')"
         rows="1"
-        class="w-full"
-        size="small"
-        :class="{ 'dark-textarea': isDarkMode }"
+        class="w-full text-xs"
+        autoResize
         @input="updateItemNotes"
       />
     </div>
@@ -292,11 +213,19 @@ import Tag from "primevue/tag";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
-import Dropdown from "primevue/dropdown";
+import FileUpload from "primevue/fileupload";
 import Tooltip from "primevue/tooltip";
 
 export default {
   name: "PosCartItem",
+  components: {
+    Button,
+    Tag,
+    InputNumber,
+    InputText,
+    Textarea,
+    FileUpload,
+  },
   directives: {
     tooltip: Tooltip,
   },
@@ -309,64 +238,81 @@ export default {
       type: Boolean,
       default: false,
     },
-  },
-  data() {
-    return {
-      measurementUnits: [],
-      selectedMeasurementUnit: this.item.measurement_unit_id || null,
-    };
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+    showAdditionalCosts: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
-    itemTotal() {
-      const price = this.item.has_discount
-        ? this.item.price_after_discount
-        : this.item.price;
-      let total = price * (this.item.quantity || 1);
-
-      // Add item-level additional costs
+    // حساب إجمالي تكاليف العمليات على المنتج
+    itemOperationsTotal() {
+      let total = 0;
       if (
         this.item.additional_costs &&
         Array.isArray(this.item.additional_costs)
       ) {
         this.item.additional_costs.forEach((cost) => {
-          total += parseFloat(cost.value) || 0;
+          total += this.parsePrice(cost.value) || 0;
         });
       }
+      return parseFloat(total.toFixed(2));
+    },
+
+    // حساب الإجمالي النهائي للمنتج (السعر + تكاليف العمليات)
+    itemTotal() {
+      const price = this.parsePrice(
+        this.item.has_discount
+          ? this.item.price_after_discount
+          : this.item.price
+      );
+
+      let total = price * (this.item.quantity || 1);
+
+      // إضافة تكاليف العمليات على المنتج (مهم: تضاف للإجمالي)
+      total += this.itemOperationsTotal;
 
       return parseFloat(total.toFixed(2));
     },
   },
   created() {
-    this.loadMeasurementUnits();
     // Initialize additional_costs array if not exists
     if (!this.item.additional_costs) {
       this.$set(this.item, "additional_costs", []);
     }
   },
   methods: {
+    parsePrice(price) {
+      if (!price && price !== 0) return 0;
+      if (typeof price === "string") {
+        return parseFloat(price.replace(/,/g, ""));
+      }
+      return parseFloat(price);
+    },
+
     formatCurrency(amount) {
       return `$${parseFloat(amount).toFixed(2)}`;
     },
 
-    getStockSeverity(stock) {
-      if (!stock || stock <= 0) return "danger";
-      if (stock <= 10) return "warning";
-      return "success";
+    formatFileSize(file) {
+      if (!file || !file.size) return "0 B";
+      const bytes = file.size;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return Math.round(bytes / Math.pow(1024, i), 2) + " " + sizes[i];
     },
 
-    async loadMeasurementUnits() {
-      // TODO: Load measurement units from API
-      this.measurementUnits = [
-        { id: "unit1", name: "Piece" },
-        { id: "unit2", name: "Kg" },
-        { id: "unit3", name: "Liter" },
-      ];
-    },
-
-    updateMeasurementUnit() {
-      this.$emit("update", {
-        measurement_unit_id: this.selectedMeasurementUnit,
-      });
+    getFileName(file) {
+      if (file.name) return file.name;
+      if (typeof file === "string") return file.split("/").pop();
+      return "file";
     },
 
     updateQuantity() {
@@ -375,18 +321,6 @@ export default {
 
     updateItemNotes() {
       this.$emit("update", { notes: this.item.notes });
-    },
-
-    increaseQuantity() {
-      const newQuantity = (this.item.quantity || 1) + 1;
-      this.$emit("update", { quantity: newQuantity });
-    },
-
-    decreaseQuantity() {
-      if (this.item.quantity > 1) {
-        const newQuantity = this.item.quantity - 1;
-        this.$emit("update", { quantity: newQuantity });
-      }
     },
 
     addAdditionalCost() {
@@ -398,8 +332,7 @@ export default {
         id: `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: "",
         value: 0,
-        description: "",
-        image: null,
+        file: null,
       });
 
       this.$emit("update", { additional_costs: this.item.additional_costs });
@@ -414,29 +347,15 @@ export default {
       this.$emit("update", { additional_costs: this.item.additional_costs });
     },
 
-    uploadOperationImage(cost) {
-      // Create a file input element
-      const input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-
-      input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            cost.image = event.target.result;
-            this.updateAdditionalCost(cost);
-          };
-          reader.readAsDataURL(file);
-        }
-      };
-
-      input.click();
+    onFileSelect(event, cost) {
+      if (event.files && event.files[0]) {
+        cost.file = event.files[0];
+        this.updateAdditionalCost(cost);
+      }
     },
 
-    removeOperationImage(cost) {
-      cost.image = null;
+    removeFile(cost) {
+      cost.file = null;
       this.updateAdditionalCost(cost);
     },
   },
@@ -444,59 +363,19 @@ export default {
 </script>
 
 <style scoped>
-/* Base styles */
 .pos-cart-item {
   border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 6px;
+  padding: 12px;
+  background: white;
+  margin-bottom: 8px;
   transition: all 0.3s ease;
 }
 
 .pos-cart-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Light Mode */
-.light-item {
-  background: white;
-  border-color: #dee2e6;
-}
-
-.light-item:hover {
-  border-color: #007bff;
-}
-
-.light-cost-item {
-  border-left: 3px solid #ffc107;
-  background: #fff8e1;
-}
-
-.light-cost-item:nth-child(even) {
-  border-left-color: #fd7e14;
-  background: #fff3e0;
-}
-
-/* Dark Mode */
-.dark-item {
-  background: #2d3748;
-  border-color: #4a5568;
-}
-
-.dark-item:hover {
-  border-color: #667eea;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.dark-cost-item {
-  border-left: 3px solid #d69e2e;
-  background: #4a5568;
-}
-
-.dark-cost-item:nth-child(even) {
-  border-left-color: #ed8936;
-  background: #2d3748;
-}
-
-/* Image */
 .item-image {
   width: 60px;
   height: 60px;
@@ -507,6 +386,7 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 4px;
 }
 
 .no-image {
@@ -516,245 +396,108 @@ export default {
   align-items: center;
   justify-content: center;
   border: 1px dashed #dee2e6;
-  border-radius: 6px;
-}
-
-.light-item .no-image {
-  background: #f8f9fa;
+  border-radius: 4px;
   color: #6c757d;
-}
-
-.dark-item .no-image {
-  background: #4a5568;
-  color: #a0aec0;
-}
-
-/* Text Colors */
-.dark-text {
-  color: #e2e8f0 !important;
-}
-
-.dark-text-secondary {
-  color: #a0aec0 !important;
-}
-
-.dark-price {
-  color: #68d391 !important;
-}
-
-.dark-total {
-  color: #667eea !important;
-}
-
-/* Original Price */
-.original-price {
-  font-size: 0.85rem;
-}
-
-.light-item .original-price {
-  color: #6c757d;
-}
-
-.dark-item .original-price {
-  color: #a0aec0;
-}
-
-/* Current Price */
-.current-price {
-  font-size: 1rem;
-}
-
-.light-item .current-price {
-  color: #28a745;
-}
-
-.dark-item .current-price {
-  color: #68d391;
-}
-
-/* Quantity Controls */
-.quantity-controls {
-  padding: 4px;
-  border-radius: 6px;
-}
-
-.light-item .quantity-controls {
-  background: #f8f9fa;
-}
-
-.dark-item .quantity-controls {
-  background: #4a5568;
 }
 
 .quantity-input {
-  width: 70px !important;
+  width: 100px;
 }
 
-:deep(.quantity-input .p-inputnumber-input) {
+.quantity-input :deep(.p-inputnumber-input) {
   text-align: center;
   font-weight: bold;
 }
 
-/* Input Fields */
-:deep(.dark-input .p-inputtext) {
-  background-color: #2d3748 !important;
-  border-color: #4a5568 !important;
-  color: #e2e8f0 !important;
+.quantity-input :deep(.p-inputnumber-button) {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 10px !important;
 }
 
-:deep(.dark-input .p-inputtext:focus) {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
-}
-
-:deep(.dark-input .p-inputnumber-button) {
-  background-color: #4a5568 !important;
-  border-color: #4a5568 !important;
-  color: #e2e8f0 !important;
-}
-
-/* Dropdown */
-:deep(.dark-dropdown .p-dropdown) {
-  background-color: #2d3748 !important;
-  border-color: #4a5568 !important;
-  color: #e2e8f0 !important;
-}
-
-:deep(.dark-dropdown .p-dropdown-panel) {
-  background-color: #2d3748 !important;
-  border-color: #4a5568 !important;
-}
-
-:deep(.dark-dropdown .p-dropdown-item) {
-  color: #e2e8f0 !important;
-}
-
-:deep(.dark-dropdown .p-dropdown-item:hover) {
-  background-color: #4a5568 !important;
-}
-
-/* Textarea */
-:deep(.dark-textarea .p-inputtextarea) {
-  background-color: #2d3748 !important;
-  border-color: #4a5568 !important;
-  color: #e2e8f0 !important;
-}
-
-:deep(.dark-textarea .p-inputtextarea:focus) {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
-}
-
-/* Buttons */
-:deep(.dark-quantity-btn.p-button) {
-  background-color: #4a5568 !important;
-  border-color: #4a5568 !important;
-  color: #e2e8f0 !important;
-}
-
-:deep(.dark-quantity-btn.p-button:hover) {
-  background-color: #667eea !important;
-  border-color: #667eea !important;
-}
-
-:deep(.dark-warning-btn.p-button) {
-  background-color: #d69e2e !important;
-  border-color: #d69e2e !important;
-  color: white !important;
-}
-
-:deep(.dark-warning-btn.p-button:hover) {
-  background-color: #b7791f !important;
-  border-color: #b7791f !important;
-}
-
-:deep(.dark-remove-btn.p-button) {
-  color: #fc8181 !important;
-}
-
-:deep(.dark-remove-btn.p-button:hover) {
-  background-color: rgba(252, 129, 129, 0.1) !important;
-}
-
-:deep(.dark-icon-btn.p-button) {
-  color: #a0aec0 !important;
-}
-
-:deep(.dark-icon-btn.p-button:hover) {
-  background-color: rgba(160, 174, 192, 0.1) !important;
-}
-
-.dark-icon {
-  color: #a0aec0 !important;
-}
-
-/* Item Total */
 .item-total {
-  min-width: 80px;
-  text-align: right;
-  margin-top: 65px;
+  color: #28a745;
+  font-size: 14px;
 }
 
-.light-item .item-total {
-  color: #007bff;
+.original-price {
+  font-size: 11px;
 }
 
-.dark-item .item-total {
-  color: #667eea;
+.current-price {
+  font-size: 13px;
+  color: #28a745;
 }
 
-/* Stock Info */
-.stock-info {
+.operations-header {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.operation-item {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.operation-item:hover {
+  background: #f1f3f4;
+}
+
+.file-upload-section {
+  border: 1px dashed #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  background: white;
+}
+
+.uploaded-file {
+  background: #e8f5e8;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
 }
 
-.dark-error {
-  color: #fc8181 !important;
+:deep(.p-fileupload-choose) {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
 }
 
-/* Image Preview */
-.image-preview {
-  position: relative;
-  width: 100px;
-  height: 100px;
+:deep(.p-button-xs) {
+  padding: 2px 4px !important;
+  font-size: 10px !important;
 }
 
-.image-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.item-notes :deep(.p-inputtextarea) {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border: 1px solid #dee2e6;
   border-radius: 4px;
 }
 
-.remove-image-btn {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 24px;
-  height: 24px;
-}
+/* تحسينات للأجهزة الصغيرة */
+@media (max-width: 768px) {
+  .item-image {
+    width: 50px;
+    height: 50px;
+  }
 
-.light-text {
-  color: #2d3748 !important; /* Dark gray for light mode */
-}
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
-.dark-text {
-  color: #e2e8f0 !important; /* Light gray for dark mode */
-}
-
-/* Utility Classes */
-:deep(.p-button.p-button-sm) {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-:deep(.p-inputtext-sm) {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-:deep(.p-dropdown-sm .p-dropdown-label) {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+  .grid > div {
+    width: 100% !important;
+  }
 }
 </style>

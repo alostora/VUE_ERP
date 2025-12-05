@@ -88,16 +88,11 @@ export default {
   },
   methods: {
     openModal() {
-      console.log("Opening final products modal with:", {
-        company_id: this.company_id,
-        discount_id: this.discount_id,
-      });
 
       this.effectiveCompanyId = this.company_id;
       this.effectiveDiscountId = this.discount_id;
 
       if (!this.effectiveCompanyId || !this.effectiveDiscountId) {
-        console.error("Missing required IDs for modal");
         return;
       }
 

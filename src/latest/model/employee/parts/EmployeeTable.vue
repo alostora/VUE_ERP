@@ -256,7 +256,6 @@ export default {
 
     propSearchUrl() {
       if (!this.effectiveCompanyId || !this.effectiveBranchId) {
-        console.warn("⚠️ Company ID or Branch ID is undefined");
         return "";
       }
 
@@ -267,7 +266,6 @@ export default {
         url += `&query_string=${encodeURIComponent(this.query_string)}`;
       }
 
-      console.log("🔗 Employee API URL:", url);
       return url;
     },
 
@@ -277,14 +275,10 @@ export default {
   },
 
   mounted() {
-    console.log("🚀 EmployeeTable mounted");
-    console.log("Company ID:", this.effectiveCompanyId);
-    console.log("Branch ID:", this.effectiveBranchId);
 
     if (this.effectiveCompanyId && this.effectiveBranchId) {
       this.getData();
     } else {
-      console.warn("⚠️ Missing company or branch ID on mount");
     }
   },
 
@@ -292,7 +286,6 @@ export default {
     "$route.params.company_id": {
       handler(newCompanyId) {
         if (newCompanyId && this.effectiveBranchId) {
-          console.log("🔄 Company ID changed, reloading data");
           this.getData();
         }
       },
@@ -300,7 +293,6 @@ export default {
     "$route.params.branch_id": {
       handler(newBranchId) {
         if (newBranchId && this.effectiveCompanyId) {
-          console.log("🔄 Branch ID changed, reloading data");
           this.getData();
         }
       },
@@ -321,7 +313,6 @@ export default {
     },
 
     handleEmployeeCreated(newEmployee) {
-      console.log("🎯 Employee created, refreshing table");
       this.handleItemCreated(newEmployee);
       // Refresh the table data
       this.getData();
@@ -335,7 +326,6 @@ export default {
     },
 
     handleEmployeeUpdated(updatedEmployee) {
-      console.log("🎯 Employee updated, refreshing table");
       this.handleItemUpdated(updatedEmployee);
       // Refresh the table data
       this.getData();
@@ -396,7 +386,6 @@ export default {
           life: 3000,
         });
       } else {
-        console.log(`Toast: ${severity} - ${summary}: ${detail}`);
       }
     },
   },

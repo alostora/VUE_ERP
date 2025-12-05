@@ -199,7 +199,6 @@ export default {
   },
   methods: {
     populateForm(category) {
-      console.log("📝 Populating form with category:", category);
 
       this.formData = {
         id: category.id || "",
@@ -213,7 +212,6 @@ export default {
       this.imagePreview = null;
       this.selectedFile = null;
 
-      console.log("✅ Form data after population:", this.formData);
     },
 
     resetForm() {
@@ -282,7 +280,6 @@ export default {
         );
 
         // CORRECT: Get file_id from response for update
-        console.log("📁 File upload response:", response.data);
 
         // Handle different response structures
         if (response.data.data && response.data.data.id) {
@@ -293,7 +290,6 @@ export default {
           throw new Error("Invalid file upload response format");
         }
 
-        console.log("✅ New File ID for update:", this.newFileId);
 
         this.showToast(
           "success",
@@ -301,7 +297,6 @@ export default {
           this.$t("categories.imageUploaded")
         );
       } catch (error) {
-        console.error("Error uploading file:", error);
         this.error = this.$t("categories.imageUploadError");
         this.removeNewImage();
       } finally {
@@ -342,13 +337,11 @@ export default {
           file_id: this.newFileId || this.currentFileId, // Use new file ID if uploaded, otherwise keep current
         };
 
-        console.log("📤 Updating category with payload:", payload);
 
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ Category updated successfully:", response.data);
         this.$emit("category-updated", response.data.data);
 
         this.showToast(
@@ -370,7 +363,6 @@ export default {
       if (error.response?.data) {
         const responseData = error.response.data;
 
-        console.log("API Error Response:", responseData);
 
         if (responseData.status_code === 400) {
           this.handleBadRequestError(responseData);

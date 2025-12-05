@@ -440,7 +440,6 @@ export default {
         );
         this.categories = response.data.data || [];
       } catch (error) {
-        console.error("Error loading categories:", error);
         this.error = this.$t("final_product.loadingCategoriesError");
       } finally {
         this.loadingCategories = false;
@@ -458,7 +457,6 @@ export default {
         );
         this.products = response.data.data || [];
       } catch (error) {
-        console.error("Error loading products:", error);
         this.error = this.$t("final_product.loadingProductsError");
       } finally {
         this.loadingProducts = false;
@@ -476,7 +474,6 @@ export default {
         );
         this.variants = response.data.data || [];
       } catch (error) {
-        console.error("Error loading variants:", error);
         this.error = this.$t("final_product.loadingVariantsError");
       } finally {
         this.loadingVariants = false;
@@ -502,7 +499,6 @@ export default {
 
         this.$forceUpdate();
       } catch (error) {
-        console.error("Error loading variant values:", error);
         this.variantValues = {
           ...this.variantValues,
           [variantId]: [],

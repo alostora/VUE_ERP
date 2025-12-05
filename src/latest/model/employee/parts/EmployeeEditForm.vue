@@ -176,7 +176,6 @@ export default {
       deep: true,
       handler(newEmployee) {
         if (newEmployee && newEmployee.id) {
-          console.log("Employee data received for editing:", newEmployee);
           this.populateForm(newEmployee);
         } else {
           this.resetForm();
@@ -240,10 +239,8 @@ export default {
     },
 
     async submitForm() {
-      console.log("Update form submitted");
 
       if (!this.validateForm()) {
-        console.log("Form validation failed");
         return;
       }
 
@@ -263,22 +260,18 @@ export default {
           payload.password = this.formData.password;
         }
 
-        console.log("Sending UPDATE request with payload:", payload);
 
         const url = `${general_request.BASE_URL}/admin/company-employee/${this.formData.id}`;
-        console.log("API URL:", url);
 
         const response = await this.$http.patch(url, payload, {
           headers: general_request.headers,
         });
 
-        console.log("✅ UPDATE Response:", response.data);
 
         // TRANSFORM UPDATE RESPONSE TO MATCH TABLE FORMAT
         const transformedEmployee = this.transformUpdateResponse(
           response.data.data
         );
-        console.log("🔄 Transformed for table:", transformedEmployee);
 
         // Emit the transformed employee
         this.$emit("employee-updated", transformedEmployee);
@@ -289,10 +282,8 @@ export default {
           this.$t("employees.employeeUpdated")
         );
       } catch (error) {
-        console.error("❌ Error updating employee:", error);
 
         if (error.response) {
-          console.error("Response error:", error.response.data);
           this.error =
             error.response.data.message || this.$t("employees.updateError");
 
@@ -302,10 +293,8 @@ export default {
             );
           }
         } else if (error.request) {
-          console.error("No response received:", error.request);
           this.error = this.$t("employees.networkError");
         } else {
-          console.error("Error:", error.message);
           this.error = error.message || this.$t("employees.updateError");
         }
       } finally {
@@ -349,7 +338,6 @@ export default {
           life: 3000,
         });
       } else {
-        console.log(`Toast: ${severity} - ${summary}: ${detail}`);
       }
     },
   },

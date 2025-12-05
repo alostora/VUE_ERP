@@ -121,7 +121,6 @@ export default {
             life: 3000,
           });
       } catch (err) {
-        console.error("Error creating contact", err);
         this.error =
           err.response?.data?.message || this.$t("contacts.createError");
       } finally {
