@@ -186,6 +186,13 @@
             @click="finishOnly"
             class="p-button-primary p-button-outlined"
           />
+          <!-- Add this cancel button -->
+          <Button
+            :label="$t('pos.cancel')"
+            icon="pi pi-times"
+            @click="showPrintOptions = false"
+            class="p-button-secondary p-button-text mt-2"
+          />
         </div>
       </template>
     </Dialog>
@@ -304,10 +311,10 @@ export default {
     ProgressSpinner,
     Divider,
     Tag,
-    PosProductsPanel,  // أضف هنا
-    PosCartPanel,      // أضف هنا
-    PosHeldInvoices,   // أضف هنا
-    PosReceipt,        // أضف هنا
+    PosProductsPanel, // أضف هنا
+    PosCartPanel, // أضف هنا
+    PosHeldInvoices, // أضف هنا
+    PosReceipt, // أضف هنا
   },
   directives: {
     tooltip: Tooltip,

@@ -1,4 +1,5 @@
-import './assets/main.css'; // Add this import
+// import './assets/main.css'; // Add this import
+import './assets/scss/main.scss';
 import { createApp } from 'vue';
 import Home from './Home.vue';
 import router from './router';

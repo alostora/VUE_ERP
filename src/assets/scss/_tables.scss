@@ -1,0 +1,373 @@
+// src/assets/scss/_tables.scss
+
+// ==================== BASIC TABLE ====================
+
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+  vertical-align: top;
+  border-color: var(--surface-border);
+
+  th,
+  td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid var(--surface-border);
+  }
+
+  thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--surface-border);
+  }
+
+  tbody + tbody {
+    border-top: 2px solid var(--surface-border);
+  }
+}
+
+// ==================== TABLE VARIANTS ====================
+
+.table-striped {
+  tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.table-hover {
+  tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.table-bordered {
+  border: 1px solid var(--surface-border);
+
+  th,
+  td {
+    border: 1px solid var(--surface-border);
+  }
+
+  thead th,
+  thead td {
+    border-bottom-width: 2px;
+  }
+}
+
+.table-borderless {
+  th,
+  td,
+  thead th,
+  tbody + tbody {
+    border: 0;
+  }
+}
+
+// ==================== TABLE SIZES ====================
+
+.table-sm {
+  th,
+  td {
+    padding: 0.3rem;
+  }
+}
+
+.table-lg {
+  th,
+  td {
+    padding: 1rem;
+  }
+}
+
+// ==================== RESPONSIVE TABLES ====================
+
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  > .table {
+    margin-bottom: 0;
+  }
+}
+
+// ==================== TABLE COLORS ====================
+
+.table-primary {
+  background-color: rgba(var(--primary-color-rgb), 0.1);
+
+  th,
+  td {
+    border-color: rgba(var(--primary-color-rgb), 0.2);
+  }
+}
+
+.table-secondary {
+  background-color: rgba(var(--color-secondary), 0.1);
+
+  th,
+  td {
+    border-color: rgba(var(--color-secondary), 0.2);
+  }
+}
+
+.table-success {
+  background-color: rgba(var(--color-success), 0.1);
+
+  th,
+  td {
+    border-color: rgba(var(--color-success), 0.2);
+  }
+}
+
+.table-danger {
+  background-color: rgba(var(--color-danger), 0.1);
+
+  th,
+  td {
+    border-color: rgba(var(--color-danger), 0.2);
+  }
+}
+
+.table-warning {
+  background-color: rgba(var(--color-warning), 0.1);
+
+  th,
+  td {
+    border-color: rgba(var(--color-warning), 0.2);
+  }
+}
+
+.table-info {
+  background-color: rgba(var(--color-info), 0.1);
+
+  th,
+  td {
+    border-color: rgba(var(--color-info), 0.2);
+  }
+}
+
+.table-light {
+  background-color: var(--color-gray-100);
+
+  th,
+  td {
+    border-color: var(--color-gray-200);
+  }
+}
+
+.table-dark {
+  background-color: var(--color-gray-900);
+  color: white;
+
+  th,
+  td {
+    border-color: var(--color-gray-800);
+  }
+}
+
+// ==================== TABLE ALIGNMENT ====================
+
+.table-align-middle {
+  th,
+  td {
+    vertical-align: middle;
+  }
+}
+
+.table-align-bottom {
+  th,
+  td {
+    vertical-align: bottom;
+  }
+}
+
+// ==================== TABLE HEAD STYLES ====================
+
+.table-head-primary {
+  thead th {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+}
+
+.table-head-secondary {
+  thead th {
+    background-color: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+  }
+}
+
+.table-head-success {
+  thead th {
+    background-color: var(--color-success);
+    color: white;
+    border-color: var(--color-success);
+  }
+}
+
+.table-head-danger {
+  thead th {
+    background-color: var(--color-danger);
+    color: white;
+    border-color: var(--color-danger);
+  }
+}
+
+// ==================== TABLE FOOTER ====================
+
+.table tfoot {
+  th,
+  td {
+    border-top: 2px solid var(--surface-border);
+    font-weight: 600;
+    background-color: var(--surface-ground);
+  }
+}
+
+// ==================== TABLE CAPTION ====================
+
+.table caption {
+  caption-side: bottom;
+  padding: 0.75rem;
+  color: var(--text-color-secondary);
+  text-align: left;
+}
+
+// ==================== CONDENSED TABLE ====================
+
+.table-condensed {
+  font-size: 0.875rem;
+
+  th,
+  td {
+    padding: 0.5rem;
+  }
+}
+
+// ==================== HOVER EFFECTS ====================
+
+.table-hover-rows {
+  tbody tr {
+    transition: background-color 0.15s ease-in-out;
+
+    &:hover {
+      background-color: var(--surface-hover);
+    }
+  }
+}
+
+// ==================== ZEBRA STRIPING ====================
+
+.table-zebra {
+  tbody tr:nth-child(even) {
+    background-color: var(--surface-ground);
+  }
+}
+
+// ==================== BORDERED TABLE WITH ROUNDED CORNERS ====================
+
+.table-rounded {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  th:first-child,
+  td:first-child {
+    border-left: none;
+  }
+
+  th:last-child,
+  td:last-child {
+    border-right: none;
+  }
+}
+
+// ==================== FIXED HEADER TABLE ====================
+
+.table-fixed-header {
+  thead {
+    position: sticky;
+    top: 0;
+    background-color: var(--surface-card);
+    z-index: 10;
+
+    th {
+      border-top: none;
+      box-shadow: inset 0 2px 0 var(--surface-border),
+        inset 0 -2px 0 var(--surface-border);
+    }
+  }
+}
+
+// ==================== SMALL SCREEN TABLE ====================
+
+@media (max-width: 767.98px) {
+  .table-responsive-sm {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    > .table {
+      margin-bottom: 0;
+    }
+  }
+}
+
+@media (max-width: 991.98px) {
+  .table-responsive-md {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    > .table {
+      margin-bottom: 0;
+    }
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .table-responsive-lg {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    > .table {
+      margin-bottom: 0;
+    }
+  }
+}
+
+// ==================== DARK MODE TABLE ====================
+
+.dark-mode {
+  .table {
+    color: var(--text-color);
+    border-color: var(--surface-border);
+
+    th,
+    td {
+      border-color: var(--surface-border);
+    }
+  }
+
+  .table-striped {
+    tbody tr:nth-of-type(odd) {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+  }
+
+  .table-hover {
+    tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+  }
+}

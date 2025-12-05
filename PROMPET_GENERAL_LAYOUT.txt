@@ -1,0 +1,2745 @@
+src\main.js
+
+import './assets/main.css'; // Add this import
+import { createApp } from 'vue';
+import Home from './Home.vue';
+import router from './router';
+import axios from "axios";
+import store from "./store/store";
+import PrimeVue from "primevue/config";
+import Aura from '@primeuix/themes/aura';
+import ToastService from 'primevue/toastservice';
+import 'primeicons/primeicons.css';
+import Tooltip from 'primevue/tooltip';
+import i18n from './i18n/index';
+import 'primeflex/primeflex.css'
+
+import ConfirmationService from 'primevue/confirmationservice';
+
+
+
+const app = createApp(Home);
+
+app.config.globalProperties.$http = axios;
+
+// Initialize theme
+const initializeTheme = () => {
+     const savedTheme = localStorage.getItem('theme') || 'light';
+     if (savedTheme === 'dark') {
+          document.documentElement.classList.add('dark-mode');
+     } else {
+          document.documentElement.classList.add('light-mode');
+     }
+};
+
+initializeTheme();
+
+app
+     .use(router)
+     .use(store)
+     .use(ToastService)
+     .use(i18n)
+     .use(PrimeVue, {
+          ripple: true,
+          unstyled: false,
+          inputVariant: "outlined",
+          theme: {
+               preset: Aura,
+               options: {
+                    darkModeSelector: '.dark-mode' // This enables PrimeVue's built-in dark mode
+               }
+          }
+     })
+     .use(ConfirmationService);
+
+app.mount('#app');
+_________________________________________________________________________
+_________________________________________________________________________
+src\Home.vue
+
+<template>
+  <RouterView />
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      token: "",
+      error_message: "",
+    };
+  },
+  methods: {
+    checkIfAuth() {
+      this.token = localStorage.getItem("token");
+
+      if (this.token) {
+        this.$router.push("/");
+      } else {
+        this.$router.push("/login");
+      }
+    },
+  },
+
+  beforeCreate() {},
+
+  created() {
+    this.checkIfAuth();
+  },
+};
+</script>
+
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+src\router\index.js
+
+import { createRouter, createWebHistory } from "vue-router";
+
+import HomePage from "../latest/views/HomePage.vue";
+import LoginPage from "../latest/views/LoginPage.vue";
+import user_routes from "../latest/model/user/routes/user-routes";
+import country_routes from "../latest/model/country/routes/country-routes";
+import governorate_routes from "../latest/model/governorate/routes/governorate-routes";
+import city_routes from "../latest/model/city/routes/city-routes";
+import company_routes from "../latest/model/company/routes/company-routes";
+import branch_routes from "../latest/model/branch/routes/branch_routes";
+import MVVMContent from "../latest/views/layouts/MVVMContent.vue";
+
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: "/",
+      name: "home",
+      component: HomePage,
+      meta: { requiresAuth: true }, // Protected route
+      children: [
+        {
+          path: '',
+          name: 'Dashboard',
+          component: MVVMContent
+        },
+        ...user_routes,
+        ...country_routes,
+        ...governorate_routes,
+        ...city_routes,
+        ...company_routes,
+        ...branch_routes,
+      ],
+    },
+    {
+      path: "/login",
+      name: "login",
+      component: LoginPage,
+      meta: { requiresAuth: false } // Unprotected route
+    },
+  ],
+});
+
+// --- ADDED NAVIGATION GUARD ---
+router.beforeEach((to, from, next) => {
+  // Check if the route the user is navigating to requires authentication
+  if (to.meta.requiresAuth) {
+    // Check if the authentication token exists in local storage
+    const authToken = localStorage.getItem('authToken');
+
+    if (authToken) {
+      // Token exists, user is authenticated. Proceed to the desired route.
+      next();
+    } else {
+      // Token does NOT exist. Redirect to the login page.
+      // We pass the intended destination path as a query parameter ('redirect')
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      });
+    }
+  } else {
+    // Route does not require authentication (e.g., /login). Proceed as normal.
+    next();
+  }
+});
+// ------------------------------
+
+export default router;
+_________________________________________________________________________
+_________________________________________________________________________
+src\latest\views\HomePage.vue
+<template>
+  <div class="layout-wrapper" :class="[currentDirection, currentTheme]">
+    <MVVMMainHeader
+      @toggle-sidebar="toggleSidebar"
+      @language-changed="onLanguageChanged"
+      @theme-changed="onThemeChanged"
+    />
+    
+    <!-- Overlay للخلفية في الموبايل -->
+    <div 
+      v-if="isMobile && !sidebarCollapsed" 
+      class="sidebar-overlay" 
+      @click="toggleSidebar"
+    ></div>
+    
+    <div class="layout-container">
+      <MVVMSidebar
+        :collapsed="sidebarCollapsed"
+        :position="currentDirection"
+        :is-mobile="isMobile"
+        @toggle="toggleSidebar"
+      />
+      <main
+        class="main-content"
+        :class="{ 'content-expanded': sidebarCollapsed }"
+      >
+        <RouterView :company="company" :company_id="company_id" />
+        <MVVMFooter />
+      </main>
+    </div>
+  </div>
+</template>
+
+<script>
+import { RouterView } from 'vue-router'
+import MVVMMainHeader from "./layouts/MVVMMainHeader.vue";
+import MVVMSidebar from "./layouts/MVVMSidebar.vue";
+import MVVMContent from "./layouts/MVVMContent.vue";
+import MVVMFooter from "./layouts/MVVMFooter.vue";
+
+export default {
+  components: {
+    RouterView,
+    MVVMMainHeader,
+    MVVMSidebar,
+    MVVMContent,
+    MVVMFooter,
+  },
+  data() {
+    return {
+      sidebarCollapsed: false,
+      currentDirection:
+        localStorage.getItem("language") === "ar" ? "rtl" : "ltr",
+      currentTheme: localStorage.getItem("theme") || "light",
+      isMobile: false,
+    };
+  },
+  methods: {
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    },
+    onLanguageChanged(language) {
+      this.currentDirection = language.dir;
+    },
+    onThemeChanged(theme) {
+      this.currentTheme = theme;
+    },
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768;
+      // إغلاق السايدبار تلقائياً في الموبايل
+      if (this.isMobile) {
+        this.sidebarCollapsed = true;
+      }
+    },
+  },
+  mounted() {
+    this.checkMobile();
+    window.addEventListener('resize', this.checkMobile);
+    
+    // Initialize theme class
+    const savedTheme = localStorage.getItem("theme") || "light";
+    document.documentElement.classList.add(savedTheme + "-mode");
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.checkMobile);
+  },
+};
+</script>
+
+<style scoped>
+.layout-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-container {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 60px);
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  min-height: 100%;
+}
+
+/* LTR - Sidebar on left */
+.layout-wrapper.ltr .main-content {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+}
+
+.layout-wrapper.ltr .main-content.content-expanded {
+  margin-left: 60px;
+  width: calc(100% - 60px);
+}
+
+/* RTL - Sidebar on right */
+.layout-wrapper.rtl .main-content {
+  margin-right: 280px;
+  width: calc(100% - 280px);
+}
+
+.layout-wrapper.rtl .main-content.content-expanded {
+  margin-right: 60px;
+  width: calc(100% - 60px);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .layout-wrapper.ltr .main-content,
+  .layout-wrapper.rtl .main-content {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .layout-wrapper.ltr .main-content.content-expanded,
+  .layout-wrapper.rtl .main-content.content-expanded {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+  }
+  
+  /* Overlay Styles */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 899;
+    backdrop-filter: blur(2px);
+  }
+}
+</style>
+
+
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+src\latest\views\layouts\MVVMSidebar.vue
+
+<template>
+  <aside
+    class="modern-sidebar"
+    :class="[position, { collapsed: collapsed, mobile: isMobile }]"
+  >
+    <div class="sidebar-content">
+      <!-- Header مع زر الإغلاق -->
+      <div class="sidebar-header" v-if="!collapsed">
+        <div class="sidebar-brand">
+          <i class="pi pi-shield brand-icon"></i>
+          <span class="brand-text">ERP System</span>
+        </div>
+
+        <!-- زر الإغلاق - يظهر فقط في الموبايل وعندما السايدبار مفتوح -->
+        <Button
+          v-if="isMobile && !collapsed"
+          icon="pi pi-times"
+          @click="$emit('toggle')"
+          text
+          rounded
+          class="close-btn"
+          v-tooltip="'Close'"
+        />
+      </div>
+
+      <nav class="sidebar-nav">
+        <div v-for="item in items" :key="item.label" class="nav-item-wrapper">
+          <router-link
+            v-if="item.route"
+            v-slot="{ isActive }"
+            :to="item.route"
+            custom
+          >
+            <div
+              class="nav-item"
+              :class="{ active: isActive, collapsed: collapsed }"
+              @click="handleNavigation(item.route)"
+            >
+              <div class="nav-icon">
+                <i :class="item.icon"></i>
+              </div>
+              <span class="nav-label">{{ $t(item.label) }}</span>
+              <div class="active-indicator" v-if="isActive && !collapsed"></div>
+            </div>
+          </router-link>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer" v-if="!collapsed && !isMobile">
+        <div class="user-section">
+          <Avatar
+            icon="pi pi-user"
+            shape="circle"
+            size="large"
+            class="user-avatar"
+          />
+          <div class="user-info">
+            <div class="user-name">John Doe</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</template>
+
+<script>
+import Avatar from "primevue/avatar";
+import Button from "primevue/button";
+
+export default {
+  components: {
+    Avatar,
+    Button,
+  },
+  props: {
+    collapsed: {
+      type: Boolean,
+      default: false,
+    },
+    position: {
+      type: String,
+      default: "ltr",
+    },
+    isMobile: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ["toggle"],
+  data() {
+    return {
+      items: [
+        { label: "menu.home", icon: "pi pi-home", route: "/" },
+        { label: "menu.users", icon: "pi pi-users", route: "/users" },
+        { label: "menu.countries", icon: "pi pi-flag", route: "/countries" },
+        {
+          label: "menu.governorates",
+          icon: "pi pi-map",
+          route: "/governorates",
+        },
+        { label: "menu.cities", icon: "pi pi-building", route: "/cities" },
+
+        {
+          label: "menu.companies",
+          icon: "pi pi-briefcase",
+          route: "/companies",
+        },
+      ],
+    };
+  },
+  methods: {
+    handleNavigation(route) {
+      this.$router.push(route);
+      // Auto-close sidebar on mobile after navigation
+      if (this.isMobile) {
+        this.$emit("toggle");
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+/* Base Styles (Desktop) */
+.modern-sidebar {
+  width: 280px;
+  height: calc(100vh - 60px);
+  background: var(--surface-card);
+  position: fixed;
+  top: 60px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--surface-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* RTL Adjustments for Desktop */
+.modern-sidebar.rtl {
+  right: 0;
+  left: unset;
+  border-right: none;
+  border-left: 1px solid var(--surface-border);
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 0;
+  background: var(--surface-card);
+  position: relative;
+  z-index: 1101;
+}
+
+/* --- Mobile Styles (max-width: 768px) --- */
+@media (max-width: 768px) {
+  .modern-sidebar {
+    height: 100vh;
+    top: 0;
+    width: 280px !important;
+    z-index: 1100;
+    box-shadow: none;
+    transform: translateX(-100%);
+  }
+
+  .modern-sidebar.rtl {
+    transform: translateX(100%);
+  }
+
+  /* Expanded LTR: Show sidebar */
+  .modern-sidebar:not(.collapsed):not(.rtl) {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Expanded RTL: Show sidebar */
+  .modern-sidebar:not(.collapsed).rtl {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Force collapsed state to remain hidden */
+  .modern-sidebar.collapsed:not(.rtl) {
+    transform: translateX(-100%);
+  }
+  .modern-sidebar.collapsed.rtl {
+    transform: translateX(100%);
+  }
+
+  .close-btn {
+    display: block !important;
+    color: var(--text-color-secondary);
+  }
+
+  .close-btn:hover {
+    color: var(--text-color);
+    background: var(--surface-hover);
+  }
+
+  .sidebar-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .sidebar-nav {
+    padding: 0 1rem;
+  }
+
+  .nav-item {
+    padding: 1rem;
+    margin: 0.25rem 0;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+}
+
+/* --- Desktop Collapsed State (min-width: 769px) --- */
+@media (min-width: 769px) {
+  .modern-sidebar.collapsed {
+    width: 70px;
+  }
+
+  .modern-sidebar.collapsed .nav-item {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+
+  .modern-sidebar.collapsed .nav-icon {
+    margin: 0;
+  }
+
+  .modern-sidebar.collapsed .nav-label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  .modern-sidebar.collapsed .active-indicator {
+    display: none;
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+}
+
+/* --- Common Navigation & Footer Styles --- */
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 0 1.5rem 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  color: var(--primary-500);
+  font-size: 1.5rem;
+}
+
+.brand-text {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.close-btn {
+  display: none;
+}
+
+/* باقي الـ styles نفسها بدون تغيير */
+/* ... Navigation, Footer, etc. ... */
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background: var(--surface-hover);
+  color: var(--text-color);
+  transform: translateX(4px);
+}
+
+.rtl .nav-item:hover {
+  transform: translateX(-4px);
+}
+
+.nav-item.active {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  font-weight: 500;
+}
+
+.dark-mode .nav-item.active {
+  background: var(--primary-900);
+  color: var(--primary-300);
+}
+
+.nav-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.rtl .nav-icon {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+.nav-label {
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.active-indicator {
+  position: absolute;
+  right: 0.5rem;
+  width: 4px;
+  height: 20px;
+  background: var(--primary-500);
+  border-radius: 2px;
+}
+
+.rtl .active-indicator {
+  right: auto;
+  left: 0.5rem;
+}
+
+.sidebar-footer {
+  padding: 1rem 1.5rem 0;
+  border-top: 1px solid var(--surface-border);
+  margin-top: auto;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Smooth animations for all elements */
+.modern-sidebar * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+
+
+
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+
+src\latest\views\layouts\MVVMMainHeader.vue
+<template>
+  <header class="main-header">
+    <Menubar :model="translatedMenuItems">
+      <template #start>
+        <div class="header-start">
+          <Button
+            icon="pi pi-bars"
+            @click="$emit('toggle-sidebar')"
+            text
+            rounded
+          />
+          <span class="app-title">{{ $t("app.title") }}</span>
+        </div>
+      </template>
+
+      <template #end>
+        <div class="header-end">
+          <div class="search-container">
+            <InputText :placeholder="$t('header.search')" type="text" />
+            <Button icon="pi pi-search" text />
+          </div>
+
+          <div class="action-buttons">
+            <Button
+              @click="toggleTheme"
+              :icon="currentTheme.icon"
+              :severity="currentTheme.severity"
+              text
+              rounded
+              :title="currentTheme.title"
+            />
+
+            <Button
+              @click="toggleLanguage"
+              :icon="currentLanguage.icon"
+              text
+              rounded
+              :title="currentLanguage.label"
+            />
+
+            <div class="user-menu-container">
+              <Menu ref="userMenu" :model="logoutMenuItem" :popup="true" />
+
+              <Button
+                icon="pi pi-user"
+                rounded
+                text
+                severity="secondary"
+                class="p-button-lg"
+                @click="toggleUserMenu"
+              />
+            </div>
+          </div>
+        </div>
+      </template>
+    </Menubar>
+  </header>
+</template>
+
+<script>
+import Menubar from "primevue/menubar";
+import Button from "primevue/button";
+import InputText from "primevue/inputtext";
+import Avatar from "primevue/avatar";
+import Menu from "primevue/menu";
+
+export default {
+  components: {
+    Menubar,
+    Button,
+    InputText,
+    Avatar,
+    Menu,
+  },
+  emits: ["toggle-sidebar", "language-changed", "theme-changed"],
+  data() {
+    return {
+      currentLang: this.$i18n.locale,
+      currentTheme:
+        localStorage.getItem("theme") === "dark"
+          ? {
+              mode: "dark",
+              icon: "pi pi-moon",
+              severity: "secondary",
+              title: "Switch to Light Mode",
+            }
+          : {
+              mode: "light",
+              icon: "pi pi-sun",
+              severity: "warning",
+              title: "Switch to Dark Mode",
+            },
+      languages: [
+        { code: "en", label: "English", icon: "pi pi-globe", dir: "ltr" },
+        { code: "ar", label: "العربية", icon: "pi pi-globe", dir: "rtl" },
+      ],
+      menuItems: [
+        { label: "menu.home", icon: "pi pi-home" },
+        { label: "menu.users", icon: "pi pi-folder" },
+        { label: "menu.settings", icon: "pi pi-cog" },
+      ],
+      logoutMenuItem: [
+        {
+          label: this.$t("header.logout") || "Logout",
+          icon: "pi pi-sign-out",
+          command: () => {
+            this.logout();
+          },
+        },
+      ],
+    };
+  },
+  computed: {
+    currentLanguage() {
+      return (
+        this.languages.find((lang) => lang.code === this.currentLang) ||
+        this.languages[0]
+      );
+    },
+    translatedMenuItems() {
+      return this.menuItems.map((item) => ({
+        ...item,
+        label: this.$t(item.label),
+      }));
+    },
+  },
+  methods: {
+    toggleUserMenu(event) {
+      this.$refs.userMenu.toggle(event);
+    },
+
+    logout() {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+      
+      this.$toast.add({
+        severity: "info",
+        summary: "Logged Out",
+        detail: "You have been successfully signed out.",
+        life: 3000,
+      });
+
+      this.$router.push("/login"); 
+    },
+
+    toggleLanguage() {
+      this.currentLang = this.currentLang === "en" ? "ar" : "en";
+      const newLang = this.currentLanguage;
+
+      this.$i18n.locale = newLang.code;
+      localStorage.setItem("language", newLang.code);
+      document.documentElement.dir = newLang.dir;
+      document.documentElement.lang = newLang.code;
+
+      this.$forceUpdate();
+      this.$emit("language-changed", newLang);
+    },
+
+    toggleTheme() {
+      const newTheme = this.currentTheme.mode === "light" ? "dark" : "light";
+
+      this.currentTheme =
+        newTheme === "dark"
+          ? {
+              mode: "dark",
+              icon: "pi pi-moon",
+              severity: "secondary",
+              title: "Switch to Light Mode",
+            }
+          : {
+              mode: "light",
+              icon: "pi pi-sun",
+              severity: "warning",
+              title: "Switch to Dark Mode",
+            };
+
+      localStorage.setItem("theme", newTheme);
+      this.applyTheme(newTheme);
+      this.$emit("theme-changed", newTheme);
+    },
+
+    applyTheme(theme) {
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark-mode");
+        document.documentElement.classList.remove("light-mode");
+      } else {
+        document.documentElement.classList.add("light-mode");
+        document.documentElement.classList.remove("dark-mode");
+      }
+    },
+
+    initializeTheme() {
+      const savedTheme = localStorage.getItem("theme") || "light";
+      this.applyTheme(savedTheme);
+    },
+
+    isMobile() {
+      return window.innerWidth <= 768;
+    },
+  },
+  mounted() {
+    const langConfig = this.currentLanguage;
+    document.documentElement.dir = langConfig.dir;
+    document.documentElement.lang = this.currentLang;
+
+    if (this.isMobile()) {
+      this.$emit("toggle-sidebar");
+    }
+
+    this.initializeTheme();
+  },
+};
+</script>
+
+<style scoped>
+.main-header {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1; /* Allow search to take space on desktop */
+}
+
+.action-buttons {
+  /* Group theme, language, and user menu buttons */
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-menu-container {
+  /* This ensures the Menu component anchors correctly relative to the button */
+  position: relative;
+}
+
+/* Adjust Avatar button size for better clickability */
+.user-menu-container .p-button-lg {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+:deep(.p-menubar) {
+  border: none;
+  border-radius: 0;
+  padding: 0.5rem 1rem;
+  background: transparent;
+}
+
+/* Theme transition for smooth mode switching */
+:deep(*) {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* --- 📱 Mobile View Adjustments (Maximum Width 768px) --- */
+@media (max-width: 768px) {
+    
+    /* 1. Hide the Search Input Text to save space */
+    .search-container :deep(.p-inputtext) {
+        display: none;
+    }
+
+    /* 2. Remove the search container's ability to grow */
+    .search-container {
+        flex-grow: 0; 
+        /* Add some padding next to the search icon */
+        padding-left: 0.5rem; 
+        padding-right: 0.5rem;
+    }
+    
+    /* 3. Ensure the main header elements don't wrap and fit */
+    .header-start, .header-end {
+        flex-shrink: 0;
+    }
+}
+</style>
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+src\latest\views\layouts\MVVMFooter.vue
+
+<template>
+  <footer class="modern-footer">
+    <div class="footer-content">
+      <div class="footer-bottom">
+        <div class="footer-bottom-content">
+          <div class="copyright-section">
+            <div class="copyright">
+              <strong
+                >{{ $t("footer.copyright") }} &copy; 2024
+                {{ $t("app.title") }}</strong
+              >
+              <span class="separator">•</span>
+              <span>{{ $t("footer.rights") }}</span>
+            </div>
+            <div class="version-info">
+              <i class="pi pi-code"></i>
+              <span class="version-text"
+                >{{ $t("footer.version") }} 2.4.18</span
+              >
+              <Badge value="Latest" severity="success" size="small" />
+            </div>
+          </div>
+
+          <div class="legal-links">
+            <a href="#" class="legal-link">Privacy Policy</a>
+            <a href="#" class="legal-link">Terms of Service</a>
+            <a href="#" class="legal-link">Cookie Policy</a>
+            <a href="#" class="legal-link">Security</a>
+            <a href="#" class="legal-link">GDPR</a>
+          </div>
+
+          <div class="footer-actions">
+            <Button
+              icon="pi pi-question-circle"
+              text
+              v-tooltip="'Help Center'"
+            />
+            <Button icon="pi pi-comments" text v-tooltip="'Live Chat'" />
+            <Button icon="pi pi-flag" text v-tooltip="'Report Issue'" />
+            <Button
+              :icon="currentTheme === 'dark' ? 'pi pi-sun' : 'pi pi-moon'"
+              text
+              @click="toggleTheme"
+              v-tooltip="currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode'"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+</template>
+
+<script>
+import Button from "primevue/button";
+import InputText from "primevue/inputtext";
+import Badge from "primevue/badge";
+import Tooltip from "primevue/tooltip";
+
+export default {
+  directives: {
+    tooltip: Tooltip,
+  },
+  components: {
+    Button,
+    InputText,
+    Badge,
+  },
+  data() {
+    return {
+      currentTheme: localStorage.getItem("theme") || "light",
+    };
+  },
+  methods: {
+    toggleTheme() {
+      this.currentTheme = this.currentTheme === "light" ? "dark" : "light";
+      localStorage.setItem("theme", this.currentTheme);
+      this.$emit("theme-changed", this.currentTheme);
+    },
+  },
+};
+</script>
+
+<style scoped>
+.modern-footer {
+  background: var(--surface-card);
+  border-top: 1px solid var(--surface-border);
+  margin-top: auto;
+  position: relative;
+}
+
+.footer-wave {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  transform: rotate(180deg);
+}
+
+.footer-wave svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 60px;
+}
+
+.footer-wave .shape-fill {
+  fill: var(--surface-card);
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Main Footer */
+.footer-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+.footer-section.company-info {
+  padding-right: 2rem;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.brand-logo {
+  width: 50px;
+  height: 50px;
+  background: var(--gradient-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-tagline {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.company-description {
+  color: var(--text-color-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.social-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.social-link {
+  width: 40px;
+  height: 40px;
+  background: var(--surface-ground);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.social-link:hover {
+  background: var(--primary-500);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  position: relative;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background: var(--primary-500);
+  border-radius: 1px;
+}
+
+.footer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  padding: 0.25rem 0;
+}
+
+.footer-link i {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--primary-500);
+  transform: translateX(5px);
+}
+
+.footer-link:hover i {
+  transform: translateX(2px);
+}
+
+/* Newsletter */
+.newsletter {
+  background: var(--surface-ground);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+}
+
+.newsletter-text {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.newsletter-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.newsletter-input {
+  flex: 1;
+}
+
+.newsletter-btn {
+  flex-shrink: 0;
+}
+
+.newsletter-note {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  opacity: 0.7;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  border-top: 1px solid var(--surface-border);
+  padding-top: 1.5rem;
+}
+
+.footer-bottom-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.copyright-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.copyright {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.separator {
+  opacity: 0.5;
+}
+
+.version-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.version-info i {
+  font-size: 0.7rem;
+}
+
+.legal-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.legal-link {
+  color: var(--text-color-secondary);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color 0.2s ease;
+}
+
+.legal-link:hover {
+  color: var(--primary-500);
+}
+
+.footer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .footer-main {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+  }
+
+  .newsletter {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    padding: 3rem 1rem 1rem;
+  }
+
+  .footer-main {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .footer-section.company-info {
+    padding-right: 0;
+    text-align: center;
+  }
+
+  .footer-brand {
+    justify-content: center;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+
+  .newsletter {
+    grid-column: span 1;
+    text-align: center;
+  }
+
+  .footer-bottom-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .legal-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer-wave svg {
+    height: 40px;
+  }
+}
+
+/* Dark mode enhancements */
+.dark-mode .footer-wave .shape-fill {
+  fill: var(--surface-900);
+}
+
+.dark-mode .newsletter {
+  background: var(--surface-800);
+}
+
+.dark-mode .social-link {
+  background: var(--surface-700);
+}
+
+/* Animation for newsletter */
+.newsletter-form :deep(.p-inputtext:focus) {
+  box-shadow: 0 0 0 2px var(--primary-100);
+}
+
+/* Hover effects */
+.footer-section:not(.company-info):not(.newsletter) .footer-links {
+  padding-left: 0.5rem;
+}
+
+/* Badge animations */
+:deep(.p-badge) {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+</style>
+
+
+
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+src\latest\views\layouts\MVVMContent.vue
+
+<template>
+  <div class="modern-content">
+    <!-- Welcome Header -->
+    <section class="welcome-section">
+      <div class="welcome-header">
+        <div class="welcome-text">
+          <h1 class="welcome-title">
+            {{ $t("content.welcome") }}, {{ name }}! 👋
+          </h1>
+          <p class="welcome-subtitle">{{ $t("content.welcomeMessage") }}</p>
+          <div class="welcome-stats">
+            <div class="stat-badge">
+              <i class="pi pi-check-circle"></i>
+              <span>24 Tasks Completed</span>
+            </div>
+            <div class="stat-badge">
+              <i class="pi pi-star"></i>
+              <span>98% Satisfaction</span>
+            </div>
+          </div>
+        </div>
+        <div class="welcome-actions">
+          <Button
+            label="Quick Report"
+            icon="pi pi-download"
+            severity="secondary"
+            class="modern-btn"
+          />
+          <Button label="New Project" icon="pi pi-plus" class="modern-btn" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Stats Grid -->
+    <section class="stats-section">
+      <div class="section-header">
+        <h2 class="section-title">{{ $t("content.stats") }}</h2>
+        <div class="section-actions">
+          <Button icon="pi pi-filter" text v-tooltip="'Filter Stats'" />
+          <Button icon="pi pi-refresh" text v-tooltip="'Refresh Data'" />
+        </div>
+      </div>
+      <div class="stats-grid">
+        <div
+          class="stat-card modern-card"
+          v-for="stat in stats"
+          :key="stat.title"
+          :class="stat.gradient"
+        >
+          <div class="stat-header">
+            <div class="stat-icon">
+              <i :class="stat.icon"></i>
+            </div>
+            <div class="stat-trend" :class="stat.trendClass">
+              <i :class="stat.trendIcon"></i>
+              <span>{{ stat.trend }}</span>
+            </div>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stat.value }}</div>
+            <div class="stat-title">{{ stat.title }}</div>
+            <div class="stat-progress">
+              <ProgressBar
+                :value="stat.progress"
+                :showValue="false"
+                :class="stat.progressClass"
+              />
+              <span class="progress-text">{{ stat.progress }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts & Analytics -->
+    <section class="analytics-section">
+      <div class="analytics-grid">
+        <!-- Revenue Chart -->
+        <div class="analytics-card modern-card">
+          <div class="card-header">
+            <h3 class="card-title">Revenue Analytics</h3>
+            <Select
+              v-model="selectedPeriod"
+              :options="periods"
+              optionLabel="label"
+              placeholder="This Month"
+              class="period-selector"
+            />
+          </div>
+          <div class="chart-placeholder">
+            <div class="chart-container">
+              <i class="pi pi-chart-line chart-icon"></i>
+              <p>Revenue chart visualization</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="metrics-card modern-card">
+          <div class="card-header">
+            <h3 class="card-title">Performance Metrics</h3>
+          </div>
+          <div class="metrics-grid">
+            <div
+              class="metric-item"
+              v-for="metric in metrics"
+              :key="metric.name"
+            >
+              <div class="metric-info">
+                <div class="metric-name">{{ metric.name }}</div>
+                <div class="metric-value">{{ metric.value }}</div>
+              </div>
+              <div class="metric-chart">
+                <div class="sparkline"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Activity & Team -->
+    <section class="activity-team-section">
+      <div class="two-column-grid">
+        <!-- Recent Activity -->
+        <div class="activity-card modern-card">
+          <div class="card-header">
+            <h3 class="card-title">{{ $t("content.recent") }}</h3>
+            <Button label="View All" text size="small" />
+          </div>
+          <div class="activity-list">
+            <div
+              class="activity-item"
+              v-for="activity in activities"
+              :key="activity.id"
+            >
+              <div class="activity-avatar">
+                <Avatar
+                  :label="activity.user.charAt(0)"
+                  :style="{ 'background-color': activity.color }"
+                  size="large"
+                  shape="circle"
+                />
+              </div>
+              <div class="activity-content">
+                <div class="activity-main">
+                  <span class="user-name">{{ activity.user }}</span>
+                  <span class="activity-text">{{ activity.text }}</span>
+                </div>
+                <div class="activity-meta">
+                  <i class="pi pi-clock"></i>
+                  <span class="activity-time">{{ activity.time }}</span>
+                  <Badge :value="activity.project" severity="secondary" />
+                </div>
+              </div>
+              <div class="activity-action">
+                <Button icon="pi pi-ellipsis-v" text rounded />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Team Progress -->
+        <div class="team-card modern-card">
+          <div class="card-header">
+            <h3 class="card-title">Team Progress</h3>
+            <Button icon="pi pi-plus" text v-tooltip="'Add Team Member'" />
+          </div>
+          <div class="team-list">
+            <div
+              class="team-member"
+              v-for="member in teamMembers"
+              :key="member.name"
+            >
+              <div class="member-info">
+                <Avatar
+                  :image="member.avatar"
+                  size="large"
+                  shape="circle"
+                  class="member-avatar"
+                />
+                <div class="member-details">
+                  <div class="member-name">{{ member.name }}</div>
+                  <div class="member-role">{{ member.role }}</div>
+                </div>
+              </div>
+              <div class="member-progress">
+                <ProgressBar
+                  :value="member.progress"
+                  :showValue="false"
+                  class="progress-small"
+                />
+                <span class="progress-percent">{{ member.progress }}%</span>
+              </div>
+              <div class="member-status" :class="member.status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions-section">
+      <h3 class="section-title">Quick Actions</h3>
+      <div class="actions-grid">
+        <div
+          class="action-card modern-card"
+          v-for="action in quickActions"
+          :key="action.label"
+          @click="handleAction(action)"
+        >
+          <div class="action-icon" :class="action.color">
+            <i :class="action.icon"></i>
+          </div>
+          <div class="action-content">
+            <div class="action-label">{{ action.label }}</div>
+            <div class="action-desc">{{ action.description }}</div>
+          </div>
+          <i class="pi pi-chevron-right action-arrow"></i>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<script>
+import Button from "primevue/button";
+import ProgressBar from "primevue/progressbar";
+import Select from "primevue/select";
+import Avatar from "primevue/avatar";
+import Badge from "primevue/badge";
+import Tooltip from "primevue/tooltip";
+
+export default {
+  directives: {
+    tooltip: Tooltip,
+  },
+  components: {
+    Button,
+    ProgressBar,
+    Select,
+    Avatar,
+    Badge,
+  },
+  data() {
+    return {
+      name: "John",
+      selectedPeriod: null,
+      periods: [
+        { label: "This Week", value: "week" },
+        { label: "This Month", value: "month" },
+        { label: "This Quarter", value: "quarter" },
+        { label: "This Year", value: "year" },
+      ],
+      stats: [
+        {
+          title: "Total Revenue",
+          value: "$24.5K",
+          icon: "pi pi-dollar",
+          gradient: "gradient-1",
+          trend: "+12%",
+          trendIcon: "pi pi-arrow-up",
+          trendClass: "positive",
+          progress: 75,
+          progressClass: "progress-success",
+        },
+        {
+          title: "New Customers",
+          value: "1,234",
+          icon: "pi pi-users",
+          gradient: "gradient-2",
+          trend: "+8%",
+          trendIcon: "pi pi-arrow-up",
+          trendClass: "positive",
+          progress: 60,
+          progressClass: "progress-info",
+        },
+        {
+          title: "Active Projects",
+          value: "24",
+          icon: "pi pi-briefcase",
+          gradient: "gradient-3",
+          trend: "+5",
+          trendIcon: "pi pi-plus",
+          trendClass: "neutral",
+          progress: 85,
+          progressClass: "progress-warning",
+        },
+        {
+          title: "Task Completion",
+          value: "92%",
+          icon: "pi pi-check-circle",
+          gradient: "gradient-4",
+          trend: "+3%",
+          trendIcon: "pi pi-arrow-up",
+          trendClass: "positive",
+          progress: 92,
+          progressClass: "progress-success",
+        },
+      ],
+      metrics: [
+        { name: "CPU Usage", value: "65%" },
+        { name: "Memory", value: "48%" },
+        { name: "Disk Space", value: "72%" },
+        { name: "Network", value: "34%" },
+      ],
+      activities: [
+        {
+          id: 1,
+          user: "Sarah Johnson",
+          text: "completed the dashboard design",
+          time: "2 hours ago",
+          project: "Website",
+          color: "#4f46e5",
+        },
+        {
+          id: 2,
+          user: "Mike Chen",
+          text: "submitted quarterly report",
+          time: "4 hours ago",
+          project: "Finance",
+          color: "#10b981",
+        },
+        {
+          id: 3,
+          user: "Emily Davis",
+          text: "added new features to mobile app",
+          time: "6 hours ago",
+          project: "Mobile",
+          color: "#f59e0b",
+        },
+        {
+          id: 4,
+          user: "Alex Rodriguez",
+          text: "fixed critical bugs in API",
+          time: "1 day ago",
+          project: "Backend",
+          color: "#ef4444",
+        },
+      ],
+      teamMembers: [
+        {
+          name: "Sarah Johnson",
+          role: "UI/UX Designer",
+          progress: 85,
+          status: "online",
+          avatar:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+        },
+        {
+          name: "Mike Chen",
+          role: "Frontend Developer",
+          progress: 92,
+          status: "online",
+          avatar:
+            "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+        },
+        {
+          name: "Emily Davis",
+          role: "Backend Developer",
+          progress: 78,
+          status: "away",
+          avatar:
+            "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
+        },
+        {
+          name: "Alex Rodriguez",
+          role: "DevOps Engineer",
+          progress: 95,
+          status: "offline",
+          avatar:
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
+        },
+      ],
+      quickActions: [
+        {
+          label: "Create Project",
+          description: "Start a new project",
+          icon: "pi pi-plus-circle",
+          color: "blue",
+        },
+        {
+          label: "Generate Report",
+          description: "Create analytics report",
+          icon: "pi pi-chart-bar",
+          color: "green",
+        },
+        {
+          label: "Schedule Meeting",
+          description: "Plan team meeting",
+          icon: "pi pi-calendar",
+          color: "purple",
+        },
+        {
+          label: "Upload Files",
+          description: "Share documents",
+          icon: "pi pi-cloud-upload",
+          color: "orange",
+        },
+      ],
+    };
+  },
+  methods: {
+    handleAction(action) {
+      this.$toast.add({
+        severity: "info",
+        summary: action.label,
+        detail: `Opening ${action.label}...`,
+        life: 2000,
+      });
+    },
+  },
+};
+</script>
+
+<style scoped>
+.modern-content {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Welcome Section */
+.welcome-section {
+  margin-bottom: 2rem;
+}
+
+.welcome-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.welcome-text {
+  flex: 1;
+}
+
+.welcome-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.welcome-stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface-hover);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.stat-badge i {
+  color: var(--primary-500);
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+/* Stats Section */
+.stats-section {
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.stat-card.gradient-1::before {
+  background: var(--gradient-primary);
+}
+.stat-card.gradient-2::before {
+  background: var(--gradient-secondary);
+}
+.stat-card.gradient-3::before {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+.stat-card.gradient-4::before {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--primary-500);
+}
+
+.stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+}
+
+.stat-trend.positive {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+
+.stat-trend.neutral {
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+
+.stat-content {
+  margin-top: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.stat-title {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 1rem;
+}
+
+.stat-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-progress :deep(.p-progressbar) {
+  flex: 1;
+  height: 6px;
+}
+
+.progress-text {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  font-weight: 500;
+}
+
+/* Analytics Section */
+.analytics-section {
+  margin-bottom: 2rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.analytics-card,
+.metrics-card {
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.period-selector {
+  width: 150px;
+}
+
+.chart-placeholder {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-ground);
+  border-radius: 12px;
+}
+
+.chart-container {
+  text-align: center;
+  color: var(--text-color-secondary);
+}
+
+.chart-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.metrics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--surface-ground);
+  border-radius: 8px;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-name {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.metric-chart {
+  width: 60px;
+  height: 30px;
+}
+
+.sparkline {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-border);
+  border-radius: 4px;
+}
+
+/* Activity & Team Section */
+.activity-team-section {
+  margin-bottom: 2rem;
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.activity-card,
+.team-card {
+  padding: 1.5rem;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+  background: var(--surface-hover);
+}
+
+.activity-avatar {
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-main {
+  margin-bottom: 0.5rem;
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--text-color);
+  margin-right: 0.5rem;
+}
+
+.activity-text {
+  color: var(--text-color-secondary);
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.activity-meta i {
+  font-size: 0.7rem;
+}
+
+.activity-action {
+  flex-shrink: 0;
+}
+
+.team-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.team-member {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.team-member:hover {
+  background: var(--surface-hover);
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.member-avatar {
+  flex-shrink: 0;
+}
+
+.member-details {
+  flex: 1;
+}
+
+.member-name {
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.member-role {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.member-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 120px;
+}
+
+.member-progress :deep(.p-progressbar) {
+  flex: 1;
+  height: 4px;
+}
+
+.progress-percent {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  width: 30px;
+  text-align: right;
+}
+
+.member-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.member-status.online {
+  background: var(--green-500);
+}
+
+.member-status.away {
+  background: var(--yellow-500);
+}
+
+.member-status.offline {
+  background: var(--surface-400);
+}
+
+/* Quick Actions */
+.quick-actions-section {
+  margin-bottom: 2rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+}
+
+.action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.action-icon.blue {
+  background: var(--primary-500);
+}
+.action-icon.green {
+  background: var(--green-500);
+}
+.action-icon.purple {
+  background: #8b5cf6;
+}
+.action-icon.orange {
+  background: var(--orange-500);
+}
+
+.action-content {
+  flex: 1;
+}
+
+.action-label {
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.25rem;
+}
+
+.action-desc {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+}
+
+.action-arrow {
+  color: var(--text-color-secondary);
+  transition: transform 0.2s ease;
+}
+
+.action-card:hover .action-arrow {
+  transform: translateX(4px);
+  color: var(--primary-500);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .two-column-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .modern-content {
+    padding: 1rem;
+  }
+
+  .welcome-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .welcome-stats {
+    justify-content: center;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* Progress Bar Variants */
+:deep(.progress-success .p-progressbar-value) {
+  background: var(--green-500);
+}
+
+:deep(.progress-info .p-progressbar-value) {
+  background: var(--blue-500);
+}
+
+:deep(.progress-warning .p-progressbar-value) {
+  background: var(--orange-500);
+}
+
+:deep(.progress-small .p-progressbar) {
+  height: 4px;
+}
+</style>
+
+_________________________________________________________________________
+_________________________________________________________________________
+src\latest\views\layouts\constants\general_request.js
+
+const general_request = {
+  BASE_URL: import.meta.env.VITE_HOST_URL,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    Authorization: "Bearer " + localStorage.getItem("authToken"),
+  },
+};
+
+export default general_request;
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+D:\vue_apps\VUE_ERP\src\latest\views\layouts\constants\composables\useCrud.js
+
+import general_request from "../general_request";
+
+export function useCrud() {
+     return {
+          data() {
+               return {
+                    selectedItem: null
+               }
+          },
+
+          methods: {
+               async deleteItem(item, baseUrl, successMessage, errorMessage) {
+                    this.$confirm.require({
+                         message: `Delete ${item.name || item.title || 'this item'}?`,
+                         header: 'Confirmation',
+                         icon: "pi pi-exclamation-triangle",
+                         acceptClass: "p-button-danger",
+                         accept: async () => {
+                              try {
+                                   this.loading = true;
+                                   const url = `${baseUrl}/${item.id}`;
+                                   await this.$http.delete(url, {
+                                        headers: general_request.headers,
+                                   });
+
+                                   this.tableItems = this.tableItems.filter(i => i.id !== item.id);
+                                   this.showToast("success", "Success", successMessage);
+                              } catch (error) {
+                                   this.showToast("error", "Error", errorMessage);
+                              } finally {
+                                   this.loading = false;
+                              }
+                         },
+                         reject: () => {
+                              // User rejected deletion
+                         }
+                    });
+               },
+
+               handleItemCreated(newItem) {
+                    this.tableItems.unshift(newItem);
+                    this.showToast("success", "Success", "Item created successfully");
+               },
+
+               handleItemUpdated(updatedItem) {
+                    const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
+                    if (index !== -1) {
+                         this.tableItems.splice(index, 1, updatedItem);
+                    }
+                    this.showToast("success", "Success", "Item updated successfully");
+               }
+          }
+     }
+}
+
+
+_________________________________________________________________________
+_________________________________________________________________________
+src\latest\views\layouts\constants\composables\useTable.js
+
+import general_request from "../general_request";
+
+export function useTable() {
+     return {
+          data() {
+               return {
+                    tableItems: [],
+                    loading: false,
+                    meta: { total: 0, current_page: 1 },
+                    links: {},
+                    per_page: 10,
+                    query_string: '',
+                    sortField: null,
+                    sortOrder: null,
+                    selectedItem: null,
+                    perPageOptions: [
+                         { label: '5', value: 5 },
+                         { label: '10', value: 10 },
+                         { label: '25', value: 25 },
+                         { label: '50', value: 50 },
+                         { label: '100', value: 100 }
+                    ],
+                    searchTimeout: null
+               }
+          },
+
+          computed: {
+               axiosParams() {
+                    return {
+                         per_page: this.per_page,
+                         query_string: this.query_string,
+                         page: this.meta.current_page || 1,
+                    }
+               },
+          },
+
+          methods: {
+               // Data fetching methods
+               async getData(url = this.propSearchUrl) {
+                    await this.fetchData(url);
+               },
+
+               async fetchData(url, customErrorMessage = null) {
+                    this.loading = true;
+                    try {
+                         const response = await this.$http.get(url, {
+                              params: this.axiosParams,
+                              headers: general_request.headers,
+                         });
+
+                         this.tableItems = response.data.data || [];
+                         this.links = response.data.links || {};
+                         this.meta = response.data.meta || { total: 0 };
+                    } catch (error) {
+                         const errorMessage = customErrorMessage || this.$t("errors.fetchError");
+                         this.showToast("error", this.$t("common.error"), errorMessage);
+                    } finally {
+                         this.loading = false;
+                    }
+               },
+
+               // Search and pagination methods
+               handleSearchInput() {
+                    this.onSearchInput(this.getData);
+               },
+
+               onSearchInput(callback) {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                         this.meta.current_page = 1;
+                         callback();
+                    }, 500);
+               },
+
+               handlePageChange(event) {
+                    this.onPageChange(event, this.getData);
+               },
+
+               onPageChange(event, callback) {
+                    this.per_page = event.rows;
+                    this.meta.current_page = event.page + 1;
+                    callback();
+               },
+
+               // Sorting method
+               onSort(event) {
+                    this.sortField = event.sortField;
+                    this.sortOrder = event.sortOrder;
+               },
+
+               // CRUD operations
+               async deleteItem(item, baseUrl, successMessage, customErrorMessage = null) {
+                    this.$confirm.require({
+                         message: `هل أنت متأكد من حذف ${item.name || item.title || 'هذا العنصر'}؟`,
+                         header: this.$t("common.confirmation"),
+                         icon: "pi pi-exclamation-triangle",
+                         acceptClass: "p-button-danger",
+                         accept: async () => {
+                              try {
+                                   this.loading = true;
+                                   const url = `${baseUrl}/${item.id}`;
+                                   await this.$http.delete(url, {
+                                        headers: general_request.headers,
+                                   });
+
+                                   this.tableItems = this.tableItems.filter(i => i.id !== item.id);
+                                   this.showToast("success", this.$t("common.success"), successMessage);
+                              } catch (error) {
+                                   const errorMessage = customErrorMessage || this.$t("errors.deleteError");
+                                   this.showToast("error", this.$t("common.error"), errorMessage);
+                              } finally {
+                                   this.loading = false;
+                              }
+                         },
+                         reject: () => {
+                              // User rejected deletion
+                         }
+                    });
+               },
+
+               handleItemCreated(newItem) {
+                    this.tableItems.unshift(newItem);
+                    this.showToast("success", this.$t("common.success"), "تم الإنشاء بنجاح");
+               },
+
+               handleItemUpdated(updatedItem) {
+                    const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
+                    if (index !== -1) {
+                         this.tableItems.splice(index, 1, updatedItem);
+                    }
+                    this.showToast("success", this.$t("common.success"), "تم التحديث بنجاح");
+               },
+
+               // Utility methods
+               showToast(severity, summary, detail) {
+                    if (this.$toast) {
+                         this.$toast.add({
+                              severity: severity,
+                              summary: summary,
+                              detail: detail,
+                              life: 3000,
+                         });
+                    }
+               },
+
+               formatDate(dateString) {
+                    if (!dateString) return "-";
+                    try {
+                         return new Date(dateString).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                         });
+                    } catch (error) {
+                         return dateString;
+                    }
+               },
+
+               // Navigation helper
+               navigateToPage(url, fetchCallback) {
+                    if (url && !this.loading) {
+                         fetchCallback(url);
+                    }
+               },
+
+               // Reset form data
+               resetFormData() {
+                    return {
+                         id: "",
+                         name: "",
+                         name_ar: "",
+                         email: "",
+                         phone: "",
+                         password: "",
+                         address: "",
+                         user_account_type_id: "",
+                         phone_code: "",
+                         prefix: "",
+                         flag: ""
+                    };
+               }
+          }
+     }
+}
+
+
+
+
+
+
+
+
+
+_________________________________________________________________________
+_________________________________________________________________________

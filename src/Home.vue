@@ -12,7 +12,7 @@ export default {
   },
   methods: {
     checkIfAuth() {
-      this.token = localStorage.getItem("token");
+      this.token = localStorage.getItem("authToken");
 
       if (this.token) {
         this.$router.push("/");
