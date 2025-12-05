@@ -1,8 +1,6 @@
 <template>
-  <div class="discount-final-products-table">
-    <!-- Action Bar -->
-    <div class="flex justify-content-between align-items-center mb-4">
-      <h3 class="m-0">{{ $t("discounts.finalProducts") }}</h3>
+  <div class="p-3">
+    <div class="mb-3">
       <Button
         :label="$t('discounts.addFinalProducts')"
         icon="pi pi-plus"
@@ -42,7 +40,6 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -117,10 +114,7 @@
     </DataTable>
 
     <!-- Empty State -->
-    <div
-      v-if="!loading && tableItems.length === 0"
-      class="empty-state text-center py-6"
-    >
+    <div v-if="!loading && tableItems.length === 0" class="text-center py-6">
       <i class="pi pi-shopping-bag text-6xl text-color-secondary mb-3"></i>
       <h3 class="text-color-secondary">
         {{ $t("discounts.noFinalProducts") }}
@@ -278,40 +272,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.discount-final-products-table {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.empty-state {
-  border: 2px dashed var(--surface-border);
-  border-radius: 12px;
-  background: var(--surface-ground);
-  padding: 2rem;
-}
-
-:deep(.p-datatable) {
-  flex: 1;
-}
-</style>
+<style scoped></style>

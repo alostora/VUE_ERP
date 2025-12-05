@@ -1,5 +1,5 @@
 <template>
-  <div class="product-table-page">
+  <div class="p-3">
     <div class="mb-3">
       <h2 class="m-0">{{ $t("products.title") }}</h2>
     </div>
@@ -59,7 +59,6 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -106,7 +105,7 @@
               v-if="slotProps.data.category?.file"
               :src="slotProps.data.category.file.file_path"
               :alt="slotProps.data.category.name"
-              class="category-image"
+              class="img-40 object-cover rounded"
             />
             <span>{{ slotProps.data.category?.name || "-" }}</span>
           </div>
@@ -193,10 +192,7 @@
     </DataTable>
 
     <!-- Empty State -->
-    <div
-      v-if="!loading && tableItems.length === 0"
-      class="empty-state text-center py-6"
-    >
+    <div v-if="!loading && tableItems.length === 0" class="text-center py-6">
       <i class="pi pi-inbox text-6xl text-color-secondary mb-3"></i>
       <h3 class="text-color-secondary">{{ $t("products.noProducts") }}</h3>
       <p class="text-color-secondary">
@@ -411,49 +407,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.product-table-page {
-  padding: 1rem;
-}
-
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.category-image {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--surface-border);
-}
-
-.empty-state {
-  border: 2px dashed var(--surface-border);
-  border-radius: 12px;
-  background: var(--surface-ground);
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
-</style>
+<style scoped></style>

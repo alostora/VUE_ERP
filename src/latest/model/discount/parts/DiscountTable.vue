@@ -217,7 +217,7 @@
     <!-- Empty State -->
     <div
       v-if="!loading && tableItems.length === 0"
-      class="empty-state text-center py-6"
+      class="text-center py-6"
     >
       <i class="pi pi-percentage text-6xl text-color-secondary mb-3"></i>
       <h3 class="text-color-secondary">{{ $t("discounts.noDiscounts") }}</h3>
@@ -506,32 +506,4 @@ export default {
 </script>
 
 <style scoped>
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.empty-state {
-  border: 2px dashed var(--surface-border);
-  border-radius: 12px;
-  background: var(--surface-ground);
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
 </style>

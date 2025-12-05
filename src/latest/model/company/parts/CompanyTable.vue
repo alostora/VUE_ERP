@@ -43,7 +43,6 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -72,7 +71,7 @@
             v-if="slotProps.data.logo"
             :src="slotProps.data.logo.file_path"
             :alt="slotProps.data.name"
-            class="logo-image"
+            class="img-40 object-cover rounded"
           />
           <span v-else>-</span>
         </template>
@@ -312,38 +311,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.logo-image {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
-</style>
+<style scoped></style>

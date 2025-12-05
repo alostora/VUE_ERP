@@ -1,5 +1,5 @@
 <template>
-  <div class="final-product-table-page">
+  <div class="p-3">
     <div class="mb-3">
       <h2 class="m-0">{{ $t("final_product.title") }}</h2>
     </div>
@@ -107,7 +107,7 @@
             v-if="slotProps.data.main_image"
             :src="slotProps.data.main_image.file.file_path"
             :alt="slotProps.data.name"
-            class="product-image"
+            class="img-40 object-cover rounded"
           />
           <div v-else class="no-image-placeholder">
             <i class="pi pi-image text-color-secondary"></i>
@@ -146,7 +146,7 @@
               v-if="slotProps.data.category?.file"
               :src="slotProps.data.category.file.file_path"
               :alt="slotProps.data.category.name"
-              class="category-image"
+              class="img-40 object-cover rounded"
             />
             <span>{{ slotProps.data.category?.name || "-" }}</span>
           </div>
@@ -259,7 +259,7 @@
     <!-- Empty State -->
     <div
       v-if="!loading && tableItems.length === 0"
-      class="empty-state text-center py-6"
+      class="text-center py-6"
     >
       <i class="pi pi-inbox text-6xl text-color-secondary mb-3"></i>
       <h3 class="text-color-secondary">
@@ -589,36 +589,6 @@ export default {
 </script>
 
 <style scoped>
-.final-product-table-page {
-  padding: 1rem;
-}
-
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.product-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
 .no-image-placeholder {
   width: 50px;
   height: 50px;
@@ -628,27 +598,5 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.category-image {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--surface-border);
-}
-
-.empty-state {
-  border: 2px dashed var(--surface-border);
-  border-radius: 12px;
-  background: var(--surface-ground);
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
 }
 </style>

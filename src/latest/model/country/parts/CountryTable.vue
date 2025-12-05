@@ -120,7 +120,7 @@
             v-if="slotProps.data.flag"
             :src="slotProps.data.flag"
             :alt="slotProps.data.name"
-            class="flag-image"
+            class="img-40 object-cover rounded"
           />
           <span v-else>-</span>
         </template>
@@ -296,37 +296,4 @@ export default {
 </script>
 
 <style scoped>
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.flag-image {
-  width: 30px;
-  height: 20px;
-  object-fit: cover;
-  border-radius: 3px;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
 </style>

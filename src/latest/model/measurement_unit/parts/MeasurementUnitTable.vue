@@ -1,5 +1,8 @@
 <template>
-  <div class="measurement-unit-table-page">
+  <div class="p-3">
+    <div class="mb-3">
+      <h2 class="m-0">{{ $t("measurementUnits.title") }}</h2>
+    </div>
     <div class="mb-4">
       <Button
         :label="$t('measurementUnits.addMeasurementUnit')"
@@ -245,31 +248,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
-</style>
+<style scoped></style>

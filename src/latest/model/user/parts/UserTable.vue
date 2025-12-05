@@ -44,7 +44,6 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -158,36 +157,6 @@
   </div>
 </template>
 
-<style scoped>
-/* نفس الـ styles */
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
-</style>
-
 <script>
 // Import PrimeVue components
 import DataTable from "primevue/datatable";
@@ -204,7 +173,7 @@ import Tooltip from "primevue/tooltip";
 import UserCreateModal from "./UserCreateModal.vue";
 import UserEditModal from "./UserEditModal.vue";
 
-// Import composables 
+// Import composables
 // From: src/latest/model/country/parts/CountryTable.vue
 // Import composables
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
@@ -304,3 +273,5 @@ export default {
   },
 };
 </script>
+
+<style scoped></style>

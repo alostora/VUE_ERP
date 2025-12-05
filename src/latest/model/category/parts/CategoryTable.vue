@@ -1,5 +1,8 @@
 <template>
-  <div class="category-table-page">
+  <div class="p3">
+    <div class="mb-3">
+      <h2 class="m-0">{{ $t("categories.title") }}</h2>
+    </div>
     <div class="mb-4">
       <Button
         :label="$t('categories.addCategory')"
@@ -38,7 +41,6 @@
       :totalRecords="meta.total"
       :rowsPerPageOptions="[5, 10, 25, 50, 100]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -65,7 +67,7 @@
             v-if="slotProps.data.file"
             :src="slotProps.data.file.file_path"
             :alt="slotProps.data.name"
-            class="category-image"
+            class="img-40 object-cover rounded"
           />
           <span v-else>-</span>
         </template>
@@ -260,37 +262,4 @@ export default {
 </script>
 
 <style scoped>
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.category-image {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
 </style>

@@ -1,7 +1,6 @@
 <template>
-  <div class="discount-branches-table">
-    <div class="flex justify-content-between align-items-center mb-4">
-      <h3 class="m-0">{{ $t("discounts.branches") }}</h3>
+  <div class="p-3">
+    <div class="mb-3">
       <Button
         :label="$t('discounts.addBranches')"
         icon="pi pi-plus"
@@ -37,9 +36,8 @@
       :paginator="true"
       :rows="per_page"
       :totalRecords="meta.total"
-      :rowsPerPageOptions="[5,10,25,50]"
+      :rowsPerPageOptions="[5, 10, 25, 50]"
       :loading="loading"
-      
       :lazy="true"
       resizableColumns
       columnResizeMode="fit"
@@ -50,28 +48,40 @@
       currentPageReportTemplate="{first} to {last} of {totalRecords}"
       @page="handlePageChange"
     >
-      <Column field="id" :header="$t('discounts.id')" style="min-width:70px">
+      <Column field="id" :header="$t('discounts.id')" style="min-width: 70px">
         <template #body="slotProps">
           <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
         </template>
       </Column>
 
-      <Column :header="$t('discounts.branchName')" style="min-width:200px">
+      <Column :header="$t('discounts.branchName')" style="min-width: 200px">
         <template #body="slotProps">
           <div>
-            <div class="font-medium">{{ slotProps.data.branch?.name || '-' }}</div>
-            <div class="text-sm text-color-secondary">{{ slotProps.data.branch?.name_ar || '-' }}</div>
+            <div class="font-medium">
+              {{ slotProps.data.branch?.name || "-" }}
+            </div>
+            <div class="text-sm text-color-secondary">
+              {{ slotProps.data.branch?.name_ar || "-" }}
+            </div>
           </div>
         </template>
       </Column>
 
-      <Column field="created_at" :header="$t('discounts.createdAt')" style="min-width:130px">
+      <Column
+        field="created_at"
+        :header="$t('discounts.createdAt')"
+        style="min-width: 130px"
+      >
         <template #body="slotProps">
           {{ formatDate(slotProps.data.created_at) }}
         </template>
       </Column>
 
-      <Column :header="$t('discounts.actions')" :exportable="false" style="min-width:100px">
+      <Column
+        :header="$t('discounts.actions')"
+        :exportable="false"
+        style="min-width: 100px"
+      >
         <template #body="slotProps">
           <Button
             icon="pi pi-trash"
@@ -83,10 +93,12 @@
       </Column>
     </DataTable>
 
-    <div v-if="!loading && tableItems.length === 0" class="empty-state text-center py-6">
+    <div v-if="!loading && tableItems.length === 0" class="text-center py-6">
       <i class="pi pi-sitemap text-6xl text-color-secondary mb-3"></i>
-      <h3 class="text-color-secondary">{{ $t('discounts.noBranches') }}</h3>
-      <p class="text-color-secondary mb-4">{{ $t('discounts.addBranchesHint') }}</p>
+      <h3 class="text-color-secondary">{{ $t("discounts.noBranches") }}</h3>
+      <p class="text-color-secondary mb-4">
+        {{ $t("discounts.addBranchesHint") }}
+      </p>
     </div>
 
     <Toast />
@@ -181,40 +193,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.discount-branches-table {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.empty-state {
-  border: 2px dashed var(--surface-border);
-  border-radius: 12px;
-  background: var(--surface-ground);
-  padding: 2rem;
-}
-
-:deep(.p-datatable) {
-  flex: 1;
-}
-</style>
+<style scoped></style>

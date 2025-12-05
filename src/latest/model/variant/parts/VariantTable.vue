@@ -1,5 +1,5 @@
 <template>
-  <div class="variant-table-page">
+  <div class="p3">
     <div class="mb-3">
       <h2 class="m-0">{{ $t("variants.title") }}</h2>
     </div>
@@ -298,35 +298,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.variant-table-page {
-  padding: 1rem;
-}
-
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
-</style>
+<style scoped></style>

@@ -1132,6 +1132,136 @@
   pointer-events: auto !important;
 }
 
+// ==================== SEARCH INPUT UTILITIES ====================
+
+/* Search container */
+.search-container {
+  position: relative !important;
+  display: inline-block !important;
+}
+
+.search-container-full {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Search input */
+.search-input {
+  padding-left: 2.5rem !important;
+  width: 20rem !important;
+}
+
+.search-input-full {
+  padding-left: 2.5rem !important;
+  width: 100% !important;
+}
+
+/* Search icon */
+.search-icon {
+  position: absolute !important;
+  left: 0.75rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: var(--text-color-secondary) !important;
+  pointer-events: none !important;
+}
+
+/* Optional: RTL support */
+[dir="rtl"] {
+  .search-input,
+  .search-input-full {
+    padding-left: unset !important;
+    padding-right: 2.5rem !important;
+  }
+
+  .search-icon {
+    left: unset !important;
+    right: 0.75rem !important;
+  }
+}
+// ==================== IMAGE UTILITIES ====================
+
+/* Fixed size squares */
+.img-32 {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.img-40 {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.img-48 {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.img-64 {
+  width: 64px !important;
+  height: 64px !important;
+}
+
+.img-80 {
+  width: 80px !important;
+  height: 80px !important;
+}
+
+.img-100 {
+  width: 100px !important;
+  height: 100px !important;
+}
+
+/* Object fit */
+.object-cover {
+  object-fit: cover !important;
+}
+
+.object-contain {
+  object-fit: contain !important;
+}
+
+.object-fill {
+  object-fit: fill !important;
+}
+
+/* Complete thumbnail classes */
+.img-thumbnail {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  background-color: var(--surface-ground);
+}
+
+.img-thumbnail-sm {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-ground);
+}
+
+.img-thumbnail-lg {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background-color: var(--surface-ground);
+}
+
+/* Circle images */
+.img-circle {
+  border-radius: 50% !important;
+}
+
+/* Responsive images */
+.img-responsive {
+  max-width: 100%;
+  height: auto;
+}
+
 // ==================== RTL SUPPORT ====================
 
 // RTL text alignment

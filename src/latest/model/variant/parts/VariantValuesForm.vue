@@ -4,12 +4,6 @@
       {{ error }}
     </Message>
 
-    <!-- Variant Info -->
-    <div v-if="variant" class="variant-info mb-4 p-3 border-round bg-surface-ground">
-      <h4 class="m-0 mb-2">{{ $t('variants.variant') }}: {{ variant.name }}</h4>
-      <p class="m-0 text-color-secondary">{{ variant.name_ar }}</p>
-    </div>
-
     <div class="mb-4">
       <Button
         :label="$t('variants.addVariantValues')"
@@ -21,7 +15,7 @@
 
     <!-- Single Value Form -->
     <div v-if="!showMultipleValuesForm" class="single-value-form mb-4">
-      <h5 class="mb-3">{{ $t('variants.addVariantValue') }}</h5>
+      <h5 class="mb-3">{{ $t("variants.addVariantValue") }}</h5>
       <form @submit.prevent="submitSingleValue" class="grid">
         <div class="col-12 md:col-5 field">
           <InputText
@@ -39,7 +33,9 @@
             class="w-full"
             :placeholder="$t('variants.valueArPlaceholder')"
           />
-          <small v-if="errors.value_ar" class="p-error">{{ errors.value_ar }}</small>
+          <small v-if="errors.value_ar" class="p-error">{{
+            errors.value_ar
+          }}</small>
         </div>
         <div class="col-12 md:col-2">
           <Button
@@ -55,7 +51,7 @@
     <!-- Multiple Values Form -->
     <div v-else class="multiple-values-form mb-4">
       <div class="flex justify-content-between align-items-center mb-3">
-        <h5 class="m-0">{{ $t('variants.addVariantValues') }}</h5>
+        <h5 class="m-0">{{ $t("variants.addVariantValues") }}</h5>
         <Button
           :label="$t('variants.addNewValue')"
           icon="pi pi-plus"
@@ -78,7 +74,7 @@
               :placeholder="$t('variants.valuePlaceholder')"
             />
             <small v-if="hasValueError(index, 'value')" class="p-error">
-              {{ getValueError(index, 'value') }}
+              {{ getValueError(index, "value") }}
             </small>
           </div>
           <div class="col-12 md:col-5">
@@ -89,7 +85,7 @@
               :placeholder="$t('variants.valueArPlaceholder')"
             />
             <small v-if="hasValueError(index, 'value_ar')" class="p-error">
-              {{ getValueError(index, 'value_ar') }}
+              {{ getValueError(index, "value_ar") }}
             </small>
           </div>
           <div class="col-12 md:col-2">
@@ -152,22 +148,17 @@
         :totalRecords="meta.total"
         :rowsPerPageOptions="[5, 10, 25, 50, 100]"
         :loading="loading"
-        
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
         class="p-datatable-sm table-scroll-container"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <Column
-          field="id"
-          :header="$t('variants.id')"
-          style="min-width: 100px"
-        >
+        <Column field="id" :header="$t('variants.id')" style="min-width: 100px">
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
@@ -243,22 +234,30 @@
         <form @submit.prevent="submitEditValue">
           <div class="grid">
             <div class="col-12 md:col-6 field">
-              <label class="font-bold block mb-2">{{ $t('variants.value') }} *</label>
+              <label class="font-bold block mb-2"
+                >{{ $t("variants.value") }} *</label
+              >
               <InputText
                 v-model="editFormData.value"
                 :class="{ 'p-invalid': editErrors.value }"
                 class="w-full"
               />
-              <small v-if="editErrors.value" class="p-error">{{ editErrors.value }}</small>
+              <small v-if="editErrors.value" class="p-error">{{
+                editErrors.value
+              }}</small>
             </div>
             <div class="col-12 md:col-6 field">
-              <label class="font-bold block mb-2">{{ $t('variants.value_ar') }} *</label>
+              <label class="font-bold block mb-2"
+                >{{ $t("variants.value_ar") }} *</label
+              >
               <InputText
                 v-model="editFormData.value_ar"
                 :class="{ 'p-invalid': editErrors.value_ar }"
                 class="w-full"
               />
-              <small v-if="editErrors.value_ar" class="p-error">{{ editErrors.value_ar }}</small>
+              <small v-if="editErrors.value_ar" class="p-error">{{
+                editErrors.value_ar
+              }}</small>
             </div>
           </div>
           <div class="flex justify-content-end gap-2 mt-3">
@@ -342,9 +341,7 @@ export default {
         value_ar: "",
       },
       multipleFormData: {
-        values: [
-          { value: "", value_ar: "" }
-        ]
+        values: [{ value: "", value_ar: "" }],
       },
       editFormData: {
         id: "",
@@ -487,7 +484,7 @@ export default {
     },
 
     getValueError(index, field) {
-      return this.valueErrors[index]?.[field] || '';
+      return this.valueErrors[index]?.[field] || "";
     },
 
     async submitMultipleValues() {
@@ -504,10 +501,10 @@ export default {
         const payload = {
           company_id: this.effectiveCompanyId,
           variant_id: this.variant.id,
-          values: this.multipleFormData.values.map(value => ({
+          values: this.multipleFormData.values.map((value) => ({
             value: value.value,
-            value_ar: value.value_ar
-          }))
+            value_ar: value.value_ar,
+          })),
         };
 
         const response = await this.$http.post(url, payload, {
@@ -519,7 +516,7 @@ export default {
 
         // Add all new values to the table
         if (Array.isArray(response.data.data)) {
-          response.data.data.forEach(value => {
+          response.data.data.forEach((value) => {
             this.handleItemCreated(value);
           });
         }
@@ -617,9 +614,7 @@ export default {
 
     resetMultipleForm() {
       this.multipleFormData = {
-        values: [
-          { value: "", value_ar: "" }
-        ]
+        values: [{ value: "", value_ar: "" }],
       };
       this.valueErrors = [];
     },
@@ -724,47 +719,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.variant-values-form {
-  max-width: 100%;
-}
-
-.variant-info {
-  border-left: 4px solid var(--primary-500);
-}
-
-.search-container {
-  position: relative;
-  display: inline-block;
-}
-
-.search-input {
-  padding-left: 2.5rem;
-  width: 20rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-color-secondary);
-  pointer-events: none;
-}
-
-.value-item {
-  gap: 0.5rem;
-}
-
-.field {
-  margin-bottom: 1rem;
-}
-
-:deep(.p-datatable) {
-  width: 100%;
-}
-
-:deep(.p-column-title) {
-  font-weight: 600;
-}
-</style>
+<style scoped></style>

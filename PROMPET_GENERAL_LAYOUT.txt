@@ -1,6 +1,8 @@
+____________________
 src\main.js
 
-import './assets/main.css'; // Add this import
+// import './assets/main.css'; // Add this import
+import './assets/scss/main.scss';
 import { createApp } from 'vue';
 import Home from './Home.vue';
 import router from './router';
@@ -53,8 +55,10 @@ app
      .use(ConfirmationService);
 
 app.mount('#app');
-_________________________________________________________________________
-_________________________________________________________________________
+____________________
+
+*********************************
+____________________
 src\Home.vue
 
 <template>
@@ -71,7 +75,7 @@ export default {
   },
   methods: {
     checkIfAuth() {
-      this.token = localStorage.getItem("token");
+      this.token = localStorage.getItem("authToken");
 
       if (this.token) {
         this.$router.push("/");
@@ -89,10 +93,47 @@ export default {
 };
 </script>
 
+____________________
 
+*********************************
+____________________
+src\Home.vue
+<template>
+  <RouterView />
+</template>
 
-_________________________________________________________________________
-_________________________________________________________________________
+<script>
+export default {
+  data() {
+    return {
+      token: "",
+      error_message: "",
+    };
+  },
+  methods: {
+    checkIfAuth() {
+      this.token = localStorage.getItem("authToken");
+
+      if (this.token) {
+        this.$router.push("/");
+      } else {
+        this.$router.push("/login");
+      }
+    },
+  },
+
+  beforeCreate() {},
+
+  created() {
+    this.checkIfAuth();
+  },
+};
+</script>
+
+____________________
+
+*********************************
+____________________
 src\router\index.js
 
 import { createRouter, createWebHistory } from "vue-router";
@@ -165,9 +206,12 @@ router.beforeEach((to, from, next) => {
 // ------------------------------
 
 export default router;
-_________________________________________________________________________
-_________________________________________________________________________
+____________________
+
+*********************************
+____________________
 src\latest\views\HomePage.vue
+
 <template>
   <div class="layout-wrapper" :class="[currentDirection, currentTheme]">
     <MVVMMainHeader
@@ -331,12 +375,10 @@ export default {
   }
 }
 </style>
+____________________
 
-
-
-
-_________________________________________________________________________
-_________________________________________________________________________
+*********************************
+____________________
 src\latest\views\layouts\MVVMSidebar.vue
 
 <template>
@@ -719,15 +761,12 @@ export default {
 }
 </style>
 
+____________________
 
-
-
-
-
-_________________________________________________________________________
-_________________________________________________________________________
-
+*********************************
+____________________
 src\latest\views\layouts\MVVMMainHeader.vue
+
 <template>
   <header class="main-header">
     <Menubar :model="translatedMenuItems">
@@ -1025,10 +1064,10 @@ export default {
     }
 }
 </style>
+____________________
 
-
-_________________________________________________________________________
-_________________________________________________________________________
+*********************************
+____________________
 src\latest\views\layouts\MVVMFooter.vue
 
 <template>
@@ -1469,12 +1508,10 @@ export default {
 }
 </style>
 
+____________________
 
-
-
-
-_________________________________________________________________________
-_________________________________________________________________________
+***************************
+____________________
 src\latest\views\layouts\MVVMContent.vue
 
 <template>
@@ -2468,85 +2505,157 @@ export default {
 }
 </style>
 
-_________________________________________________________________________
-_________________________________________________________________________
+____________________
+
+*********************************
+____________________
 src\latest\views\layouts\constants\general_request.js
 
+
 const general_request = {
-  BASE_URL: import.meta.env.VITE_HOST_URL,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    Authorization: "Bearer " + localStorage.getItem("authToken"),
+
+  BASE_URL: import.meta.env.VITE_HOST_URL || 'http://localhost:8000',
+
+  get headers() {
+    const token = localStorage.getItem('authToken');
+    return {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    };
   },
+
+  axiosInstance: null,
+
+  getAxiosInstance() {
+    if (!this.axiosInstance) {
+      const axios = require('axios');
+
+      this.axiosInstance = axios.create({
+        baseURL: this.BASE_URL,
+        timeout: 30000,
+      });
+
+      this.axiosInstance.interceptors.request.use(
+        (config) => {
+          const token = localStorage.getItem('authToken');
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+          return config;
+        },
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
+
+      this.axiosInstance.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+          const originalRequest = error.config;
+
+          if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+              const refreshToken = localStorage.getItem('refreshToken');
+              if (!refreshToken) {
+                throw new Error('No refresh token available');
+              }
+
+              const response = await axios.post(`${this.BASE_URL}/auth/refresh`, {
+                refresh_token: refreshToken
+              }, {
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+              });
+
+              if (response.data.access_token) {
+                localStorage.setItem('authToken', response.data.access_token);
+                localStorage.setItem('refreshToken', response.data.refresh_token || refreshToken);
+
+                originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
+                return this.axiosInstance(originalRequest);
+              }
+            } catch (refreshError) {
+              this.clearAuthTokens();
+              if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+              }
+              return Promise.reject(refreshError);
+            }
+          }
+
+          return Promise.reject(error);
+        }
+      );
+    }
+
+    return this.axiosInstance;
+  },
+
+  clearAuthTokens() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+  },
+
+  isAuthenticated() {
+    return !!localStorage.getItem('authToken');
+  },
+
+  async request(config) {
+    try {
+      const instance = this.getAxiosInstance();
+      return await instance(config);
+    } catch (error) {
+      this.handleRequestError(error);
+      throw error;
+    }
+  },
+
+  handleRequestError(error) {
+    if (error.response) {
+      console.error('API Error:', {
+        status: error.response.status,
+        data: error.response.data,
+        url: error.config?.url
+      });
+
+      switch (error.response.status) {
+        case 401:
+          console.warn('Unauthorized access - redirecting to login');
+          break;
+        case 403:
+          console.warn('Forbidden - insufficient permissions');
+          break;
+        case 404:
+          console.warn('Resource not found');
+          break;
+        case 500:
+          console.error('Internal server error');
+          break;
+      }
+    } else if (error.request) {
+      console.error('Network error - no response received:', error.request);
+    } else {
+      console.error('Request setup error:', error.message);
+    }
+  },
+
+  getHeaders() {
+    return this.headers;
+  }
 };
 
 export default general_request;
+____________________
 
-
-_________________________________________________________________________
-_________________________________________________________________________
-D:\vue_apps\VUE_ERP\src\latest\views\layouts\constants\composables\useCrud.js
-
-import general_request from "../general_request";
-
-export function useCrud() {
-     return {
-          data() {
-               return {
-                    selectedItem: null
-               }
-          },
-
-          methods: {
-               async deleteItem(item, baseUrl, successMessage, errorMessage) {
-                    this.$confirm.require({
-                         message: `Delete ${item.name || item.title || 'this item'}?`,
-                         header: 'Confirmation',
-                         icon: "pi pi-exclamation-triangle",
-                         acceptClass: "p-button-danger",
-                         accept: async () => {
-                              try {
-                                   this.loading = true;
-                                   const url = `${baseUrl}/${item.id}`;
-                                   await this.$http.delete(url, {
-                                        headers: general_request.headers,
-                                   });
-
-                                   this.tableItems = this.tableItems.filter(i => i.id !== item.id);
-                                   this.showToast("success", "Success", successMessage);
-                              } catch (error) {
-                                   this.showToast("error", "Error", errorMessage);
-                              } finally {
-                                   this.loading = false;
-                              }
-                         },
-                         reject: () => {
-                              // User rejected deletion
-                         }
-                    });
-               },
-
-               handleItemCreated(newItem) {
-                    this.tableItems.unshift(newItem);
-                    this.showToast("success", "Success", "Item created successfully");
-               },
-
-               handleItemUpdated(updatedItem) {
-                    const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
-                    if (index !== -1) {
-                         this.tableItems.splice(index, 1, updatedItem);
-                    }
-                    this.showToast("success", "Success", "Item updated successfully");
-               }
-          }
-     }
-}
-
-
-_________________________________________________________________________
-_________________________________________________________________________
+****************************
+____________________
 src\latest\views\layouts\constants\composables\useTable.js
+
 
 import general_request from "../general_request";
 
@@ -2556,13 +2665,27 @@ export function useTable() {
                return {
                     tableItems: [],
                     loading: false,
-                    meta: { total: 0, current_page: 1 },
+                    error: null,
+
+                    meta: {
+                         total: 0,
+                         current_page: 1,
+                         last_page: 1,
+                         per_page: 10,
+                         from: 0,
+                         to: 0
+                    },
                     links: {},
-                    per_page: 10,
+
                     query_string: '',
                     sortField: null,
                     sortOrder: null,
+
                     selectedItem: null,
+                    selectedItems: [],
+                    expandedRows: {},
+
+                    per_page: 10,
                     perPageOptions: [
                          { label: '5', value: 5 },
                          { label: '10', value: 10 },
@@ -2570,60 +2693,156 @@ export function useTable() {
                          { label: '50', value: 50 },
                          { label: '100', value: 100 }
                     ],
-                    searchTimeout: null
-               }
+
+                    searchTimeout: null,
+                    debounceDelay: 500,
+                    cacheKey: null,
+                    dataCache: {}
+               };
           },
 
           computed: {
+
                axiosParams() {
-                    return {
+                    const params = {
                          per_page: this.per_page,
-                         query_string: this.query_string,
                          page: this.meta.current_page || 1,
+                    };
+
+                    if (this.query_string && this.query_string.trim() !== '') {
+                         params.search = this.query_string.trim();
                     }
+
+                    if (this.sortField && this.sortOrder) {
+                         params.sort_by = this.sortField;
+                         params.sort_order = this.sortOrder === 1 ? 'asc' : 'desc';
+                    }
+
+                    return params;
                },
+
+
+               hasMoreData() {
+                    return this.meta.current_page < this.meta.last_page;
+               },
+
+
+               isEmpty() {
+                    return this.tableItems.length === 0 && !this.loading && !this.error;
+               },
+
+
+               isSearching() {
+                    return this.query_string && this.query_string.trim() !== '';
+               }
           },
 
           methods: {
-               // Data fetching methods
-               async getData(url = this.propSearchUrl) {
+
+               async getData(url = this.propSearchUrl, forceRefresh = false) {
+
+                    const cacheKey = `${url}?${new URLSearchParams(this.axiosParams).toString()}`;
+
+                    if (!forceRefresh && this.dataCache[cacheKey]) {
+                         this.tableItems = this.dataCache[cacheKey].data;
+                         this.meta = this.dataCache[cacheKey].meta;
+                         this.links = this.dataCache[cacheKey].links;
+                         return;
+                    }
+
                     await this.fetchData(url);
                },
 
+
                async fetchData(url, customErrorMessage = null) {
                     this.loading = true;
+                    this.error = null;
+
                     try {
                          const response = await this.$http.get(url, {
                               params: this.axiosParams,
                               headers: general_request.headers,
                          });
 
-                         this.tableItems = response.data.data || [];
-                         this.links = response.data.links || {};
-                         this.meta = response.data.meta || { total: 0 };
+
+                         if (response.data && typeof response.data === 'object') {
+
+                              if (response.data.data !== undefined) {
+                                   this.tableItems = response.data.data || [];
+                                   this.meta = response.data.meta || { total: 0 };
+                                   this.links = response.data.links || {};
+                              }
+
+                              else if (Array.isArray(response.data)) {
+                                   this.tableItems = response.data;
+                                   this.meta = { total: response.data.length };
+                                   this.links = {};
+                              }
+
+                              else {
+                                   this.tableItems = response.data.items || [];
+                                   this.meta = response.data.meta || { total: 0 };
+                                   this.links = response.data.links || {};
+                              }
+                         } else {
+                              this.tableItems = [];
+                              this.meta = { total: 0 };
+                         }
+
+                         const cacheKey = `${url}?${new URLSearchParams(this.axiosParams).toString()}`;
+                         this.dataCache[cacheKey] = {
+                              data: this.tableItems,
+                              meta: this.meta,
+                              links: this.links,
+                              timestamp: Date.now()
+                         };
+
+                         // Clean old cache entries (older than 5 minutes)
+                         this.cleanCache();
+
                     } catch (error) {
-                         const errorMessage = customErrorMessage || this.$t("errors.fetchError");
-                         this.showToast("error", this.$t("common.error"), errorMessage);
+                         this.error = error;
+                         const errorMessage = customErrorMessage || this.$t("errors.fetchError") || "Failed to fetch data";
+                         this.showToast("error", this.$t("common.error") || "Error", errorMessage);
+
+                         // Clear data on error
+                         this.tableItems = [];
+                         this.meta = { total: 0 };
+
+                         // Handle specific errors
+                         if (error.response?.status === 401) {
+                              this.handleUnauthorizedError();
+                         }
                     } finally {
                          this.loading = false;
                     }
                },
 
-               // Search and pagination methods
                handleSearchInput() {
-                    this.onSearchInput(this.getData);
+                    this.onSearchInput(() => {
+                         this.meta.current_page = 1;
+                         this.getData();
+                    });
                },
+
 
                onSearchInput(callback) {
                     clearTimeout(this.searchTimeout);
                     this.searchTimeout = setTimeout(() => {
-                         this.meta.current_page = 1;
                          callback();
-                    }, 500);
+                    }, this.debounceDelay);
+               },
+
+               clearSearch() {
+                    this.query_string = '';
+                    this.meta.current_page = 1;
+                    this.getData();
                },
 
                handlePageChange(event) {
-                    this.onPageChange(event, this.getData);
+                    this.onPageChange(event, () => {
+                         this.getData();
+                    });
                },
 
                onPageChange(event, callback) {
@@ -2632,56 +2851,90 @@ export function useTable() {
                     callback();
                },
 
-               // Sorting method
+               goToPage(pageNumber) {
+                    if (pageNumber >= 1 && pageNumber <= this.meta.last_page) {
+                         this.meta.current_page = pageNumber;
+                         this.getData();
+                    }
+               },
+
+               async loadMore() {
+                    if (this.loading || !this.hasMoreData) return;
+
+                    this.meta.current_page += 1;
+                    try {
+                         const response = await this.$http.get(this.propSearchUrl, {
+                              params: this.axiosParams,
+                              headers: general_request.headers,
+                         });
+
+                         if (response.data.data) {
+                              this.tableItems = [...this.tableItems, ...response.data.data];
+                              this.meta = response.data.meta;
+                              this.links = response.data.links;
+                         }
+                    } catch (error) {
+                         this.meta.current_page -= 1;
+                         this.showToast("error", "Error", "Failed to load more data");
+                    }
+               },
+
                onSort(event) {
                     this.sortField = event.sortField;
                     this.sortOrder = event.sortOrder;
+                    this.getData();
                },
 
-               // CRUD operations
-               async deleteItem(item, baseUrl, successMessage, customErrorMessage = null) {
-                    this.$confirm.require({
-                         message: `هل أنت متأكد من حذف ${item.name || item.title || 'هذا العنصر'}؟`,
-                         header: this.$t("common.confirmation"),
-                         icon: "pi pi-exclamation-triangle",
-                         acceptClass: "p-button-danger",
-                         accept: async () => {
-                              try {
-                                   this.loading = true;
-                                   const url = `${baseUrl}/${item.id}`;
-                                   await this.$http.delete(url, {
-                                        headers: general_request.headers,
-                                   });
+               clearSorting() {
+                    this.sortField = null;
+                    this.sortOrder = null;
+                    this.getData();
+               },
 
-                                   this.tableItems = this.tableItems.filter(i => i.id !== item.id);
-                                   this.showToast("success", this.$t("common.success"), successMessage);
-                              } catch (error) {
-                                   const errorMessage = customErrorMessage || this.$t("errors.deleteError");
-                                   this.showToast("error", this.$t("common.error"), errorMessage);
-                              } finally {
-                                   this.loading = false;
-                              }
-                         },
-                         reject: () => {
-                              // User rejected deletion
+               selectAll() {
+                    this.selectedItems = [...this.tableItems];
+               },
+
+               clearSelection() {
+                    this.selectedItems = [];
+               },
+
+               isSelected(item) {
+                    return this.selectedItems.some(selected => selected.id === item.id);
+               },
+
+               toggleSelection(item) {
+                    const index = this.selectedItems.findIndex(selected => selected.id === item.id);
+                    if (index === -1) {
+                         this.selectedItems.push(item);
+                    } else {
+                         this.selectedItems.splice(index, 1);
+                    }
+               },
+
+               cleanCache() {
+                    const now = Date.now();
+                    const cacheLifetime = 5 * 60 * 1000; // 5 minutes
+
+                    Object.keys(this.dataCache).forEach(key => {
+                         if (now - this.dataCache[key].timestamp > cacheLifetime) {
+                              delete this.dataCache[key];
                          }
                     });
                },
 
-               handleItemCreated(newItem) {
-                    this.tableItems.unshift(newItem);
-                    this.showToast("success", this.$t("common.success"), "تم الإنشاء بنجاح");
+               clearCache() {
+                    this.dataCache = {};
                },
 
-               handleItemUpdated(updatedItem) {
-                    const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
-                    if (index !== -1) {
-                         this.tableItems.splice(index, 1, updatedItem);
-                    }
-                    this.showToast("success", this.$t("common.success"), "تم التحديث بنجاح");
+               invalidateCache(url) {
+                    Object.keys(this.dataCache).forEach(key => {
+                         if (key.startsWith(url)) {
+                              delete this.dataCache[key];
+                         }
+                    });
                },
 
-               // Utility methods
                showToast(severity, summary, detail) {
                     if (this.$toast) {
                          this.$toast.add({
@@ -2690,56 +2943,625 @@ export function useTable() {
                               detail: detail,
                               life: 3000,
                          });
+                    } else {
+                         console.log(`[${severity.toUpperCase()}] ${summary}: ${detail}`);
                     }
                },
 
-               formatDate(dateString) {
+               formatDate(dateString, format = "medium") {
                     if (!dateString) return "-";
+
                     try {
-                         return new Date(dateString).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                         });
+                         const date = new Date(dateString);
+
+                         if (format === "short") {
+                              return date.toLocaleDateString("en-US", {
+                                   month: "short",
+                                   day: "numeric",
+                              });
+                         } else if (format === "long") {
+                              return date.toLocaleDateString("en-US", {
+                                   year: "numeric",
+                                   month: "long",
+                                   day: "numeric",
+                              });
+                         } else {
+                              return date.toLocaleDateString("en-US", {
+                                   year: "numeric",
+                                   month: "short",
+                                   day: "numeric",
+                              });
+                         }
                     } catch (error) {
                          return dateString;
                     }
                },
 
-               // Navigation helper
-               navigateToPage(url, fetchCallback) {
-                    if (url && !this.loading) {
-                         fetchCallback(url);
+               handleUnauthorizedError() {
+                    general_request.clearAuthTokens();
+                    this.showToast("warn", "Session Expired", "Please login again");
+
+                    setTimeout(() => {
+                         if (this.$router && window.location.pathname !== '/login') {
+                              this.$router.push('/login');
+                         }
+                    }, 2000);
+               },
+
+               reset() {
+                    this.tableItems = [];
+                    this.loading = false;
+                    this.error = null;
+                    this.meta = { total: 0, current_page: 1 };
+                    this.links = {};
+                    this.query_string = '';
+                    this.sortField = null;
+                    this.sortOrder = null;
+                    this.selectedItem = null;
+                    this.selectedItems = [];
+                    this.clearCache();
+               }
+          }
+     };
+}
+____________________
+
+*********************************
+____________________
+src\latest\views\layouts\constants\composables\useCrud.js
+
+import general_request from "../general_request";
+
+export function useCrud() {
+     return {
+          data() {
+               return {
+
+                    selectedItem: null,
+                    isCreating: false,
+                    isUpdating: false,
+                    isDeleting: false,
+
+                    formData: {},
+                    formErrors: {},
+                    formLoading: false,
+
+                    validationRules: {},
+                    isValid: false
+               };
+          },
+
+          methods: {
+
+               async createItem(data, url, successMessage = null, errorMessage = null) {
+                    this.isCreating = true;
+                    this.formLoading = true;
+                    this.formErrors = {};
+
+                    try {
+                         const response = await this.$http.post(url, data, {
+                              headers: general_request.headers,
+                         });
+
+                         const newItem = response.data.data || response.data;
+
+                         const message = successMessage || this.$t("common.createdSuccess") || "Item created successfully";
+                         this.showToast("success", this.$t("common.success") || "Success", message);
+
+                         this.$emit('item-created', newItem);
+
+                         if (this.handleItemCreated) {
+                              this.handleItemCreated(newItem);
+                         }
+
+                         return newItem;
+
+                    } catch (error) {
+                         this.handleCrudError(error, errorMessage || "Failed to create item");
+                         throw error;
+                    } finally {
+                         this.isCreating = false;
+                         this.formLoading = false;
                     }
                },
 
-               // Reset form data
-               resetFormData() {
-                    return {
-                         id: "",
-                         name: "",
-                         name_ar: "",
-                         email: "",
-                         phone: "",
-                         password: "",
-                         address: "",
-                         user_account_type_id: "",
-                         phone_code: "",
-                         prefix: "",
-                         flag: ""
-                    };
+               async getItem(id, url, errorMessage = null) {
+                    try {
+                         const response = await this.$http.get(`${url}/${id}`, {
+                              headers: general_request.headers,
+                         });
+
+                         return response.data.data || response.data;
+
+                    } catch (error) {
+                         this.handleCrudError(error, errorMessage || "Failed to fetch item");
+                         throw error;
+                    }
+               },
+
+               async updateItem(id, data, url, successMessage = null, errorMessage = null) {
+                    this.isUpdating = true;
+                    this.formLoading = true;
+                    this.formErrors = {};
+
+                    try {
+                         const response = await this.$http.put(`${url}/${id}`, data, {
+                              headers: general_request.headers,
+                         });
+
+                         const updatedItem = response.data.data || response.data;
+
+                         const message = successMessage || this.$t("common.updatedSuccess") || "Item updated successfully";
+                         this.showToast("success", this.$t("common.success") || "Success", message);
+
+                         this.$emit('item-updated', updatedItem);
+
+                         if (this.handleItemUpdated) {
+                              this.handleItemUpdated(updatedItem);
+                         }
+
+                         return updatedItem;
+
+                    } catch (error) {
+                         this.handleCrudError(error, errorMessage || "Failed to update item");
+                         throw error;
+                    } finally {
+                         this.isUpdating = false;
+                         this.formLoading = false;
+                    }
+               },
+
+               async patchItem(id, data, url, successMessage = null, errorMessage = null) {
+                    this.isUpdating = true;
+                    this.formLoading = true;
+
+                    try {
+                         const response = await this.$http.patch(`${url}/${id}`, data, {
+                              headers: general_request.headers,
+                         });
+
+                         const updatedItem = response.data.data || response.data;
+
+                         const message = successMessage || this.$t("common.updatedSuccess") || "Item updated successfully";
+                         this.showToast("success", this.$t("common.success") || "Success", message);
+
+                         return updatedItem;
+
+                    } catch (error) {
+                         this.handleCrudError(error, errorMessage || "Failed to update item");
+                         throw error;
+                    } finally {
+                         this.isUpdating = false;
+                         this.formLoading = false;
+                    }
+               },
+
+               async deleteItem(item, baseUrl, successMessage = null, errorMessage = null) {
+                    return new Promise((resolve) => {
+                         this.$confirm.require({
+                              message: this.$t("common.deleteConfirm", {
+                                   item: item.name || item.title || 'this item'
+                              }) || `Delete ${item.name || item.title || 'this item'}?`,
+                              header: this.$t("common.confirmation") || "Confirmation",
+                              icon: "pi pi-exclamation-triangle",
+                              acceptClass: "p-button-danger",
+                              accept: async () => {
+                                   await this.executeDelete(item.id, baseUrl, successMessage, errorMessage);
+                                   resolve(true);
+                              },
+                              reject: () => {
+                                   this.showToast("info", "Cancelled", "Deletion cancelled");
+                                   resolve(false);
+                              }
+                         });
+                    });
+               },
+
+               async executeDelete(id, baseUrl, successMessage = null, errorMessage = null) {
+                    this.isDeleting = true;
+
+                    try {
+                         await this.$http.delete(`${baseUrl}/${id}`, {
+                              headers: general_request.headers,
+                         });
+
+                         // Show success message
+                         const message = successMessage || this.$t("common.deletedSuccess") || "Item deleted successfully";
+                         this.showToast("success", this.$t("common.success") || "Success", message);
+
+                         // Emit event
+                         this.$emit('item-deleted', id);
+
+                         // Call handler if exists
+                         if (this.handleItemDeleted) {
+                              this.handleItemDeleted(id);
+                         }
+
+                         return true;
+
+                    } catch (error) {
+                         this.handleCrudError(error, errorMessage || "Failed to delete item");
+                         throw error;
+                    } finally {
+                         this.isDeleting = false;
+                    }
+               },
+
+               async bulkDelete(items, baseUrl, successMessage = null, errorMessage = null) {
+                    if (!items || items.length === 0) return;
+
+                    return new Promise((resolve) => {
+                         this.$confirm.require({
+                              message: this.$t("common.bulkDeleteConfirm", { count: items.length }) ||
+                                   `Delete ${items.length} selected items?`,
+                              header: this.$t("common.confirmation") || "Confirmation",
+                              icon: "pi pi-exclamation-triangle",
+                              acceptClass: "p-button-danger",
+                              accept: async () => {
+                                   this.isDeleting = true;
+                                   let successCount = 0;
+                                   let failCount = 0;
+
+                                   for (const item of items) {
+                                        try {
+                                             await this.$http.delete(`${baseUrl}/${item.id}`, {
+                                                  headers: general_request.headers,
+                                             });
+                                             successCount++;
+
+                                             // Remove from local data
+                                             if (this.handleItemDeleted) {
+                                                  this.handleItemDeleted(item.id);
+                                             }
+
+                                        } catch (error) {
+                                             failCount++;
+                                             console.error(`Failed to delete item ${item.id}:`, error);
+                                        }
+                                   }
+
+                                   this.isDeleting = false;
+
+                                   // Show results
+                                   if (successCount > 0) {
+                                        const message = successMessage ||
+                                             this.$t("common.bulkDeleteSuccess", { count: successCount }) ||
+                                             `${successCount} items deleted successfully`;
+                                        this.showToast("success", "Success", message);
+                                   }
+
+                                   if (failCount > 0) {
+                                        this.showToast("warn", "Partial Success",
+                                             `${successCount} deleted, ${failCount} failed`);
+                                   }
+
+                                   // Emit event
+                                   this.$emit('bulk-delete-completed', { successCount, failCount });
+
+                                   resolve({ successCount, failCount });
+                              },
+                              reject: () => {
+                                   this.showToast("info", "Cancelled", "Bulk deletion cancelled");
+                                   resolve({ successCount: 0, failCount: 0 });
+                              }
+                         });
+                    });
+               },
+
+               initFormData(defaultData = {}) {
+                    this.formData = { ...defaultData };
+                    this.formErrors = {};
+                    this.isValid = false;
+               },
+
+               resetForm() {
+                    this.formData = {};
+                    this.formErrors = {};
+                    this.isValid = false;
+                    this.selectedItem = null;
+               },
+
+               loadItemForEdit(item) {
+                    this.selectedItem = { ...item };
+                    this.formData = { ...item };
+                    this.formErrors = {};
+               },
+
+               validateForm() {
+                    this.formErrors = {};
+                    this.isValid = true;
+
+                    if (this.validationRules) {
+                         Object.keys(this.validationRules).forEach(field => {
+                              const rule = this.validationRules[field];
+
+                              if (rule.required && (!this.formData[field] || this.formData[field].toString().trim() === '')) {
+                                   this.formErrors[field] = rule.message || `${field} is required`;
+                                   this.isValid = false;
+                              }
+
+                              if (rule.pattern && this.formData[field]) {
+                                   const regex = new RegExp(rule.pattern);
+                                   if (!regex.test(this.formData[field])) {
+                                        this.formErrors[field] = rule.message || `${field} format is invalid`;
+                                        this.isValid = false;
+                                   }
+                              }
+
+                              if (rule.minLength && this.formData[field] && this.formData[field].length < rule.minLength) {
+                                   this.formErrors[field] = rule.message || `${field} must be at least ${rule.minLength} characters`;
+                                   this.isValid = false;
+                              }
+
+                              if (rule.maxLength && this.formData[field] && this.formData[field].length > rule.maxLength) {
+                                   this.formErrors[field] = rule.message || `${field} must not exceed ${rule.maxLength} characters`;
+                                   this.isValid = false;
+                              }
+                         });
+                    }
+
+                    return this.isValid;
+               },
+
+               handleCrudError(error, defaultMessage) {
+                    console.error('CRUD Error:', error);
+
+                    // Handle validation errors (422)
+                    if (error.response?.status === 422 && error.response.data.errors) {
+                         this.formErrors = error.response.data.errors;
+
+                         const errorMessages = Object.values(error.response.data.errors)
+                              .flat()
+                              .join(', ');
+
+                         this.showToast("error", "Validation Error", errorMessages);
+                         return;
+                    }
+
+                    let message = defaultMessage;
+                    let title = "Error";
+
+                    switch (error.response?.status) {
+                         case 401:
+                              title = "Unauthorized";
+                              message = "Your session has expired. Please login again.";
+                              general_request.clearAuthTokens();
+                              setTimeout(() => {
+                                   if (this.$router) {
+                                        this.$router.push('/login');
+                                   }
+                              }, 2000);
+                              break;
+
+                         case 403:
+                              title = "Forbidden";
+                              message = "You don't have permission to perform this action.";
+                              break;
+
+                         case 404:
+                              title = "Not Found";
+                              message = "The requested resource was not found.";
+                              break;
+
+                         case 409:
+                              title = "Conflict";
+                              message = "This item conflicts with existing data.";
+                              break;
+
+                         case 500:
+                              title = "Server Error";
+                              message = "Internal server error. Please try again later.";
+                              break;
+                    }
+
+                    this.showToast("error", title, message);
+
+                    // Re-throw for further handling
+                    throw error;
+               },
+
+               showToast(severity, summary, detail) {
+                    if (this.$toast) {
+                         this.$toast.add({
+                              severity: severity,
+                              summary: summary,
+                              detail: detail,
+                              life: 3000,
+                         });
+                    } else {
+                         console.log(`[${severity.toUpperCase()}] ${summary}: ${detail}`);
+                    }
+               },
+
+               exportToCSV(data, filename = 'export.csv') {
+                    if (!data || data.length === 0) {
+                         this.showToast('warn', 'Export Failed', 'No data to export');
+                         return;
+                    }
+
+                    try {
+                         const headers = Object.keys(data[0]);
+                         const csvRows = [
+                              headers.join(','),
+                              ...data.map(row =>
+                                   headers.map(header =>
+                                        JSON.stringify(row[header] || '')
+                                   ).join(',')
+                              )
+                         ];
+
+                         const csvString = csvRows.join('\n');
+                         const blob = new Blob([csvString], { type: 'text/csv' });
+                         const url = window.URL.createObjectURL(blob);
+                         const a = document.createElement('a');
+
+                         a.setAttribute('hidden', '');
+                         a.setAttribute('href', url);
+                         a.setAttribute('download', filename);
+                         document.body.appendChild(a);
+                         a.click();
+                         document.body.removeChild(a);
+
+                         this.showToast('success', 'Export Successful', `Data exported to ${filename}`);
+                    } catch (error) {
+                         this.showToast('error', 'Export Failed', 'Failed to export data');
+                         console.error('Export error:', error);
+                    }
+               },
+
+               generateTempId() {
+                    return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+               },
+
+               isTempId(id) {
+                    return typeof id === 'string' && id.startsWith('temp_');
+               }
+          },
+
+          computed: {
+
+               isFormDirty() {
+                    if (!this.selectedItem) return Object.keys(this.formData).length > 0;
+
+                    return Object.keys(this.formData).some(key => {
+                         return this.formData[key] !== this.selectedItem[key];
+                    });
+               },
+
+               isProcessing() {
+                    return this.isCreating || this.isUpdating || this.isDeleting || this.formLoading;
+               },
+
+               fieldError() {
+                    return (field) => this.formErrors[field]?.[0] || this.formErrors[field] || '';
                }
           }
+     };
+}
+____________________
+
+****************************************
+____________________
+src\i18n\index.js
+
+import { createI18n } from 'vue-i18n'
+
+// Import English translations
+import enUsers from './locales/en/users'
+import enCountries from './locales/en/country'
+import enCommon from './locales/en/common'
+import enAuth from './locales/en/auth'
+import enValidation from './locales/en/validation'
+import enErrors from './locales/en/errors'
+import enGovernorate from './locales/en/governorate'
+import enCities from './locales/en/city'
+import enCompanies from './locales/en/company'
+import enCategories from './locales/en/category'
+import enMeasurementUnits from './locales/en/measurementUnit'
+import enVariants from './locales/en/variant'
+import enProducts from './locales/en/product'
+import enFinalProducts from './locales/en/final_product'
+import enFinalProductVariants from './locales/en/final_product_variant'
+import enFinalProductImages from './locales/en/final_product_image'
+import enBranch from './locales/en/branch'
+import enInvoiceStages from './locales/en/invoice_stage'
+import enTax from './locales/en/tax'
+import enDiscounts from './locales/en/discount'
+import enContacts from './locales/en/contact'
+import enWarehouses from './locales/en/warehouse'
+import enEmployees from './locales/en/employee'
+import enPos from './locales/en/pos.js';
+
+
+// Import Arabic translations
+import arUsers from './locales/ar/users'
+import arCountries from './locales/ar/country'
+import arCommon from './locales/ar/common'
+import arAuth from './locales/ar/auth'
+import arValidation from './locales/ar/validation'
+import arErrors from './locales/ar/errors'
+import arGovernorate from './locales/ar/governorate'
+import arCities from './locales/ar/city'
+import arCompanies from './locales/ar/company'
+import arCategories from './locales/ar/category'
+import arMeasuremartUnits from './locales/ar/measurementUnit'
+import arVariants from './locales/ar/variant'
+import arProducts from './locales/ar/product'
+import arFinalProducts from './locales/ar/final_product'
+import arFinalProductVariants from './locales/ar/final_product_variant'
+import arFinalProductImages from './locales/ar/final_product_image'
+import arBranch from './locales/ar/branch'
+import arInvoiceStages from './locales/ar/invoice_stage'
+import arTax from './locales/ar/tax'
+import arDiscounts from './locales/ar/discount'
+import arContacts from './locales/ar/contact'
+import arWarehouses from './locales/ar/warehouse'
+import arEmployees from './locales/ar/employee'
+import arPos from './locales/ar/pos.js'
+
+
+
+const messages = {
+     en: {
+          ...enCommon,
+          ...enAuth,
+          ...enValidation,
+          errors: enErrors,
+          users: enUsers,
+          countries: enCountries,
+          governorates: enGovernorate,
+          cities: enCities,
+          companies: enCompanies,
+          categories: enCategories,
+          measurementUnits: enMeasurementUnits,
+          variants: enVariants,
+          products: enProducts,
+          final_product: enFinalProducts,
+          final_product_variants: enFinalProductVariants,
+          final_product_images: enFinalProductImages,
+          branches: enBranch,
+          invoice_stages: enInvoiceStages,
+          taxes: enTax,
+          discounts: enDiscounts,
+          contacts: enContacts,
+          warehouses: enWarehouses,
+          employees: enEmployees,
+          pos: enPos,
+     },
+     ar: {
+          ...arCommon,
+          ...arAuth,
+          ...arValidation,
+          errors: arErrors,
+          users: arUsers,
+          countries: arCountries,
+          governorates: arGovernorate,
+          cities: arCities,
+          companies: arCompanies,
+          categories: arCategories,
+          measurementUnits: arMeasuremartUnits,
+          variants: arVariants,
+          products: arProducts,
+          final_product: arFinalProducts,
+          final_product_variants: arFinalProductVariants,
+          final_product_images: arFinalProductImages,
+          branches: arBranch,
+          invoice_stages: arInvoiceStages,
+          taxes: arTax,
+          discounts: arDiscounts,
+          contacts: arContacts,
+          warehouses: arWarehouses,
+          employees: arEmployees,
+          pos: arPos,
      }
 }
 
+const i18n = createI18n({
+     legacy: false,
+     locale: localStorage.getItem('language') || 'en',
+     fallbackLocale: 'en',
+     messages
+})
 
-
-
-
-
-
-
-
-_________________________________________________________________________
-_________________________________________________________________________
+export default i18n
+____________________

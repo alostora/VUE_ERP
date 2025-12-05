@@ -435,14 +435,6 @@ export default {
 </script>
 
 <style scoped>
-.user-edit-form {
-  max-width: 100%;
-}
-
-.field {
-  margin-bottom: 1.5rem;
-}
-
 :deep(.p-password input) {
   width: 100%;
 }
