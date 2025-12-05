@@ -370,5 +370,56 @@ export default {
      unauthorized: "غير مصرح",
      forbidden: "ممنوع",
      badRequest: "طلب غير صالح",
-     internalServerError: "خطأ داخلي في الخادم"
+     internalServerError: "خطأ داخلي في الخادم",
+     holdInvoiceTooltip: "حفظ الفاتورة الحالية لوقت لاحق",
+     viewHeldTooltip: "عرض الفواتير المحفوظة",
+     switchLayoutTooltip: "التبديل بين التخطيط الأفقي والعمودي",
+
+     // Loading states
+     loading: "جاري التحميل...",
+     pleaseWait: "يرجى الانتظار...",
+     processingHint: "جاري معالجة الفاتورة، يرجى الانتظار",
+     printHint: "يمكنك طباعة أو تحميل الإيصال",
+
+     // Debug/Health
+     checkComponentStatus: "فحص حالة المكونات",
+
+     // Print Options
+     printAndFinish: "طباعة وإنهاء",
+     finishOnly: "إنهاء فقط",
+
+     // Download
+     downloadPDF: "تحميل PDF",
+
+     // Product states
+     noProductsAvailable: "لا توجد منتجات متاحة",
+     noProductsInCategory: "لا توجد منتجات في هذا التصنيف",
+
+     // File upload
+     uploadFile: "رفع ملف",
+     maxFileSize: "الحد الأقصى لحجم الملف",
+
+     // Product details
+     enterOperationName: "أدخل اسم العملية",
+     enterCostValue: "أدخل قيمة التكلفة",
+
+     // Customer selection
+     selectCustomer: "اختر عميل",
+     name: "الاسم",
+     phone: "الهاتف",
+     nameRequired: "الاسم مطلوب",
+
+     // Customer creation
+     createNewCustomer: "إنشاء عميل جديد",
+     enterName: "أدخل الاسم",
+     enterAddress: "أدخل العنوان",
+
+     // Item operations
+     itemOperations: "عمليات العنصر",
+
+     // Component loading
+     componentFailedToLoad: "فشل تحميل المكون",
+
+     // Debug
+     debugInfo: "معلومات التصحيح"
 };

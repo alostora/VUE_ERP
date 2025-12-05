@@ -78,7 +78,7 @@
         <div
           v-for="(item, index) in invoice.items"
           :key="index"
-          class="table-row flex justify-content-between py-1 border-bottom-1"
+          class="table-row justify-content-between py-1 border-bottom-1"
         >
           <div class="col-6">
             <div class="font-bold">{{ item.name }}</div>

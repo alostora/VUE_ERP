@@ -370,5 +370,59 @@ export default {
      unauthorized: "Unauthorized",
      forbidden: "Forbidden",
      badRequest: "Bad Request",
-     internalServerError: "Internal Server Error"
+     internalServerError: "Internal Server Error",
+
+
+     // Tooltips
+     holdInvoiceTooltip: "Hold current invoice for later",
+     viewHeldTooltip: "View held invoices",
+     switchLayoutTooltip: "Switch between horizontal and vertical layout",
+
+     // Loading states
+     loading: "Loading...",
+     pleaseWait: "Please wait...",
+     processingHint: "Processing invoice, please wait",
+     printHint: "You can print or download the receipt",
+
+     // Debug/Health
+     checkComponentStatus: "Check component status",
+
+     // Print Options
+     printAndFinish: "Print and Finish",
+     finishOnly: "Finish Only",
+
+     // Download
+     downloadPDF: "Download PDF",
+
+     // Product states
+     noProductsAvailable: "No Products Available",
+     noProductsInCategory: "No products found in this category",
+
+     // File upload
+     uploadFile: "Upload File",
+     maxFileSize: "Max file size",
+
+     // Product details
+     enterOperationName: "Enter operation name",
+     enterCostValue: "Enter cost value",
+
+     // Customer selection
+     selectCustomer: "Select Customer",
+     name: "Name",
+     phone: "Phone",
+     nameRequired: "Name is required",
+
+     // Customer creation
+     createNewCustomer: "Create New Customer",
+     enterName: "Enter name",
+     enterAddress: "Enter address",
+
+     // Item operations
+     itemOperations: "Item Operations",
+
+     // Component loading
+     componentFailedToLoad: "Component Failed to Load",
+
+     // Debug
+     debugInfo: "Debug Info",
 };

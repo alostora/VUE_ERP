@@ -1,4 +1,11 @@
 <template>
+  <!-- Loading Overlay for Initial Load -->
+  <div v-if="loadingComponents" class="loading-overlay">
+    <ProgressSpinner style="width: 60px; height: 60px" />
+    <h3 class="mt-3">Loading POS System...</h3>
+    <p class="text-color-secondary">Preparing components</p>
+  </div>
+
   <Dialog
     v-model:visible="visible"
     :modal="true"
@@ -9,12 +16,17 @@
     @hide="closeModal"
     class="pos-modal"
     :class="{ 'maximized-dialog': isMaximized }"
+    @show="onDialogShow"
   >
     <!-- Simple header -->
     <template #header>
-      <span class="text-xl font-bold text-white dark:text-gray-100">{{
-        $t("pos.title")
-      }}</span>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-shopping-cart text-white"></i>
+        <span class="text-xl font-bold text-white dark:text-gray-100">{{
+          $t("pos.title")
+        }}</span>
+        <Tag value="v1.0" severity="info" size="small" class="ml-2" />
+      </div>
     </template>
 
     <!-- POS Toolbar -->
@@ -30,6 +42,7 @@
           class="p-button-warning"
           :class="{ 'dark-button-warning': isDarkMode }"
           :disabled="cartItems.length === 0"
+          v-tooltip="$t('pos.holdInvoiceTooltip')"
         />
         <Button
           :label="$t('pos.viewHeld')"
@@ -37,6 +50,7 @@
           @click="showHeldInvoices"
           class="p-button-secondary"
           :class="{ 'dark-button-secondary': isDarkMode }"
+          v-tooltip="$t('pos.viewHeldTooltip')"
         />
         <Button
           :label="$t('pos.switchLayout')"
@@ -44,6 +58,15 @@
           @click="toggleLayout"
           class="p-button-help"
           :class="{ 'dark-button-help': isDarkMode }"
+          v-tooltip="$t('pos.switchLayoutTooltip')"
+        />
+        <!-- Debug Button -->
+        <Button
+          v-if="debugMode"
+          label="Debug"
+          icon="pi pi-bug"
+          @click="debugComponents"
+          class="p-button-info p-button-sm"
         />
       </div>
 
@@ -74,62 +97,99 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div :class="['pos-main-content', layoutClass]">
-      <!-- Products Panel -->
-      <PosProductsPanel
-        ref="productsPanel"
-        :company-id="companyId"
-        :branch-id="branchId"
-        :selected-category="selectedCategory"
-        :search-query="searchQuery"
-        @add-to-cart="addToCart"
-        @category-change="selectedCategory = $event"
-        @search="searchQuery = $event"
-        :class="[
-          layoutClass.includes('horizontal')
-            ? 'products-panel-horizontal'
-            : 'products-panel-vertical',
-        ]"
-      />
-
-      <!-- Cart Panel -->
-      <PosCartPanel
-        ref="cartPanel"
-        :cart-items="cartItems"
-        :selected-customer="selectedCustomer"
-        :selected-warehouse="selectedWarehouse?.id"
-        :selected-payment-method="selectedPaymentMethod?.id"
-        :invoice-discounts="invoiceDiscounts"
-        :invoice-additional-costs="invoiceAdditionalCosts"
-        :tax-rate="taxRate"
-        :company-id="companyId"
-        :branch-id="branchId"
-        :is-dark-mode="isDarkMode"
-        @update-item="updateCartItem"
-        @remove-item="removeCartItem"
-        @customer-change="selectedCustomer = $event"
-        @warehouse-change="onWarehouseChange"
-        @payment-method-change="onPaymentMethodChange"
-        @add-discount="addInvoiceDiscount"
-        @update-discount="onDiscountUpdate"
-        @remove-discount="removeInvoiceDiscount"
-        @add-additional-cost="addInvoiceAdditionalCost"
-        @update-additional-cost="onAdditionalCostUpdate"
-        @remove-additional-cost="removeInvoiceAdditionalCost"
-        @checkout="processCheckout"
-        @clear-cart="clearCart"
-        @totals-updated="handleTotalsUpdate"
-        :class="[
-          layoutClass.includes('horizontal')
-            ? 'cart-panel-horizontal'
-            : 'cart-panel-vertical',
-        ]"
-      />
+    <!-- Debug Info (Visible in Debug Mode) -->
+    <div v-if="debugMode" class="debug-info p-2 mb-2 bg-blue-50 border-round">
+      <div class="grid text-xs">
+        <div class="col-6">
+          <strong>Components Loaded:</strong>
+          <span class="ml-2"
+            >{{
+              Object.keys(componentRegistry).filter((k) => componentRegistry[k])
+                .length
+            }}/4</span
+          >
+        </div>
+        <div class="col-6">
+          <strong>Cache:</strong>
+          <span
+            class="ml-2"
+            :class="componentCacheHit ? 'text-green-600' : 'text-yellow-600'"
+          >
+            {{ componentCacheHit ? "HIT" : "MISS" }}
+          </span>
+        </div>
+      </div>
     </div>
 
-    <!-- Held Invoices Modal -->
+    <!-- Main Content -->
+    <div :class="['pos-main-content', layoutClass]">
+      <!-- Products Panel (Dynamic Component) -->
+      <div v-if="componentRegistry.PosProductsPanel">
+        <PosProductsPanel
+          ref="productsPanel"
+          :company-id="companyId"
+          :branch-id="branchId"
+          :selected-category="selectedCategory"
+          :search-query="searchQuery"
+          @add-to-cart="addToCart"
+          @category-change="selectedCategory = $event"
+          @search="searchQuery = $event"
+          :class="[
+            layoutClass.includes('horizontal')
+              ? 'products-panel-horizontal'
+              : 'products-panel-vertical',
+          ]"
+        />
+      </div>
+      <div v-else class="component-placeholder">
+        <ProgressSpinner style="width: 40px; height: 40px" />
+        <p class="mt-2">Loading Products Panel...</p>
+      </div>
+
+      <!-- Cart Panel (Dynamic Component) -->
+      <div v-if="componentRegistry.PosCartPanel">
+        <PosCartPanel
+          ref="cartPanel"
+          :cart-items="cartItems"
+          :selected-customer="selectedCustomer"
+          :selected-warehouse="selectedWarehouse?.id"
+          :selected-payment-method="selectedPaymentMethod?.id"
+          :invoice-discounts="invoiceDiscounts"
+          :invoice-additional-costs="invoiceAdditionalCosts"
+          :tax-rate="taxRate"
+          :company-id="companyId"
+          :branch-id="branchId"
+          :is-dark-mode="isDarkMode"
+          @update-item="updateCartItem"
+          @remove-item="removeCartItem"
+          @customer-change="selectedCustomer = $event"
+          @warehouse-change="onWarehouseChange"
+          @payment-method-change="onPaymentMethodChange"
+          @add-discount="addInvoiceDiscount"
+          @update-discount="onDiscountUpdate"
+          @remove-discount="removeInvoiceDiscount"
+          @add-additional-cost="addInvoiceAdditionalCost"
+          @update-additional-cost="onAdditionalCostUpdate"
+          @remove-additional-cost="removeInvoiceAdditionalCost"
+          @checkout="processCheckout"
+          @clear-cart="clearCart"
+          @totals-updated="handleTotalsUpdate"
+          :class="[
+            layoutClass.includes('horizontal')
+              ? 'cart-panel-horizontal'
+              : 'cart-panel-vertical',
+          ]"
+        />
+      </div>
+      <div v-else class="component-placeholder">
+        <ProgressSpinner style="width: 40px; height: 40px" />
+        <p class="mt-2">Loading Cart Panel...</p>
+      </div>
+    </div>
+
+    <!-- Held Invoices Modal (Loaded on demand) -->
     <PosHeldInvoices
+      v-if="componentRegistry.PosHeldInvoices"
       ref="heldInvoicesModal"
       :company-id="companyId"
       :branch-id="branchId"
@@ -210,11 +270,16 @@
 
       <div class="receipt-container" ref="receiptContainer">
         <PosReceipt
+          v-if="componentRegistry.PosReceipt && currentInvoice"
           :invoice="currentInvoice"
           :company-id="companyId"
           :branch-id="branchId"
           :is-dark-mode="isDarkMode"
         />
+        <div v-else class="receipt-loading">
+          <ProgressSpinner />
+          <p>Loading Receipt...</p>
+        </div>
       </div>
 
       <template #footer>
@@ -290,12 +355,6 @@ import Divider from "primevue/divider";
 import Tag from "primevue/tag";
 import Tooltip from "primevue/tooltip";
 
-import PosProductsPanel from "./PosProductsPanel.vue";
-import PosCartPanel from "./PosCartPanel.vue";
-import PosHeldInvoices from "./PosHeldInvoices.vue";
-import PosReceipt from "./PosReceipt.vue";
-import PosService from "./PosService.js";
-
 export default {
   name: "PosModal",
   components: {
@@ -304,10 +363,6 @@ export default {
     ProgressSpinner,
     Divider,
     Tag,
-    PosProductsPanel,  // أضف هنا
-    PosCartPanel,      // أضف هنا
-    PosHeldInvoices,   // أضف هنا
-    PosReceipt,        // أضف هنا
   },
   directives: {
     tooltip: Tooltip,
@@ -328,6 +383,31 @@ export default {
       isMaximized: false,
       layout: "horizontal",
       isDarkMode: false,
+
+      // Debug mode (set to false in production)
+      debugMode: true,
+
+      // Component loading states
+      loadingComponents: false,
+      componentsLoaded: false,
+      componentCacheHit: false,
+
+      // Component registry - tracks which components are loaded
+      componentRegistry: {
+        PosProductsPanel: null,
+        PosCartPanel: null,
+        PosHeldInvoices: null,
+        PosReceipt: null,
+      },
+
+      // Component cache for performance
+      componentCache: {
+        PosProductsPanel: null,
+        PosCartPanel: null,
+        PosHeldInvoices: null,
+        PosReceipt: null,
+        PosService: null,
+      },
 
       // Dialog dimensions
       dialogWidth: "95vw",
@@ -361,12 +441,12 @@ export default {
       processingCheckout: false,
       loadingMessage: "",
 
-      // Service and components
+      // Service
       posService: null,
-      posProductsPanel: null,
-      posCartPanel: null,
-      posHeldInvoices: null,
-      posReceipt: null,
+
+      // Performance tracking
+      loadStartTime: null,
+      loadEndTime: null,
     };
   },
   computed: {
@@ -401,13 +481,24 @@ export default {
         };
       }
     },
+    loadTime() {
+      if (this.loadStartTime && this.loadEndTime) {
+        return Math.round(this.loadEndTime - this.loadStartTime);
+      }
+      return 0;
+    },
   },
   created() {
     this.checkDarkMode();
+    console.log("🔄 PosModal created");
   },
   mounted() {
+    console.log("✅ PosModal mounted");
     this.originalWidth = this.dialogWidth;
     this.originalHeight = this.dialogHeight;
+
+    // Preload components when modal is mounted (not visible yet)
+    this.preloadComponents();
 
     // Listen for dark mode changes
     window
@@ -415,28 +506,194 @@ export default {
       .addEventListener("change", this.checkDarkMode);
   },
   beforeDestroy() {
+    console.log("🗑️ PosModal destroying");
     window
       .matchMedia("(prefers-color-scheme: dark)")
       .removeEventListener("change", this.checkDarkMode);
   },
   methods: {
-    checkDarkMode() {
-      this.isDarkMode =
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // === COMPONENT LOADING & REGISTRATION ===
+    async preloadComponents() {
+      console.log("📦 Preloading POS components...");
+
+      // Check if components are already cached
+      const allCached =
+        this.componentCache.PosProductsPanel &&
+        this.componentCache.PosCartPanel &&
+        this.componentCache.PosService;
+
+      if (allCached) {
+        console.log("✅ Using cached components");
+        this.componentCacheHit = true;
+        this.loadComponentsFromCache();
+        return;
+      }
+
+      try {
+        // Load all components in parallel
+        const [
+          { default: PosService },
+          { default: PosProductsPanel },
+          { default: PosCartPanel },
+          { default: PosHeldInvoices },
+          { default: PosReceipt },
+        ] = await Promise.all([
+          import("./PosService.js").catch(() => {
+            console.warn("Failed to load PosService");
+            return null;
+          }),
+          import("./PosProductsPanel.vue").catch(() => {
+            console.warn("Failed to load PosProductsPanel");
+            return null;
+          }),
+          import("./PosCartPanel.vue").catch(() => {
+            console.warn("Failed to load PosCartPanel");
+            return null;
+          }),
+          import("./PosHeldInvoices.vue").catch(() => {
+            console.warn("Failed to load PosHeldInvoices");
+            return null;
+          }),
+          import("./PosReceipt.vue").catch(() => {
+            console.warn("Failed to load PosReceipt");
+            return null;
+          }),
+        ]);
+
+        // Cache the loaded components
+        if (PosService) {
+          this.componentCache.PosService = PosService;
+        }
+
+        if (PosProductsPanel) {
+          this.componentCache.PosProductsPanel = PosProductsPanel;
+          this.$options.components.PosProductsPanel = PosProductsPanel;
+          this.componentRegistry.PosProductsPanel = PosProductsPanel;
+        }
+
+        if (PosCartPanel) {
+          this.componentCache.PosCartPanel = PosCartPanel;
+          this.$options.components.PosCartPanel = PosCartPanel;
+          this.componentRegistry.PosCartPanel = PosCartPanel;
+        }
+
+        if (PosHeldInvoices) {
+          this.componentCache.PosHeldInvoices = PosHeldInvoices;
+          this.$options.components.PosHeldInvoices = PosHeldInvoices;
+          this.componentRegistry.PosHeldInvoices = PosHeldInvoices;
+        }
+
+        if (PosReceipt) {
+          this.componentCache.PosReceipt = PosReceipt;
+          this.$options.components.PosReceipt = PosReceipt;
+          this.componentRegistry.PosReceipt = PosReceipt;
+        }
+
+        console.log("✅ Components preloaded and registered");
+        this.componentsLoaded = true;
+      } catch (error) {
+        console.error("❌ Error preloading components:", error);
+        this.createFallbackComponents();
+      }
     },
 
+    loadComponentsFromCache() {
+      if (this.componentCache.PosProductsPanel) {
+        this.$options.components.PosProductsPanel =
+          this.componentCache.PosProductsPanel;
+        this.componentRegistry.PosProductsPanel =
+          this.componentCache.PosProductsPanel;
+      }
+
+      if (this.componentCache.PosCartPanel) {
+        this.$options.components.PosCartPanel =
+          this.componentCache.PosCartPanel;
+        this.componentRegistry.PosCartPanel = this.componentCache.PosCartPanel;
+      }
+
+      if (this.componentCache.PosHeldInvoices) {
+        this.$options.components.PosHeldInvoices =
+          this.componentCache.PosHeldInvoices;
+        this.componentRegistry.PosHeldInvoices =
+          this.componentCache.PosHeldInvoices;
+      }
+
+      if (this.componentCache.PosReceipt) {
+        this.$options.components.PosReceipt = this.componentCache.PosReceipt;
+        this.componentRegistry.PosReceipt = this.componentCache.PosReceipt;
+      }
+
+      this.componentsLoaded = true;
+      console.log("✅ Components loaded from cache");
+    },
+
+    createFallbackComponents() {
+      console.log("⚠️ Creating fallback components");
+
+      const fallbackComponent = {
+        name: "FallbackComponent",
+        template:
+          '<div class="fallback-component"><i class="pi pi-exclamation-triangle"></i> <span>Component Failed to Load</span></div>',
+      };
+
+      // Register fallbacks
+      this.$options.components.PosProductsPanel = fallbackComponent;
+      this.$options.components.PosCartPanel = fallbackComponent;
+      this.$options.components.PosHeldInvoices = fallbackComponent;
+      this.$options.components.PosReceipt = fallbackComponent;
+
+      this.componentRegistry.PosProductsPanel = fallbackComponent;
+      this.componentRegistry.PosCartPanel = fallbackComponent;
+      this.componentRegistry.PosHeldInvoices = fallbackComponent;
+      this.componentRegistry.PosReceipt = fallbackComponent;
+
+      this.componentsLoaded = true;
+      this.$forceUpdate();
+    },
+
+    // === MODAL CONTROL ===
     async openModal() {
+      console.log("🚀 Opening POS modal...");
+      this.loadStartTime = performance.now();
+
       this.visible = true;
       this.resetCart();
       this.generateInvoiceNumber();
       this.isMaximized = false;
       this.checkDarkMode();
 
-      this.posService = new PosService(this.companyId, this.branchId);
+      // Ensure components are loaded
+      if (!this.componentsLoaded) {
+        console.log("⏳ Waiting for components to load...");
+        this.loadingComponents = true;
+        await this.preloadComponents();
+        this.loadingComponents = false;
+      }
+
+      // Initialize service
+      if (this.componentCache.PosService) {
+        this.posService = new this.componentCache.PosService(
+          this.companyId,
+          this.branchId
+        );
+        console.log("✅ Service initialized");
+      }
 
       // Initialize data when modal opens
       await this.initializeData();
+
+      this.loadEndTime = performance.now();
+      console.log(`✅ Modal fully opened in ${this.loadTime}ms`);
+    },
+
+    onDialogShow() {
+      console.log("📋 Dialog shown event");
+      this.$nextTick(() => {
+        // Focus search if products panel is loaded
+        if (this.$refs.productsPanel && this.$refs.productsPanel.focusSearch) {
+          this.$refs.productsPanel.focusSearch();
+        }
+      });
     },
 
     closeModal() {
@@ -451,9 +708,9 @@ export default {
       }
     },
 
+    // === UI CONTROLS ===
     toggleMaximize() {
       this.isMaximized = !this.isMaximized;
-
       this.$nextTick(() => {
         window.dispatchEvent(new Event("resize"));
       });
@@ -462,9 +719,46 @@ export default {
     toggleLayout() {
       this.layout = this.layout === "horizontal" ? "vertical" : "horizontal";
       localStorage.setItem("pos_layout_preference", this.layout);
+      this.$toast.add({
+        severity: "info",
+        summary: "Layout Changed",
+        detail: `Switched to ${this.layout} layout`,
+        life: 2000,
+      });
     },
 
+    checkDarkMode() {
+      this.isDarkMode =
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+    },
+
+    // === DEBUG & DIAGNOSTICS ===
+    debugComponents() {
+      console.group("🔍 POS Component Debug");
+      console.log("Component Registry:", this.componentRegistry);
+      console.log(
+        "$options.components:",
+        Object.keys(this.$options.components)
+      );
+      console.log("Cache Status:", this.componentCache);
+      console.log("Load Time:", this.loadTime + "ms");
+      console.log("Visible:", this.visible);
+      console.log("Modal Element:", document.querySelector(".p-dialog"));
+      console.groupEnd();
+
+      this.$toast.add({
+        severity: "info",
+        summary: "Debug Info",
+        detail: "Check console for component details",
+        life: 3000,
+      });
+    },
+
+    // === INITIALIZATION ===
     async initializeData() {
+      console.log("📊 Initializing data...");
+
       const savedLayout = localStorage.getItem("pos_layout_preference");
       if (savedLayout) {
         this.layout = savedLayout;
@@ -472,14 +766,17 @@ export default {
 
       // Load initial warehouses and payment methods
       try {
-        const warehouses = await this.posService.getWarehouses();
-        if (warehouses.length > 0) {
-          this.selectedWarehouse = warehouses[0];
-        }
+        if (this.posService) {
+          const warehouses = await this.posService.getWarehouses();
+          if (warehouses.length > 0) {
+            this.selectedWarehouse = warehouses[0];
+          }
 
-        const paymentMethods = await this.posService.getPaymentMethods();
-        if (paymentMethods.length > 0) {
-          this.selectedPaymentMethod = paymentMethods[0];
+          const paymentMethods = await this.posService.getPaymentMethods();
+          if (paymentMethods.length > 0) {
+            this.selectedPaymentMethod = paymentMethods[0];
+          }
+          console.log("✅ Data initialized");
         }
       } catch (error) {
         console.error("Error initializing data:", error);
@@ -492,7 +789,7 @@ export default {
       this.invoiceNumber = `INV-${timestamp.toString().slice(-6)}-${random}`;
     },
 
-    // Cart Methods
+    // === CART METHODS ===
     addToCart(product) {
       const existingItemIndex = this.cartItems.findIndex(
         (item) => item.id === product.id
@@ -546,7 +843,7 @@ export default {
       this.currentTotals = totals;
     },
 
-    // Invoice Discounts & Additional Costs
+    // === INVOICE DISCOUNTS & ADDITIONAL COSTS ===
     addInvoiceDiscount() {
       this.invoiceDiscounts.push({
         id: `disc_${Date.now()}`,
@@ -575,7 +872,7 @@ export default {
       );
     },
 
-    // Hold Invoice
+    // === HOLD INVOICE ===
     holdCurrentInvoice() {
       if (this.cartItems.length === 0) {
         this.$toast.add({
@@ -598,7 +895,9 @@ export default {
         invoiceNumber: this.invoiceNumber,
       };
 
-      this.posService.saveHeldInvoice(heldInvoice);
+      if (this.posService) {
+        this.posService.saveHeldInvoice(heldInvoice);
+      }
 
       this.$toast.add({
         severity: "success",
@@ -637,7 +936,7 @@ export default {
       });
     },
 
-    // Checkout and Print
+    // === CHECKOUT AND PRINT ===
     async processCheckout() {
       if (!this.validateCheckoutData()) {
         return;
@@ -749,7 +1048,7 @@ export default {
       return parseFloat(price);
     },
 
-    // Print Functions
+    // === PRINT FUNCTIONS ===
     printAndFinish() {
       this.showPrintOptions = false;
       this.showReceipt = true;
@@ -787,8 +1086,6 @@ export default {
       }
 
       const printContent = receiptElement.innerHTML;
-      const originalContent = document.body.innerHTML;
-
       const printWindow = window.open("", "_blank", "width=800,height=600");
 
       const styles = `
@@ -1014,7 +1311,58 @@ export default {
   box-shadow: none !important;
 }
 
-/* POS Toolbar - Light Mode */
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* Debug Info */
+.debug-info {
+  font-family: monospace;
+  font-size: 11px;
+  margin: 0 1rem;
+  border: 1px solid #b3e5fc;
+}
+
+/* Component Placeholders */
+.component-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  color: #6c757d;
+  text-align: center;
+}
+
+.fallback-component {
+  padding: 20px;
+  background: #ffebee;
+  border: 2px solid #f44336;
+  border-radius: 8px;
+  color: #c62828;
+  text-align: center;
+}
+
+.fallback-component i {
+  margin-right: 8px;
+}
+
+/* POS Toolbar */
 .pos-toolbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -1029,7 +1377,7 @@ export default {
   border: 1px solid #4a5568;
 }
 
-/* Horizontal Layout */
+/* Layout Styles */
 .horizontal-layout {
   display: flex;
   height: calc(100% - 80px);
@@ -1037,7 +1385,6 @@ export default {
   margin: 0 1rem;
 }
 
-/* Vertical Layout */
 .vertical-layout {
   display: flex;
   flex-direction: column;
@@ -1046,7 +1393,6 @@ export default {
   margin: 0 1rem;
 }
 
-/* Products Panel */
 .products-panel-horizontal {
   flex: 3;
   min-width: 0;
@@ -1072,7 +1418,7 @@ export default {
   overflow: hidden;
 }
 
-/* Loading Overlay */
+/* Checkout Overlay */
 .checkout-overlay {
   position: absolute;
   top: 0;
@@ -1093,18 +1439,6 @@ export default {
 
 .checkout-overlay.dark-overlay .p-progress-spinner-circle {
   stroke: #667eea !important;
-}
-
-/* Print Options Dialog */
-.print-dialog :deep(.p-dialog-header) {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-  color: white !important;
-}
-
-/* Receipt Dialog */
-.receipt-dialog :deep(.p-dialog-content) {
-  padding: 0 !important;
-  max-height: 80vh !important;
 }
 
 /* Custom button styles */
@@ -1128,14 +1462,22 @@ export default {
   transform: scale(1.1) !important;
 }
 
-/* Dialog header styling */
+/* Receipt Loading */
+.receipt-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+/* Dialog overrides */
 :deep(.p-dialog-header) {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   padding: 1rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Dialog content area */
 :deep(.p-dialog-content) {
   padding: 0 !important;
   display: flex;
@@ -1144,7 +1486,6 @@ export default {
   height: 100%;
 }
 
-/* Maximized dialog styles */
 :deep(.maximized-dialog .p-dialog) {
   width: 100vw !important;
   height: 100vh !important;
@@ -1161,8 +1502,38 @@ export default {
   height: calc(100vh - 60px) !important;
 }
 
-/* Fix for dialog positioning */
 :deep(.p-dialog) {
   transition: all 0.3s ease !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .horizontal-layout {
+    flex-direction: column;
+  }
+
+  .products-panel-horizontal,
+  .cart-panel-horizontal {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .debug-info .grid {
+    flex-direction: column;
+  }
 }
 </style>

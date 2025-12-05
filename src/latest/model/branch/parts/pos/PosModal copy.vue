@@ -290,12 +290,6 @@ import Divider from "primevue/divider";
 import Tag from "primevue/tag";
 import Tooltip from "primevue/tooltip";
 
-import PosProductsPanel from "./PosProductsPanel.vue";
-import PosCartPanel from "./PosCartPanel.vue";
-import PosHeldInvoices from "./PosHeldInvoices.vue";
-import PosReceipt from "./PosReceipt.vue";
-import PosService from "./PosService.js";
-
 export default {
   name: "PosModal",
   components: {
@@ -304,10 +298,6 @@ export default {
     ProgressSpinner,
     Divider,
     Tag,
-    PosProductsPanel,  // أضف هنا
-    PosCartPanel,      // أضف هنا
-    PosHeldInvoices,   // أضف هنا
-    PosReceipt,        // أضف هنا
   },
   directives: {
     tooltip: Tooltip,
@@ -433,10 +423,39 @@ export default {
       this.isMaximized = false;
       this.checkDarkMode();
 
-      this.posService = new PosService(this.companyId, this.branchId);
+      // Load components dynamically
+      await this.loadComponents();
 
       // Initialize data when modal opens
       await this.initializeData();
+    },
+
+    async loadComponents() {
+      try {
+        const [
+          { default: PosService },
+          { default: PosProductsPanel },
+          { default: PosCartPanel },
+          { default: PosHeldInvoices },
+          { default: PosReceipt },
+        ] = await Promise.all([
+          import("./PosService.js"),
+          import("./PosProductsPanel.vue"),
+          import("./PosCartPanel.vue"),
+          import("./PosHeldInvoices.vue"),
+          import("./PosReceipt.vue"),
+        ]);
+
+        this.posService = new PosService(this.companyId, this.branchId);
+
+        // Register components dynamically
+        this.$options.components.PosProductsPanel = PosProductsPanel;
+        this.$options.components.PosCartPanel = PosCartPanel;
+        this.$options.components.PosHeldInvoices = PosHeldInvoices;
+        this.$options.components.PosReceipt = PosReceipt;
+      } catch (error) {
+        console.error("Error loading components:", error);
+      }
     },
 
     closeModal() {
