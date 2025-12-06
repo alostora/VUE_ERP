@@ -1,4 +1,5 @@
 export default {
+     "title": "الموظفون",
      "name": "الاسم",
      "namePlaceholder": "أدخل اسم الموظف",
      "nameRequired": "الاسم مطلوب",

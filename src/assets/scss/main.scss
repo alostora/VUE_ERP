@@ -525,6 +525,44 @@
   }
 }
 
+// ==================== PROGRESS BAR ====================
+// Progress Bar Variants
+.progress-success .p-progressbar-value {
+  background: var(--color-success) !important;
+}
+
+.progress-info .p-progressbar-value {
+  background: var(--color-info) !important;
+}
+
+.progress-warning .p-progressbar-value {
+  background: var(--color-warning) !important;
+}
+
+.progress-danger .p-progressbar-value {
+  background: var(--color-danger) !important;
+}
+
+.progress-primary .p-progressbar-value {
+  background: var(--color-primary) !important;
+}
+
+/* Minimal text selection */
+::selection {
+  background: #bae6fd;
+  color: #000;
+}
+
+.dark-mode ::selection {
+  background: #1e3a8a;
+  color: #fff;
+}
+
+// Small progress bar
+.progress-small .p-progressbar {
+  height: 4px !important;
+}
+
 // ==================== RESPONSIVE HELPERS ====================
 
 // Hide on different screen sizes

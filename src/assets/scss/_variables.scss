@@ -213,6 +213,22 @@ $color-gray-900: #111827 !default;
   --z-40: 40;
   --z-50: 50;
   --z-auto: auto;
+
+  // Add all gradient variables here
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --gradient-dark: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+
+  // Generic gradient numbers
+  --gradient-1: var(--gradient-primary);
+  --gradient-2: var(--gradient-secondary);
+  --gradient-3: var(--gradient-success);
+  --gradient-4: var(--gradient-warning);
+  --gradient-5: var(--gradient-danger);
+  --gradient-6: var(--gradient-dark);
 }
 
 // ==================== DARK MODE ====================

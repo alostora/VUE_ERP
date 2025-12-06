@@ -16,11 +16,6 @@
   --success-500: #10b981;
   --warning-500: #f59e0b;
   --error-500: #ef4444;
-
-  /* Modern gradients */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-dark: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
 }
 
 /* Smooth transitions for everything */
@@ -156,7 +151,6 @@ input:focus-visible {
   background: white;
   margin-bottom: 1rem;
 }
-
 
 /* Enhanced Global table scroll styles */
 .table-scroll-container {

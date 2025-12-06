@@ -1,4 +1,5 @@
 export default {
+     "title": "Employees",
      "name": "Name",
      "namePlaceholder": "Enter employee name",
      "nameRequired": "Name is required",
