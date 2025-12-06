@@ -571,7 +571,7 @@ export default {
     addInvoiceAdditionalCost() {
       this.invoiceAdditionalCosts.push({
         id: `cost_${Date.now()}`,
-        name: this.$t("pos.additionalCost"),
+        name: this.$t("pos.additionalCosts"),
         value: 0,
       });
     },
