@@ -1,0 +1,4741 @@
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosService.js
+
+
+// src/latest/model/branch/parts/pos/PosService.js
+import general_request from "../../../../views/layouts/constants/general_request";
+import axios from 'axios';
+
+class PosService {
+     constructor(companyId, branchId) {
+          // Ensure companyId and branchId are provided
+          if (!companyId) {
+               console.warn('PosService: companyId is required');
+          }
+          if (!branchId) {
+               console.warn('PosService: branchId is required');
+          }
+
+          this.companyId = companyId;
+          this.branchId = branchId;
+          this.baseUrl = general_request.BASE_URL;
+          this.headers = general_request.headers;
+
+          // Create axios instance
+          this.$http = axios.create({
+               baseURL: this.baseUrl,
+               timeout: 30000,
+               headers: this.headers
+          });
+
+          // Add request interceptor for auth token
+          this.$http.interceptors.request.use(
+               (config) => {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                         config.headers.Authorization = `Bearer ${token}`;
+                    }
+                    return config;
+               },
+               (error) => {
+                    return Promise.reject(error);
+               }
+          );
+     }
+
+     // ========== HELPER METHOD FOR API RESPONSES ==========
+     handleApiResponse(response) {
+          if (!response || !response.data) {
+               console.warn('No data in API response');
+               return [];
+          }
+          if (response.data.data && Array.isArray(response.data.data)) {
+               return response.data.data;
+          }
+          if (Array.isArray(response.data)) {
+               return response.data;
+          }
+          console.warn('Unexpected API response format:', response.data);
+          return [];
+     }
+
+     // ========== PRODUCTS ==========
+     async getProducts(params = {}) {
+          try {
+               if (!this.companyId) {
+                    console.error('Company ID is required for getProducts');
+                    return [];
+               }
+               const url = `${this.baseUrl}/admin/company/product/company-final-products/search/${this.companyId}`;
+               console.log('Fetching products from:', url, 'with params:', params);
+
+               const response = await this.$http.get(url, {
+                    params: { ...params, paginate: false },
+                    headers: this.headers
+               });
+
+               const products = this.handleApiResponse(response);
+               console.log('Products loaded:', products.length);
+               return products;
+          } catch (error) {
+               console.error('Error fetching products:', error.message);
+               return [];
+          }
+     }
+
+     async getProductDetails(productId) {
+          try {
+               if (!productId) {
+                    console.error('Product ID is required');
+                    return null;
+               }
+               const url = `${this.baseUrl}/admin/company/product/final-product/${productId}`;
+               const response = await this.$http.get(url, { headers: this.headers });
+               return response.data.data || response.data;
+          } catch (error) {
+               console.error('Error fetching product details:', error.message);
+               return null;
+          }
+     }
+
+     // ========== CATEGORIES ==========
+     async getCategories() {
+          try {
+               if (!this.companyId) {
+                    console.error('Company ID is required for getCategories');
+                    return [];
+               }
+               const url = `${this.baseUrl}/admin/company/categories/search/${this.companyId}`;
+               const response = await this.$http.get(url, {
+                    params: { paginate: false },
+                    headers: this.headers
+               });
+               return this.handleApiResponse(response);
+          } catch (error) {
+               console.error('Error fetching categories:', error.message);
+               return [];
+          }
+     }
+
+     // ========== PAYMENT METHODS ==========
+     async getPaymentMethods() {
+          try {
+               const url = `${this.baseUrl}/system-lookups/15`;
+               const response = await this.$http.get(url, { headers: this.headers });
+               const methods = this.handleApiResponse(response);
+               
+               // Ensure we have at least cash as default
+               if (methods.length === 0) {
+                    return [
+                         { id: "1", name: "Cash", name_ar: "نقداً" },
+                         { id: "2", name: "Credit Card", name_ar: "بطاقة ائتمان" }
+                    ];
+               }
+               return methods;
+          } catch (error) {
+               console.error('Error fetching payment methods:', error.message);
+               // Return default payment methods if API fails
+               return [
+                    { id: "1", name: "Cash", name_ar: "نقداً" },
+                    { id: "2", name: "Credit Card", name_ar: "بطاقة ائتمان" }
+               ];
+          }
+     }
+
+     // ========== WAREHOUSES ==========
+     async getWarehouses() {
+          try {
+               if (!this.companyId || !this.branchId) {
+                    console.error('Company ID and Branch ID are required for getWarehouses');
+                    return [];
+               }
+               const url = `${this.baseUrl}/admin/company/branch/warehouses/search/${this.companyId}`;
+               const response = await this.$http.get(url, {
+                    params: {
+                         branch_id: this.branchId,
+                         paginate: false
+                    },
+                    headers: this.headers
+               });
+               const warehouses = this.handleApiResponse(response);
+
+               // If no warehouses from API, return default
+               if (warehouses.length === 0) {
+                    return [
+                         { 
+                              id: "default", 
+                              name: "Main Warehouse", 
+                              name_ar: "المخزن الرئيسي",
+                              branch_id: this.branchId 
+                         }
+                    ];
+               }
+
+               return warehouses;
+          } catch (error) {
+               console.error('Error fetching warehouses:', error.message);
+               // Return default warehouse if API fails
+               return [
+                    { 
+                         id: "default", 
+                         name: "Main Warehouse", 
+                         name_ar: "المخزن الرئيسي",
+                         branch_id: this.branchId 
+                    }
+               ];
+          }
+     }
+
+     // ========== BRANCHES (for fallback) ==========
+     async getBranches() {
+          try {
+               if (!this.companyId) {
+                    console.error('Company ID is required for getBranches');
+                    return [];
+               }
+               const url = `${this.baseUrl}/admin/company/branches/search/${this.companyId}`;
+               const response = await this.$http.get(url, {
+                    params: { paginate: false },
+                    headers: this.headers
+               });
+               return this.handleApiResponse(response);
+          } catch (error) {
+               console.error('Error fetching branches:', error.message);
+               return [];
+          }
+     }
+
+     // ========== MEASUREMENT UNITS ==========
+     async getMeasurementUnits() {
+          try {
+               if (!this.companyId) {
+                    console.error('Company ID is required for getMeasurementUnits');
+                    return [];
+               }
+               const url = `${this.baseUrl}/admin/company/measurement-units/search/${this.companyId}`;
+               const response = await this.$http.get(url, {
+                    params: { paginate: false },
+                    headers: this.headers
+               });
+               return this.handleApiResponse(response);
+          } catch (error) {
+               console.error('Error fetching measurement units:', error.message);
+               return [];
+          }
+     }
+
+     // ========== CONTACTS/CUSTOMERS ==========
+     async getContacts(search = '') {
+          try {
+               if (!this.companyId) {
+                    console.error('Company ID is required for getContacts');
+                    return [];
+               }
+               const url = `${this.baseUrl}/admin/company/contacts/search/${this.companyId}`;
+               const response = await this.$http.get(url, {
+                    params: {
+                         query_string: search,
+                         paginate: false
+                    },
+                    headers: this.headers
+               });
+               const contacts = this.handleApiResponse(response);
+               
+               // Ensure all contacts have required fields
+               return contacts.map(contact => ({
+                    ...contact,
+                    name: contact.name || 'Unknown Customer',
+                    phone: contact.phone || 'N/A',
+                    email: contact.email || '',
+                    address: contact.address || ''
+               }));
+          } catch (error) {
+               console.error('Error fetching contacts:', error.message);
+               return [];
+          }
+     }
+
+     async createContact(contactData) {
+          try {
+               if (!this.companyId) {
+                    throw new Error('Company ID is required');
+               }
+               const url = `${this.baseUrl}/admin/company/contact`;
+               const payload = {
+                    company_id: this.companyId,
+                    ...contactData
+               };
+               const response = await this.$http.post(url, payload, { headers: this.headers });
+               return response.data.data || response.data;
+          } catch (error) {
+               console.error('Error creating contact:', error.message);
+               throw error;
+          }
+     }
+
+     // ========== CREATE INVOICE ==========
+     async createInvoice(invoiceData) {
+          try {
+               if (!this.companyId || !this.branchId) {
+                    throw new Error('Company ID and Branch ID are required');
+               }
+               const url = `${this.baseUrl}/admin/company/sale`;
+               const payload = {
+                    company_id: this.companyId,
+                    branch_id: this.branchId,
+                    ...invoiceData
+               };
+               const response = await this.$http.post(url, payload, { headers: this.headers });
+               return response.data.data || response.data;
+          } catch (error) {
+               console.error('Error creating invoice:', error.message);
+               throw error;
+          }
+     }
+
+     // ========== CALCULATIONS ==========
+     calculateItemTotal(item) {
+          const price = item.has_discount ? item.price_after_discount : item.price;
+          const quantity = item.quantity || 1;
+          let total = price * quantity;
+
+          // Add item-level additional costs
+          if (item.additional_costs && Array.isArray(item.additional_costs)) {
+               item.additional_costs.forEach(cost => {
+                    total += parseFloat(cost.value) || 0;
+               });
+          }
+
+          return parseFloat(total.toFixed(2));
+     }
+
+     calculateInvoiceTotals(cartItems, invoiceDiscounts = [], invoiceAdditionalCosts = [], taxRate = 0) {
+          let subtotal = 0;
+
+          // Calculate items subtotal
+          cartItems.forEach(item => {
+               subtotal += this.calculateItemTotal(item);
+          });
+
+          // Apply invoice-level discounts
+          let discountTotal = 0;
+          if (invoiceDiscounts && Array.isArray(invoiceDiscounts)) {
+               invoiceDiscounts.forEach(discount => {
+                    discountTotal += parseFloat(discount.value) || 0;
+               });
+          }
+
+          // Apply invoice-level additional costs
+          let additionalCostsTotal = 0;
+          if (invoiceAdditionalCosts && Array.isArray(invoiceAdditionalCosts)) {
+               invoiceAdditionalCosts.forEach(cost => {
+                    additionalCostsTotal += parseFloat(cost.value) || 0;
+               });
+          }
+
+          // Calculate tax
+          const taxableAmount = subtotal - discountTotal + additionalCostsTotal;
+          const taxAmount = (taxableAmount * taxRate) / 100;
+
+          // Calculate grand total
+          const grandTotal = taxableAmount + taxAmount;
+
+          return {
+               subtotal: parseFloat(subtotal.toFixed(2)),
+               discountTotal: parseFloat(discountTotal.toFixed(2)),
+               additionalCostsTotal: parseFloat(additionalCostsTotal.toFixed(2)),
+               taxAmount: parseFloat(taxAmount.toFixed(2)),
+               grandTotal: parseFloat(grandTotal.toFixed(2)),
+               taxableAmount: parseFloat(taxableAmount.toFixed(2))
+          };
+     }
+
+     // ========== HELD INVOICES ==========
+     saveHeldInvoice(invoice) {
+          const heldInvoices = this.getHeldInvoices();
+          invoice.id = `held_${Date.now()}`;
+          invoice.heldAt = new Date().toISOString();
+          heldInvoices.push(invoice);
+          localStorage.setItem(`pos_held_invoices_${this.companyId}_${this.branchId}`, JSON.stringify(heldInvoices));
+          return invoice;
+     }
+
+     getHeldInvoices() {
+          const stored = localStorage.getItem(`pos_held_invoices_${this.companyId}_${this.branchId}`);
+          return stored ? JSON.parse(stored) : [];
+     }
+
+     deleteHeldInvoice(invoiceId) {
+          const heldInvoices = this.getHeldInvoices();
+          const updated = heldInvoices.filter(inv => inv.id !== invoiceId);
+          localStorage.setItem(`pos_held_invoices_${this.companyId}_${this.branchId}`, JSON.stringify(updated));
+     }
+}
+
+export default PosService;
+
+
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosReceipt.vue
+
+<template>
+  <div class="pos-receipt" ref="receiptContent">
+    <!-- Receipt Header -->
+    <div class="receipt-header text-center mb-3">
+      <h2 class="m-0">{{ companyInfo.name || "Company Name" }}</h2>
+      <p class="m-0 text-sm" v-if="companyInfo.address">
+        {{ companyInfo.address }}
+      </p>
+      <p class="m-0 text-sm" v-if="companyInfo.phone">
+        {{ $t("pos.phone") }}: {{ companyInfo.phone }}
+      </p>
+      <Divider />
+    </div>
+
+    <!-- Receipt Info -->
+    <div class="receipt-info mb-3">
+      <div class="grid">
+        <div class="col-6">
+          <strong>{{ $t("pos.invoiceNumber") }}:</strong>
+          <div>{{ invoice.invoice_number || invoice.id }}</div>
+        </div>
+        <div class="col-6">
+          <strong>{{ $t("pos.date") }}:</strong>
+          <div>{{ formatDate(invoice.created_at) }}</div>
+        </div>
+      </div>
+
+      <div class="mt-2">
+        <strong>{{ $t("pos.cashier") }}:</strong>
+        <div>{{ userName }}</div>
+      </div>
+    </div>
+
+    <!-- Customer Info -->
+    <div
+      v-if="invoice.customer"
+      class="customer-info mb-3 p-2 surface-50 border-round"
+    >
+      <h4 class="m-0 mb-1">{{ $t("pos.customer") }}</h4>
+      <p class="m-0">
+        <strong>{{ invoice.customer.name }}</strong>
+      </p>
+      <p v-if="invoice.customer.phone" class="m-0 text-sm">
+        {{ $t("pos.phone") }}: {{ invoice.customer.phone }}
+      </p>
+      <p v-if="invoice.customer.email" class="m-0 text-sm">
+        {{ $t("pos.email") }}: {{ invoice.customer.email }}
+      </p>
+      <p v-if="invoice.customer.address" class="m-0 text-sm">
+        {{ $t("pos.address") }}: {{ invoice.customer.address }}
+      </p>
+    </div>
+
+    <!-- Warehouse Info -->
+    <div
+      v-if="invoice.warehouse"
+      class="warehouse-info mb-3 p-2 surface-100 border-round"
+    >
+      <h4 class="m-0 mb-1">{{ $t("pos.warehouse") }}</h4>
+      <p class="m-0">
+        <strong>{{ invoice.warehouse.name }}</strong>
+      </p>
+    </div>
+
+    <!-- Items Table -->
+    <div class="receipt-items mb-3">
+      <h4 class="m-0 mb-2">{{ $t("pos.items") }}</h4>
+      <div class="items-table">
+        <div
+          class="table-header flex justify-content-between font-bold mb-1 pb-1 border-bottom-1"
+        >
+          <div class="col-6">{{ $t("pos.item") }}</div>
+          <div class="col-2 text-center">{{ $t("pos.qty") }}</div>
+          <div class="col-2 text-right">{{ $t("pos.price") }}</div>
+          <div class="col-2 text-right">{{ $t("pos.total") }}</div>
+        </div>
+
+        <div
+          v-for="(item, index) in invoice.items"
+          :key="index"
+          class="table-row justify-content-between py-1 border-bottom-1"
+        >
+          <div class="col-6">
+            <div class="font-bold">{{ item.name }}</div>
+            <div v-if="item.name_ar" class="text-sm text-color-secondary">
+              {{ item.name_ar }}
+            </div>
+          </div>
+          <div class="col-2 text-center">{{ item.quantity }}</div>
+          <div class="col-2 text-right">
+            {{
+              formatCurrency(
+                item.has_discount ? item.price_after_discount : item.price
+              )
+            }}
+          </div>
+          <div class="col-2 text-right">
+            {{ formatCurrency(calculateItemTotal(item)) }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice-Level Adjustments -->
+    <div v-if="hasInvoiceAdjustments" class="invoice-adjustments mb-3">
+      <h4 class="m-0 mb-2">{{ $t("pos.adjustments") }}</h4>
+
+      <!-- Discounts -->
+      <div
+        v-if="invoice.discounts && invoice.discounts.length > 0"
+        class="mb-2"
+      >
+        <div
+          v-for="discount in invoice.discounts"
+          :key="discount.name"
+          class="flex justify-content-between text-red-500"
+        >
+          <span>{{ discount.name }}:</span>
+          <span>-{{ formatCurrency(discount.value) }}</span>
+        </div>
+      </div>
+
+      <!-- Additional Costs -->
+      <div
+        v-if="invoice.additional_costs && invoice.additional_costs.length > 0"
+        class="mb-2"
+      >
+        <div
+          v-for="cost in invoice.additional_costs"
+          :key="cost.name"
+          class="flex justify-content-between text-green-500"
+        >
+          <span>{{ cost.name }}:</span>
+          <span>+{{ formatCurrency(cost.value) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="receipt-totals p-3 surface-100 border-round">
+      <h4 class="m-0 mb-2">{{ $t("pos.summary") }}</h4>
+
+      <div class="totals-grid">
+        <div class="flex justify-content-between mb-1">
+          <span>{{ $t("pos.subtotal") }}:</span>
+          <span class="font-bold">{{
+            formatCurrency(invoice.totals?.subtotal || 0)
+          }}</span>
+        </div>
+
+        <div
+          v-if="invoice.totals?.discountTotal > 0"
+          class="flex justify-content-between mb-1 text-red-500"
+        >
+          <span>{{ $t("pos.discount") }}:</span>
+          <span class="font-bold"
+            >-{{ formatCurrency(invoice.totals.discountTotal) }}</span
+          >
+        </div>
+
+        <div
+          v-if="invoice.totals?.additionalCostsTotal > 0"
+          class="flex justify-content-between mb-1 text-green-500"
+        >
+          <span>{{ $t("pos.additionalCosts") }}:</span>
+          <span class="font-bold"
+            >+{{ formatCurrency(invoice.totals.additionalCostsTotal) }}</span
+          >
+        </div>
+
+        <div class="flex justify-content-between mb-1">
+          <span>{{ $t("pos.taxableAmount") }}:</span>
+          <span class="font-bold">{{
+            formatCurrency(invoice.totals?.taxableAmount || 0)
+          }}</span>
+        </div>
+
+        <div class="flex justify-content-between mb-1">
+          <span>{{ $t("pos.tax") }} ({{ invoice.taxRate || 14 }}%):</span>
+          <span class="font-bold">{{
+            formatCurrency(invoice.totals?.taxAmount || 0)
+          }}</span>
+        </div>
+
+        <Divider class="my-2" />
+
+        <div
+          class="flex justify-content-between text-xl font-bold text-primary"
+        >
+          <span>{{ $t("pos.total") }}:</span>
+          <span>{{ formatCurrency(invoice.totals?.grandTotal || 0) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="payment-info mt-3 p-2 surface-100 border-round">
+      <h4 class="m-0 mb-1">{{ $t("pos.payment") }}</h4>
+      <p class="m-0">
+        <strong>{{ $t("pos.paymentMethod") }}:</strong>
+        {{ invoice.payment_method?.name || $t("pos.cash") }}
+      </p>
+      <p v-if="invoice.details" class="m-0 mt-1 text-sm">
+        <strong>{{ $t("pos.notes") }}:</strong> {{ invoice.details }}
+      </p>
+    </div>
+
+    <!-- Receipt Footer -->
+    <div class="receipt-footer text-center mt-4">
+      <Divider />
+      <p class="text-sm text-color-secondary m-0">
+        {{ $t("pos.thankYouMessage") }}
+      </p>
+      <p class="text-xs text-color-secondary m-0 mt-1">
+        {{ $t("pos.returnPolicy") }}
+      </p>
+      <p class="text-xs text-color-secondary m-0">
+        {{ $t("pos.receiptFooter") }}
+      </p>
+    </div>
+  </div>
+</template>
+
+<script>
+import Divider from "primevue/divider";
+import PosService from "./PosService.js";
+
+export default {
+  name: "PosReceipt",
+  components: {
+    Divider,
+  },
+  props: {
+    invoice: {
+      type: Object,
+      required: true,
+    },
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      companyInfo: {
+        name: "",
+        address: "",
+        phone: "",
+      },
+      userName: "Cashier",
+      posService: null,
+    };
+  },
+  computed: {
+    hasInvoiceAdjustments() {
+      return (
+        (this.invoice.discounts && this.invoice.discounts.length > 0) ||
+        (this.invoice.additional_costs &&
+          this.invoice.additional_costs.length > 0)
+      );
+    },
+  },
+  created() {
+    this.posService = new PosService(this.companyId, this.branchId);
+    this.loadCompanyInfo();
+  },
+  methods: {
+    async loadCompanyInfo() {
+      try {
+        // Load company info from API if needed
+        // For now, we'll use default values
+        this.companyInfo = {
+          name: "Your Company",
+          address: "123 Business Street, City",
+          phone: "0123456789",
+        };
+      } catch (error) {
+        console.error("Error loading company info:", error);
+      }
+    },
+
+    formatCurrency(amount) {
+      if (amount === undefined || amount === null) return "$0.00";
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return new Date().toLocaleString();
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    },
+
+    calculateItemTotal(item) {
+      const price = item.has_discount ? item.price_after_discount : item.price;
+      let total = price * (item.quantity || 1);
+
+      if (item.additional_costs && Array.isArray(item.additional_costs)) {
+        item.additional_costs.forEach((cost) => {
+          total += parseFloat(cost.value) || 0;
+        });
+      }
+
+      return total;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.pos-receipt {
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  background: white;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  color: #000;
+}
+
+.receipt-header {
+  border-bottom: 2px dashed #333;
+  padding-bottom: 10px;
+}
+
+.receipt-header h2 {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.receipt-info {
+  font-size: 11px;
+}
+
+.customer-info,
+.warehouse-info,
+.payment-info {
+  border-left: 3px solid #007bff;
+}
+
+.items-table {
+  width: 100%;
+}
+
+.table-header {
+  border-bottom: 2px solid #333;
+}
+
+.table-row {
+  border-bottom: 1px dashed #ddd;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.receipt-totals {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.totals-grid {
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.payment-info {
+  border: 1px solid #28a745;
+  background: #f8fff9;
+}
+
+.receipt-footer {
+  border-top: 2px dashed #333;
+  padding-top: 10px;
+  font-size: 10px;
+}
+
+/* Print styles */
+@media print {
+  .pos-receipt {
+    width: 80mm;
+    padding: 0;
+    font-size: 10px;
+    max-width: none;
+  }
+
+  .receipt-header h2 {
+    font-size: 14px;
+  }
+
+  .receipt-info,
+  .customer-info,
+  .warehouse-info {
+    font-size: 9px;
+  }
+
+  .table-header,
+  .table-row {
+    font-size: 9px;
+  }
+
+  .receipt-totals {
+    font-size: 10px;
+  }
+
+  .receipt-footer {
+    font-size: 8px;
+  }
+
+  /* Hide buttons and other non-printable elements */
+  .no-print {
+    display: none !important;
+  }
+}
+</style>
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosProductsPanel.vue
+
+<template>
+  <div class="pos-products-panel">
+    <!-- Search and Filter Bar -->
+    <div class="products-filter-bar mb-3 p-3 surface-50 border-round">
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <div class="p-inputgroup">
+            <span class="p-inputgroup-addon">
+              <i class="pi pi-search"></i>
+            </span>
+            <InputText
+              v-model="search"
+              :placeholder="$t('pos.searchProducts')"
+              @input="handleSearch"
+              class="w-full"
+            />
+            <Button
+              v-if="search"
+              icon="pi pi-times"
+              @click="clearSearch"
+              class="p-button-text"
+            />
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <div class="p-inputgroup">
+            <span class="p-inputgroup-addon">
+              <i class="pi pi-filter"></i>
+            </span>
+            <Select
+              v-model="selectedCategoryId"
+              :options="categories"
+              optionLabel="name"
+              optionValue="id"
+              :placeholder="$t('pos.allCategories')"
+              @change="handleCategoryChange"
+              class="w-full"
+              showClear
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Barcode Input -->
+      <div class="mt-2">
+        <div class="p-inputgroup">
+          <span class="p-inputgroup-addon">
+            <i class="pi pi-barcode"></i>
+          </span>
+          <InputText
+            v-model="barcode"
+            :placeholder="$t('pos.scanBarcode')"
+            @keyup.enter="searchByBarcode"
+            class="w-full"
+          />
+          <Button
+            :label="$t('pos.scan')"
+            @click="searchByBarcode"
+            class="p-button-primary"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories Quick Filter -->
+    <div class="categories-scroll mb-3">
+      <div class="flex flex-wrap gap-2">
+        <Button
+          :label="$t('pos.all')"
+          :severity="!selectedCategoryId ? 'primary' : 'secondary'"
+          @click="selectCategory(null)"
+          class="p-button-sm"
+        />
+        <Button
+          v-for="category in categories"
+          :key="category.id"
+          :label="category.name"
+          :severity="
+            selectedCategoryId === category.id ? 'primary' : 'secondary'
+          "
+          @click="selectCategory(category.id)"
+          class="p-button-sm"
+        />
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div v-if="!loading && filteredProducts.length > 0" class="products-grid">
+      <div class="grid">
+        <div
+          v-for="product in paginatedProducts"
+          :key="product.id"
+          class="col-6 md:col-4 lg:col-3 xl:col-2"
+        >
+          <PosProductCard
+            :product="product"
+            @add-to-cart="$emit('add-to-cart', product)"
+            @view-details="showProductDetails(product)"
+          />
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div
+        v-if="totalPages > 1"
+        class="pagination mt-3 flex justify-content-center"
+      >
+        <Paginator
+          v-model="currentPage"
+          :rows="productsPerPage"
+          :totalRecords="filteredProducts.length"
+          :rowsPerPageOptions="[12, 24, 48, 96]"
+          @page="onPageChange"
+          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+        />
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-state text-center py-6">
+      <ProgressSpinner />
+      <p class="mt-2">{{ $t("pos.loadingProducts") }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div
+      v-else-if="!loading && filteredProducts.length === 0"
+      class="empty-state text-center py-6"
+    >
+      <i class="pi pi-box text-6xl text-color-secondary mb-3"></i>
+      <h3 class="text-color-secondary">
+        {{ $t("pos.noProductsFound") }}
+      </h3>
+      <p class="text-color-secondary">
+        {{ $t("pos.tryDifferentSearch") }}
+      </p>
+    </div>
+
+    <!-- Product Details Modal -->
+    <Dialog
+      v-model:visible="showDetailsModal"
+      :header="selectedProduct?.name"
+      :modal="true"
+      :style="{ width: '500px' }"
+    >
+      <div v-if="selectedProduct" class="product-details">
+        <div class="text-center mb-3">
+          <img
+            v-if="selectedProduct.main_image?.file?.file_path"
+            :src="selectedProduct.main_image.file.file_path"
+            :alt="selectedProduct.name"
+            class="product-detail-image border-round"
+          />
+          <div v-else class="no-image-placeholder">
+            <i class="pi pi-image text-6xl text-color-secondary"></i>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="col-12">
+            <h3>{{ selectedProduct.name }}</h3>
+            <p class="text-color-secondary">{{ selectedProduct.name_ar }}</p>
+          </div>
+
+          <div class="col-6">
+            <strong>{{ $t("pos.price") }}:</strong>
+            <div class="flex align-items-center gap-2 mt-1">
+              <span
+                v-if="selectedProduct.has_discount"
+                class="original-price text-line-through text-color-secondary"
+              >
+                {{ formatCurrency(selectedProduct.price) }}
+              </span>
+              <span
+                :class="[
+                  'current-price',
+                  { 'text-green-500 font-bold': selectedProduct.has_discount },
+                ]"
+              >
+                {{
+                  formatCurrency(
+                    selectedProduct.price_after_discount ||
+                      selectedProduct.price
+                  )
+                }}
+              </span>
+              <Tag
+                v-if="selectedProduct.has_discount"
+                :value="`-${selectedProduct.discount_value}%`"
+                severity="danger"
+                class="ml-2"
+              />
+            </div>
+          </div>
+
+          <div class="col-6">
+            <strong>{{ $t("pos.category") }}:</strong>
+            <div class="mt-1">
+              <span>{{ selectedProduct.category?.name || "N/A" }}</span>
+            </div>
+          </div>
+
+          <div v-if="selectedProduct.details" class="col-12 mt-2">
+            <strong>{{ $t("pos.description") }}:</strong>
+            <p>{{ selectedProduct.details }}</p>
+          </div>
+
+          <div
+            v-if="selectedProduct.final_product_variant_values?.length > 0"
+            class="col-12 mt-2"
+          >
+            <strong>{{ $t("pos.variants") }}:</strong>
+            <div class="flex flex-wrap gap-2 mt-1">
+              <Chip
+                v-for="variant in selectedProduct.final_product_variant_values"
+                :key="variant.id"
+                :label="`${variant.variant?.name}: ${variant.variant_value?.value}`"
+                class="mr-2 mb-2"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <Button
+          :label="$t('pos.addToCart')"
+          icon="pi pi-cart-plus"
+          @click="addSelectedToCart"
+          class="p-button-primary"
+        />
+        <Button
+          :label="$t('common.close')"
+          @click="showDetailsModal = false"
+          class="p-button-text"
+        />
+      </template>
+    </Dialog>
+  </div>
+</template>
+
+<script>
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Select from "primevue/select";
+import Dialog from "primevue/dialog";
+import Tag from "primevue/tag";
+import Chip from "primevue/chip";
+import Paginator from "primevue/paginator";
+import ProgressSpinner from "primevue/progressspinner";
+
+import PosProductCard from "./PosProductCard.vue";
+import PosService from "./PosService.js";
+
+export default {
+  name: "PosProductsPanel",
+  components: {
+    InputText,
+    Button,
+    Select,
+    Dialog,
+    Tag,
+    Chip,
+    Paginator,
+    ProgressSpinner,
+    PosProductCard,
+  },
+  props: {
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+    selectedCategory: {
+      type: String,
+      default: null,
+    },
+    searchQuery: {
+      type: String,
+      default: "",
+    },
+  },
+  data() {
+    return {
+      // Products
+      products: [],
+      filteredProducts: [],
+      selectedProduct: null,
+
+      // Categories
+      categories: [],
+      selectedCategoryId: null,
+
+      // Search
+      search: "",
+      barcode: "",
+
+      // Pagination
+      currentPage: 1,
+      productsPerPage: 12,
+
+      // Modals
+      showDetailsModal: false,
+
+      // Loading
+      loading: false,
+
+      // Service
+      posService: null,
+    };
+  },
+  computed: {
+    paginatedProducts() {
+      const start = (this.currentPage - 1) * this.productsPerPage;
+      const end = start + this.productsPerPage;
+      return this.filteredProducts.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredProducts.length / this.productsPerPage);
+    },
+  },
+  watch: {
+    selectedCategory: {
+      immediate: true,
+      handler(newVal) {
+        this.selectedCategoryId = newVal;
+      },
+    },
+    searchQuery: {
+      immediate: true,
+      handler(newVal) {
+        this.search = newVal;
+      },
+    },
+  },
+  created() {
+    this.posService = new PosService(this.companyId, this.branchId);
+    this.loadData();
+  },
+  methods: {
+    async loadData() {
+      this.loading = true;
+      try {
+        // Load categories from API
+        this.categories = await this.posService.getCategories();
+
+        // Load products from API with initial category filter
+        await this.loadProductsWithFilter();
+      } catch (error) {
+        console.error("Error loading data:", error);
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.loadError"),
+          detail: error.message || this.$t("pos.failedToLoadProducts"),
+          life: 3000,
+        });
+        this.products = [];
+        this.filteredProducts = [];
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async loadProductsWithFilter() {
+      try {
+        // Prepare query parameters
+        const params = {};
+
+        // Add category filter if selected
+        if (this.selectedCategoryId) {
+          params.category_id = this.selectedCategoryId;
+        }
+
+        // Load products with the filter
+        this.products = await this.posService.getProducts(params);
+
+        // Apply local search filter if any
+        this.filterProducts();
+      } catch (error) {
+        console.error("Error loading products:", error);
+        throw error;
+      }
+    },
+
+    filterProducts() {
+      if (!Array.isArray(this.products) || this.products.length === 0) {
+        this.filteredProducts = [];
+        return;
+      }
+
+      let filtered = [...this.products];
+
+      // Apply local search filter only (category filtering is done by backend)
+      if (this.search) {
+        const searchLower = this.search.toLowerCase();
+        filtered = filtered.filter(
+          (product) =>
+            product.name.toLowerCase().includes(searchLower) ||
+            product.name_ar?.toLowerCase().includes(searchLower) ||
+            product.details?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      this.filteredProducts = filtered;
+      this.currentPage = 1; // Reset to first page
+    },
+
+    async handleCategoryChange() {
+      this.loading = true;
+      try {
+        // Reload products with the selected category filter
+        await this.loadProductsWithFilter();
+        this.$emit("category-change", this.selectedCategoryId);
+      } catch (error) {
+        console.error("Error filtering by category:", error);
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.loadError"),
+          detail: this.$t("pos.failedToLoadProducts"),
+          life: 3000,
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    handleSearch() {
+      // Only apply local search filter (category filter is already applied via API)
+      this.filterProducts();
+      this.$emit("search", this.search);
+    },
+
+    clearSearch() {
+      this.search = "";
+      this.filterProducts();
+      this.$emit("search", "");
+    },
+
+    async selectCategory(categoryId) {
+      this.selectedCategoryId = categoryId;
+      await this.handleCategoryChange();
+    },
+
+    searchByBarcode() {
+      if (!this.barcode.trim()) return;
+
+      const product = this.products.find(
+        (p) =>
+          p.id.toLowerCase().includes(this.barcode.toLowerCase()) ||
+          p.name.toLowerCase().includes(this.barcode.toLowerCase())
+      );
+
+      if (product) {
+        this.showProductDetails(product);
+      } else {
+        this.$toast.add({
+          severity: "warn",
+          summary: this.$t("pos.productNotFound"),
+          detail: this.$t("pos.noProductWithBarcode"),
+          life: 3000,
+        });
+      }
+
+      this.barcode = "";
+    },
+
+    showProductDetails(product) {
+      this.selectedProduct = product;
+      this.showDetailsModal = true;
+    },
+
+    addSelectedToCart() {
+      if (this.selectedProduct) {
+        this.$emit("add-to-cart", this.selectedProduct);
+        this.showDetailsModal = false;
+      }
+    },
+
+    onPageChange(event) {
+      this.currentPage = event.page + 1;
+    },
+
+    formatCurrency(amount) {
+      if (!amount && amount !== 0) return "$0.00";
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.pos-products-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.products-filter-bar {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.categories-scroll {
+  overflow-x: auto;
+  padding-bottom: 5px;
+}
+
+.categories-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.categories-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.categories-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 2px;
+}
+
+.products-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.products-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.products-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.products-grid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.product-detail-image {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.no-image-placeholder {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  margin: 0 auto;
+}
+
+.original-price {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.current-price {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.loading-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.p-button.p-button-sm) {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+</style>
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosProductCard.vue
+
+<template>
+  <div class="pos-product-card" @click="$emit('view-details')">
+    <div
+      class="product-card-inner p-3 surface-card border-round cursor-pointer hover:surface-hover transition-all transition-duration-300"
+    >
+      <!-- Product Image -->
+      <div class="product-image mb-2">
+        <img
+          v-if="product.main_image?.file?.file_path"
+          :src="product.main_image.file.file_path"
+          :alt="product.name"
+          class="border-round w-full"
+        />
+        <div v-else class="no-image">
+          <i class="pi pi-image"></i>
+          <span class="block mt-2 text-sm">{{ $t("pos.noImage") }}</span>
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="product-info">
+        <h4
+          class="product-name m-0 mb-1 text-sm font-bold truncate"
+          :title="product.name"
+        >
+          {{ product.name }}
+        </h4>
+        <p
+          class="product-name-ar m-0 mb-2 text-xs text-color-secondary truncate"
+          :title="product.name_ar"
+        >
+          {{ product.name_ar }}
+        </p>
+
+        <!-- Price -->
+        <div class="product-price mb-2">
+          <div class="flex align-items-center gap-1">
+            <span
+              v-if="product.has_discount"
+              class="original-price text-line-through text-xs text-color-secondary"
+            >
+              {{ formatCurrency(product.price) }}
+            </span>
+            <span class="current-price font-bold text-primary">
+              {{
+                formatCurrency(
+                  product.has_discount
+                    ? product.price_after_discount
+                    : product.price
+                )
+              }}
+            </span>
+            <Tag
+              v-if="product.has_discount"
+              :value="`-${product.discount_value}%`"
+              severity="danger"
+              size="small"
+              class="ml-1"
+            />
+          </div>
+        </div>
+
+        <!-- Stock - Removed since API doesn't provide stock -->
+        <!-- <div class="product-stock mb-3">
+          <Tag
+            :value="product.stock || 0"
+            :severity="getStockSeverity(product.stock)"
+            size="small"
+            class="w-full justify-content-center"
+          />
+        </div> -->
+
+        <!-- Add to Cart Button -->
+        <Button
+          :label="$t('pos.addToCart')"
+          icon="pi pi-cart-plus"
+          @click.stop="addToCart"
+          class="w-full p-button-sm"
+          :disabled="false"
+          :loading="addingToCart"
+        >
+          <template #loading>
+            <i class="pi pi-spin pi-spinner mr-2"></i>
+            {{ $t("pos.adding") }}
+          </template>
+        </Button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import Button from "primevue/button";
+import Tag from "primevue/tag";
+
+export default {
+  name: "PosProductCard",
+  components: {
+    Button,
+    Tag,
+  },
+  props: {
+    product: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      addingToCart: false,
+    };
+  },
+  methods: {
+    addToCart() {
+      this.addingToCart = true;
+
+      // Simulate API call
+      setTimeout(() => {
+        this.$emit("add-to-cart", this.product);
+        this.addingToCart = false;
+      }, 300);
+    },
+
+    formatCurrency(amount) {
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+
+    // Removed getStockSeverity since API doesn't provide stock
+    // getStockSeverity(stock) {
+    //   if (!stock || stock <= 0) return "danger";
+    //   if (stock <= 10) return "warning";
+    //   return "success";
+    // },
+  },
+};
+</script>
+
+<style scoped>
+.pos-product-card {
+  height: 100%;
+}
+
+.product-card-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dee2e6;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card-inner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+.product-image {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+}
+
+.no-image i {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  line-height: 1.2;
+  max-height: 2.4em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.product-name-ar {
+  line-height: 1.2;
+  max-height: 1.8em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.original-price {
+  font-size: 0.75rem;
+}
+
+.current-price {
+  font-size: 1rem;
+}
+
+.product-stock {
+  margin-top: auto;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:deep(.p-button) {
+  font-weight: 600;
+}
+
+:deep(.p-button.p-button-sm) {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+:deep(.p-tag.p-tag-sm) {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+}
+</style>
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosModal.vue
+
+<template>
+  <Dialog
+    v-model:visible="visible"
+    :modal="true"
+    :style="dialogStyle"
+    :maximizable="false"
+    :draggable="false"
+    :resizable="false"
+    @hide="closeModal"
+    class="pos-modal"
+    :class="{ 'maximized-dialog': isMaximized }"
+  >
+    <!-- Simple header -->
+    <template #header>
+      <span class="text-xl font-bold text-white dark:text-gray-100">{{
+        $t("pos.title")
+      }}</span>
+    </template>
+
+    <!-- POS Toolbar -->
+    <div
+      class="pos-toolbar flex justify-content-between align-items-center mb-3 p-3 surface-ground border-round"
+      :class="{ 'dark-surface': isDarkMode }"
+    >
+      <div class="flex align-items-center gap-2">
+        <Button
+          :label="$t('pos.holdInvoice')"
+          icon="pi pi-pause"
+          @click="holdCurrentInvoice"
+          class="p-button-warning"
+          :class="{ 'dark-button-warning': isDarkMode }"
+          :disabled="cartItems.length === 0"
+        />
+        <Button
+          :label="$t('pos.viewHeld')"
+          icon="pi pi-list"
+          @click="showHeldInvoices"
+          class="p-button-secondary"
+          :class="{ 'dark-button-secondary': isDarkMode }"
+        />
+        <Button
+          :label="$t('pos.switchLayout')"
+          :icon="layoutIcon"
+          @click="toggleLayout"
+          class="p-button-help"
+          :class="{ 'dark-button-help': isDarkMode }"
+        />
+      </div>
+
+      <div class="flex align-items-center gap-2">
+        <span class="font-bold text-color dark:text-gray-300">
+          {{ $t("pos.invoiceNumber") }}: {{ invoiceNumber }}
+        </span>
+
+        <!-- Maximize/Minimize Button -->
+        <Button
+          :icon="
+            isMaximized ? 'pi pi-window-minimize' : 'pi pi-window-maximize'
+          "
+          @click="toggleMaximize"
+          class="p-button-rounded custom-maximize-btn"
+          :class="{ 'dark-button': isDarkMode }"
+          v-tooltip.top="isMaximized ? $t('pos.minimize') : $t('pos.maximize')"
+        />
+
+        <!-- Close Button -->
+        <Button
+          icon="pi pi-times"
+          @click="closeModal"
+          class="p-button-rounded custom-close-btn"
+          :class="{ 'dark-close-btn': isDarkMode }"
+          v-tooltip.top="$t('common.close')"
+        />
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div :class="['pos-main-content', layoutClass]">
+      <!-- Products Panel -->
+      <PosProductsPanel
+        ref="productsPanel"
+        :company-id="companyId"
+        :branch-id="branchId"
+        :selected-category="selectedCategory"
+        :search-query="searchQuery"
+        @add-to-cart="addToCart"
+        @category-change="selectedCategory = $event"
+        @search="searchQuery = $event"
+        :class="[
+          layoutClass.includes('horizontal')
+            ? 'products-panel-horizontal'
+            : 'products-panel-vertical',
+        ]"
+      />
+
+      <!-- Cart Panel -->
+      <PosCartPanel
+        ref="cartPanel"
+        :cart-items="cartItems"
+        :selected-customer="selectedCustomer"
+        :selected-warehouse="selectedWarehouse?.id"
+        :selected-payment-method="selectedPaymentMethod?.id"
+        :invoice-discounts="invoiceDiscounts"
+        :invoice-additional-costs="invoiceAdditionalCosts"
+        :tax-rate="taxRate"
+        :company-id="companyId"
+        :branch-id="branchId"
+        :is-dark-mode="isDarkMode"
+        @update-item="updateCartItem"
+        @remove-item="removeCartItem"
+        @customer-change="selectedCustomer = $event"
+        @warehouse-change="onWarehouseChange"
+        @payment-method-change="onPaymentMethodChange"
+        @add-discount="addInvoiceDiscount"
+        @update-discount="onDiscountUpdate"
+        @remove-discount="removeInvoiceDiscount"
+        @add-additional-cost="addInvoiceAdditionalCost"
+        @update-additional-cost="onAdditionalCostUpdate"
+        @remove-additional-cost="removeInvoiceAdditionalCost"
+        @checkout="processCheckout"
+        @clear-cart="clearCart"
+        @totals-updated="handleTotalsUpdate"
+        :class="[
+          layoutClass.includes('horizontal')
+            ? 'cart-panel-horizontal'
+            : 'cart-panel-vertical',
+        ]"
+      />
+    </div>
+
+    <!-- Held Invoices Modal -->
+    <PosHeldInvoices
+      ref="heldInvoicesModal"
+      :company-id="companyId"
+      :branch-id="branchId"
+      @load-invoice="loadHeldInvoice"
+    />
+
+    <!-- Print Options Modal -->
+    <Dialog
+      v-model:visible="showPrintOptions"
+      :header="$t('pos.invoiceCompleted')"
+      :modal="true"
+      :style="{ width: '450px' }"
+      :closable="false"
+      class="print-dialog"
+    >
+      <div class="print-options text-center p-4">
+        <i class="pi pi-check-circle text-5xl text-green-500 mb-3"></i>
+        <h3 class="mb-2">{{ $t("pos.paymentSuccessful") }}</h3>
+        <p class="text-color-secondary mb-4">
+          {{ $t("pos.invoiceCreatedSuccessfully") }}
+        </p>
+
+        <div class="invoice-details mb-4 p-3 border-round bg-gray-50">
+          <div class="flex justify-content-between mb-2">
+            <span class="font-bold">{{ $t("pos.invoiceNumber") }}:</span>
+            <span class="font-bold text-primary">{{
+              currentInvoice?.invoice_number || invoiceNumber
+            }}</span>
+          </div>
+          <div class="flex justify-content-between mb-2">
+            <span class="font-bold">{{ $t("pos.total") }}:</span>
+            <span class="font-bold text-primary text-lg">{{
+              formatCurrency(currentTotals?.grandTotal || 0)
+            }}</span>
+          </div>
+          <div class="flex justify-content-between">
+            <span>{{ $t("pos.date") }}:</span>
+            <span>{{ formatDate(new Date()) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex flex-column gap-2 w-full">
+          <Button
+            :label="$t('pos.printAndFinish')"
+            icon="pi pi-print"
+            @click="printAndFinish"
+            class="p-button-success mb-2"
+          />
+          <Button
+            :label="$t('pos.finishOnly')"
+            icon="pi pi-check"
+            @click="finishOnly"
+            class="p-button-primary p-button-outlined"
+          />
+          <!-- Add this cancel button -->
+          <Button
+            :label="$t('pos.cancel')"
+            icon="pi pi-times"
+            @click="showPrintOptions = false"
+            class="p-button-secondary p-button-text mt-2"
+          />
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Receipt Modal for Printing -->
+    <Dialog
+      v-model:visible="showReceipt"
+      :modal="true"
+      :style="{ width: '420px' }"
+      :draggable="true"
+      :resizable="true"
+      class="receipt-dialog"
+      id="receiptDialog"
+    >
+      <template #header>
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-receipt text-primary"></i>
+          <span class="text-lg font-bold">{{ $t("pos.receipt") }}</span>
+          <Tag value="PAID" severity="success" class="ml-2" />
+        </div>
+      </template>
+
+      <div class="receipt-container" ref="receiptContainer">
+        <PosReceipt
+          :invoice="currentInvoice"
+          :company-id="companyId"
+          :branch-id="branchId"
+          :is-dark-mode="isDarkMode"
+        />
+      </div>
+
+      <template #footer>
+        <div class="flex justify-content-between align-items-center w-full">
+          <div class="text-xs text-color-secondary">
+            <i class="pi pi-info-circle mr-1"></i>
+            {{ $t("pos.printHint") }}
+          </div>
+          <div class="flex gap-2">
+            <Button
+              :label="$t('pos.downloadPDF')"
+              icon="pi pi-download"
+              @click="downloadReceipt"
+              class="p-button-outlined p-button-secondary"
+              :class="{ 'dark-button-outlined': isDarkMode }"
+            />
+            <Button
+              :label="$t('pos.printReceipt')"
+              icon="pi pi-print"
+              @click="printReceipt"
+              class="p-button-primary"
+              :class="{ 'dark-button-primary': isDarkMode }"
+            />
+            <Button
+              :label="$t('common.close')"
+              @click="showReceipt = false"
+              class="p-button-text"
+              :class="{ 'dark-button-text': isDarkMode }"
+            />
+          </div>
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Loading Overlay -->
+    <div
+      v-if="processingCheckout"
+      class="checkout-overlay"
+      :class="{ 'dark-overlay': isDarkMode }"
+    >
+      <div class="checkout-loading text-center">
+        <ProgressSpinner style="width: 60px; height: 60px" />
+        <h3 class="mt-3 mb-1">{{ $t("pos.processingPayment") }}</h3>
+        <p class="text-color-secondary">{{ $t("pos.pleaseWait") }}</p>
+
+        <div class="mt-4 p-3 bg-surface border-round" style="max-width: 300px">
+          <div class="flex justify-content-between mb-2">
+            <span>{{ $t("pos.items") }}:</span>
+            <span class="font-bold">{{ cartItems.length }}</span>
+          </div>
+          <div class="flex justify-content-between mb-2">
+            <span>{{ $t("pos.total") }}:</span>
+            <span class="font-bold text-primary">{{
+              formatCurrency(currentTotals?.grandTotal || 0)
+            }}</span>
+          </div>
+          <Divider />
+          <div class="text-xs text-color-secondary">
+            <i class="pi pi-info-circle mr-1"></i>
+            {{ $t("pos.processingHint") }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </Dialog>
+</template>
+
+<script>
+import Dialog from "primevue/dialog";
+import Button from "primevue/button";
+import ProgressSpinner from "primevue/progressspinner";
+import Divider from "primevue/divider";
+import Tag from "primevue/tag";
+import Tooltip from "primevue/tooltip";
+
+import PosProductsPanel from "./PosProductsPanel.vue";
+import PosCartPanel from "./PosCartPanel.vue";
+import PosHeldInvoices from "./PosHeldInvoices.vue";
+import PosReceipt from "./PosReceipt.vue";
+import PosService from "./PosService.js";
+
+export default {
+  name: "PosModal",
+  components: {
+    Dialog,
+    Button,
+    ProgressSpinner,
+    Divider,
+    Tag,
+    PosProductsPanel, // أضف هنا
+    PosCartPanel, // أضف هنا
+    PosHeldInvoices, // أضف هنا
+    PosReceipt, // أضف هنا
+  },
+  directives: {
+    tooltip: Tooltip,
+  },
+  props: {
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      visible: false,
+      isMaximized: false,
+      layout: "horizontal",
+      isDarkMode: false,
+
+      // Dialog dimensions
+      dialogWidth: "95vw",
+      dialogHeight: "90vh",
+      originalWidth: "95vw",
+      originalHeight: "90vh",
+
+      // Cart data
+      cartItems: [],
+      selectedCustomer: null,
+      selectedWarehouse: null,
+      selectedPaymentMethod: null,
+      invoiceDiscounts: [],
+      invoiceAdditionalCosts: [],
+      currentTotals: null,
+
+      // Products filtering
+      selectedCategory: null,
+      searchQuery: "",
+
+      // Tax
+      taxRate: 14,
+
+      // Invoice
+      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      currentInvoice: null,
+      showReceipt: false,
+      showPrintOptions: false,
+
+      // Loading states
+      processingCheckout: false,
+      loadingMessage: "",
+
+      // Service and components
+      posService: null,
+      posProductsPanel: null,
+      posCartPanel: null,
+      posHeldInvoices: null,
+      posReceipt: null,
+    };
+  },
+  computed: {
+    layoutClass() {
+      return this.layout === "horizontal"
+        ? "horizontal-layout"
+        : "vertical-layout";
+    },
+    layoutIcon() {
+      return this.layout === "horizontal"
+        ? "pi pi-arrow-right-arrow-left"
+        : "pi pi-arrow-down-arrow-up";
+    },
+    dialogStyle() {
+      if (this.isMaximized) {
+        return {
+          width: "100vw",
+          height: "100vh",
+          maxWidth: "100vw",
+          maxHeight: "100vh",
+          top: "0",
+          left: "0",
+          margin: "0",
+          position: "fixed",
+        };
+      } else {
+        return {
+          width: this.dialogWidth,
+          height: this.dialogHeight,
+          maxWidth: "95vw",
+          maxHeight: "90vh",
+        };
+      }
+    },
+  },
+  created() {
+    this.checkDarkMode();
+  },
+  mounted() {
+    this.originalWidth = this.dialogWidth;
+    this.originalHeight = this.dialogHeight;
+
+    // Listen for dark mode changes
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", this.checkDarkMode);
+  },
+  beforeDestroy() {
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .removeEventListener("change", this.checkDarkMode);
+  },
+  methods: {
+    checkDarkMode() {
+      this.isDarkMode =
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+    },
+
+    async openModal() {
+      this.visible = true;
+      this.resetCart();
+      this.generateInvoiceNumber();
+      this.isMaximized = false;
+      this.checkDarkMode();
+
+      this.posService = new PosService(this.companyId, this.branchId);
+
+      // Initialize data when modal opens
+      await this.initializeData();
+    },
+
+    closeModal() {
+      if (this.cartItems.length > 0) {
+        if (confirm(this.$t("pos.confirmCloseWithItems"))) {
+          this.visible = false;
+          this.resetCart();
+        }
+      } else {
+        this.visible = false;
+        this.resetCart();
+      }
+    },
+
+    toggleMaximize() {
+      this.isMaximized = !this.isMaximized;
+
+      this.$nextTick(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+    },
+
+    toggleLayout() {
+      this.layout = this.layout === "horizontal" ? "vertical" : "horizontal";
+      localStorage.setItem("pos_layout_preference", this.layout);
+    },
+
+    async initializeData() {
+      const savedLayout = localStorage.getItem("pos_layout_preference");
+      if (savedLayout) {
+        this.layout = savedLayout;
+      }
+
+      // Load initial warehouses and payment methods
+      try {
+        const warehouses = await this.posService.getWarehouses();
+        if (warehouses.length > 0) {
+          this.selectedWarehouse = warehouses[0];
+        }
+
+        const paymentMethods = await this.posService.getPaymentMethods();
+        if (paymentMethods.length > 0) {
+          this.selectedPaymentMethod = paymentMethods[0];
+        }
+      } catch (error) {
+        console.error("Error initializing data:", error);
+      }
+    },
+
+    generateInvoiceNumber() {
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000);
+      this.invoiceNumber = `INV-${timestamp.toString().slice(-6)}-${random}`;
+    },
+
+    // Cart Methods
+    addToCart(product) {
+      const existingItemIndex = this.cartItems.findIndex(
+        (item) => item.id === product.id
+      );
+
+      if (existingItemIndex !== -1) {
+        this.cartItems[existingItemIndex].quantity += 1;
+        this.cartItems = [...this.cartItems];
+      } else {
+        const newItem = {
+          ...product,
+          quantity: 1,
+          measurement_unit_id:
+            product.product?.sales_measurement_unit?.id || null,
+          additional_costs: [],
+          notes: "",
+        };
+        this.cartItems = [...this.cartItems, newItem];
+      }
+
+      this.$toast.add({
+        severity: "success",
+        summary: this.$t("pos.productAdded"),
+        detail: `${product.name} ${this.$t("pos.addedToCart")}`,
+        life: 2000,
+      });
+    },
+
+    updateCartItem(itemId, updates) {
+      const index = this.cartItems.findIndex((item) => item.id === itemId);
+      if (index !== -1) {
+        this.cartItems[index] = { ...this.cartItems[index], ...updates };
+        this.cartItems = [...this.cartItems];
+      }
+    },
+
+    removeCartItem(itemId) {
+      this.cartItems = this.cartItems.filter((item) => item.id !== itemId);
+    },
+
+    clearCart() {
+      this.cartItems = [];
+      this.invoiceDiscounts = [];
+      this.invoiceAdditionalCosts = [];
+      this.selectedCustomer = null;
+      this.selectedPaymentMethod = null;
+      this.currentTotals = null;
+    },
+
+    handleTotalsUpdate(totals) {
+      this.currentTotals = totals;
+    },
+
+    // Invoice Discounts & Additional Costs
+    addInvoiceDiscount() {
+      this.invoiceDiscounts.push({
+        id: `disc_${Date.now()}`,
+        name: this.$t("pos.discount"),
+        value: 0,
+      });
+    },
+
+    removeInvoiceDiscount(discountId) {
+      this.invoiceDiscounts = this.invoiceDiscounts.filter(
+        (d) => d.id !== discountId
+      );
+    },
+
+    addInvoiceAdditionalCost() {
+      this.invoiceAdditionalCosts.push({
+        id: `cost_${Date.now()}`,
+        name: this.$t("pos.additionalCost"),
+        value: 0,
+      });
+    },
+
+    removeInvoiceAdditionalCost(costId) {
+      this.invoiceAdditionalCosts = this.invoiceAdditionalCosts.filter(
+        (c) => c.id !== costId
+      );
+    },
+
+    // Hold Invoice
+    holdCurrentInvoice() {
+      if (this.cartItems.length === 0) {
+        this.$toast.add({
+          severity: "warn",
+          summary: this.$t("pos.emptyCart"),
+          detail: this.$t("pos.addItemsBeforeHold"),
+          life: 3000,
+        });
+        return;
+      }
+
+      const heldInvoice = {
+        id: `held_${Date.now()}`,
+        cartItems: [...this.cartItems],
+        customer: this.selectedCustomer,
+        warehouse: this.selectedWarehouse,
+        discounts: [...this.invoiceDiscounts],
+        additionalCosts: [...this.invoiceAdditionalCosts],
+        heldAt: new Date().toISOString(),
+        invoiceNumber: this.invoiceNumber,
+      };
+
+      this.posService.saveHeldInvoice(heldInvoice);
+
+      this.$toast.add({
+        severity: "success",
+        summary: this.$t("pos.invoiceHeld"),
+        detail: this.$t("pos.invoiceSavedForLater"),
+        life: 3000,
+      });
+
+      this.clearCart();
+      this.generateInvoiceNumber();
+    },
+
+    showHeldInvoices() {
+      if (this.$refs.heldInvoicesModal) {
+        this.$refs.heldInvoicesModal.openModal();
+      }
+    },
+
+    loadHeldInvoice(invoice) {
+      this.cartItems = invoice.cartItems || [];
+      this.selectedCustomer = invoice.customer || null;
+      this.selectedWarehouse = invoice.warehouse || null;
+      this.invoiceDiscounts = invoice.discounts || [];
+      this.invoiceAdditionalCosts = invoice.additionalCosts || [];
+      this.invoiceNumber = invoice.invoiceNumber || this.invoiceNumber;
+
+      if (this.$refs.heldInvoicesModal) {
+        this.$refs.heldInvoicesModal.closeModal();
+      }
+
+      this.$toast.add({
+        severity: "success",
+        summary: this.$t("pos.invoiceLoaded"),
+        detail: this.$t("pos.heldInvoiceLoaded"),
+        life: 3000,
+      });
+    },
+
+    // Checkout and Print
+    async processCheckout() {
+      if (!this.validateCheckoutData()) {
+        return;
+      }
+
+      this.processingCheckout = true;
+
+      try {
+        // Create invoice object
+        this.currentInvoice = this.createInvoiceObject();
+
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Show print options
+        this.showPrintOptions = true;
+      } catch (error) {
+        console.error("Checkout error:", error);
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.paymentFailed"),
+          detail: error.message || this.$t("pos.checkoutError"),
+          life: 3000,
+        });
+      } finally {
+        this.processingCheckout = false;
+      }
+    },
+
+    validateCheckoutData() {
+      if (this.cartItems.length === 0) {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.emptyCart"),
+          detail: this.$t("pos.addItemsBeforeCheckout"),
+          life: 3000,
+        });
+        return false;
+      }
+
+      if (!this.selectedWarehouse) {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.warehouseRequired"),
+          detail: this.$t("pos.selectWarehouseFirst"),
+          life: 3000,
+        });
+        return false;
+      }
+
+      if (!this.selectedPaymentMethod) {
+        this.$toast.add({
+          severity: "error",
+          summary: this.$t("pos.paymentMethodRequired"),
+          detail: this.$t("pos.selectPaymentMethodFirst"),
+          life: 3000,
+        });
+        return false;
+      }
+
+      return true;
+    },
+
+    createInvoiceObject() {
+      return {
+        id: `inv_${Date.now()}`,
+        invoice_number: this.invoiceNumber,
+        created_at: new Date().toISOString(),
+        status: "completed",
+        payment_status: "paid",
+        customer: this.selectedCustomer,
+        warehouse: this.selectedWarehouse,
+        payment_method: this.selectedPaymentMethod,
+        items: this.cartItems.map((item) => ({
+          ...item,
+          total: this.calculateItemTotal(item),
+        })),
+        discounts: this.invoiceDiscounts.filter((d) => d.value > 0),
+        additional_costs: this.invoiceAdditionalCosts.filter(
+          (c) => c.value > 0
+        ),
+        totals: this.currentTotals,
+        taxRate: this.taxRate,
+        details: "POS Sale",
+        cashier: "System User",
+      };
+    },
+
+    calculateItemTotal(item) {
+      const price = this.parsePrice(
+        item.has_discount ? item.price_after_discount : item.price
+      );
+      let total = price * (item.quantity || 1);
+
+      if (item.additional_costs && Array.isArray(item.additional_costs)) {
+        item.additional_costs.forEach((cost) => {
+          total += this.parsePrice(cost.value) || 0;
+        });
+      }
+
+      return parseFloat(total.toFixed(2));
+    },
+
+    parsePrice(price) {
+      if (!price && price !== 0) return 0;
+      if (typeof price === "string") {
+        return parseFloat(price.replace(/,/g, ""));
+      }
+      return parseFloat(price);
+    },
+
+    // Print Functions
+    printAndFinish() {
+      this.showPrintOptions = false;
+      this.showReceipt = true;
+      this.$nextTick(() => {
+        this.printReceipt();
+        setTimeout(() => {
+          this.finishSale();
+        }, 1000);
+      });
+    },
+
+    finishOnly() {
+      this.showPrintOptions = false;
+      this.finishSale();
+    },
+
+    finishSale() {
+      this.clearCart();
+      this.generateInvoiceNumber();
+      this.showReceipt = false;
+
+      this.$toast.add({
+        severity: "success",
+        summary: this.$t("pos.saleCompleted"),
+        detail: this.$t("pos.readyForNewSale"),
+        life: 3000,
+      });
+    },
+
+    printReceipt() {
+      const receiptElement = this.$refs.receiptContainer;
+      if (!receiptElement) {
+        console.error("Receipt container not found");
+        return;
+      }
+
+      const printContent = receiptElement.innerHTML;
+      const originalContent = document.body.innerHTML;
+
+      const printWindow = window.open("", "_blank", "width=800,height=600");
+
+      const styles = `
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+          }
+          .pos-receipt {
+            max-width: 380px;
+            margin: 0 auto;
+            padding: 15px;
+            border: 1px solid #000;
+          }
+          .receipt-header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+          }
+          .receipt-header h2 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+          }
+          .receipt-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+          }
+          .receipt-items th {
+            background: #f0f0f0;
+            font-weight: bold;
+            padding: 5px;
+            border: 1px solid #000;
+            text-align: left;
+          }
+          .receipt-items td {
+            padding: 5px;
+            border: 1px solid #000;
+          }
+          .receipt-totals {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f8f8;
+            border: 1px solid #000;
+          }
+          .receipt-footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+          }
+          @media print {
+            body {
+              padding: 0;
+              margin: 0;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .pos-receipt {
+              border: none !important;
+              box-shadow: none !important;
+            }
+          }
+        </style>
+      `;
+
+      const buttons = `
+        <div class="no-print" style="margin-top: 20px; text-align: center;">
+          <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; margin-right: 10px;">
+            ${this.$t("pos.print")}
+          </button>
+          <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; cursor: pointer;">
+            ${this.$t("common.close")}
+          </button>
+        </div>
+      `;
+
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>${this.$t("pos.receipt")} - ${
+        this.currentInvoice?.invoice_number
+      }</title>
+            ${styles}
+          </head>
+          <body>
+            ${printContent}
+            ${buttons}
+            <script>
+              window.onload = function() {
+                // Auto print after 500ms
+                setTimeout(function() {
+                  window.print();
+                }, 500);
+              };
+            <\/script>
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+    },
+
+    downloadReceipt() {
+      const receiptElement = this.$refs.receiptContainer;
+      if (!receiptElement) {
+        console.error("Receipt container not found");
+        return;
+      }
+
+      const printContent = receiptElement.innerHTML;
+      const blob = new Blob(
+        [
+          `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              .pos-receipt { max-width: 400px; margin: 0 auto; }
+            </style>
+          </head>
+          <body>${printContent}</body>
+        </html>
+      `,
+        ],
+        { type: "text/html" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receipt-${
+        this.currentInvoice?.invoice_number || "invoice"
+      }.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+
+    formatCurrency(amount) {
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+
+    formatDate(date) {
+      if (!date) return new Date().toLocaleString();
+      if (typeof date === "string") {
+        date = new Date(date);
+      }
+      return date.toLocaleString();
+    },
+
+    resetCart() {
+      this.cartItems = [];
+      this.selectedCustomer = null;
+      this.selectedPaymentMethod = null;
+      this.invoiceDiscounts = [];
+      this.invoiceAdditionalCosts = [];
+      this.selectedCategory = null;
+      this.searchQuery = "";
+      this.currentTotals = null;
+      this.currentInvoice = null;
+      this.showReceipt = false;
+      this.showPrintOptions = false;
+    },
+
+    onWarehouseChange(warehouse) {
+      this.selectedWarehouse = warehouse;
+    },
+
+    onPaymentMethodChange(paymentMethod) {
+      this.selectedPaymentMethod = paymentMethod;
+    },
+
+    onDiscountUpdate(updatedDiscount) {
+      const index = this.invoiceDiscounts.findIndex(
+        (d) => d.id === updatedDiscount.id
+      );
+      if (index !== -1) {
+        this.invoiceDiscounts = [
+          ...this.invoiceDiscounts.slice(0, index),
+          updatedDiscount,
+          ...this.invoiceDiscounts.slice(index + 1),
+        ];
+      }
+    },
+
+    onAdditionalCostUpdate(updatedCost) {
+      const index = this.invoiceAdditionalCosts.findIndex(
+        (c) => c.id === updatedCost.id
+      );
+      if (index !== -1) {
+        this.invoiceAdditionalCosts = [
+          ...this.invoiceAdditionalCosts.slice(0, index),
+          updatedCost,
+          ...this.invoiceAdditionalCosts.slice(index + 1),
+        ];
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.pos-modal {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.pos-modal.maximized-dialog {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* POS Toolbar - Light Mode */
+.pos-toolbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  margin: 0 1rem;
+  transition: all 0.3s ease;
+}
+
+.pos-toolbar.dark-surface {
+  background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+}
+
+/* Horizontal Layout */
+.horizontal-layout {
+  display: flex;
+  height: calc(100% - 80px);
+  gap: 1rem;
+  margin: 0 1rem;
+}
+
+/* Vertical Layout */
+.vertical-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 80px);
+  gap: 1rem;
+  margin: 0 1rem;
+}
+
+/* Products Panel */
+.products-panel-horizontal {
+  flex: 3;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cart-panel-horizontal {
+  flex: 2;
+  min-width: 400px;
+  max-width: 500px;
+  overflow: hidden;
+}
+
+.products-panel-vertical {
+  flex: 2;
+  min-height: 300px;
+  overflow: hidden;
+}
+
+.cart-panel-vertical {
+  flex: 3;
+  min-height: 400px;
+  overflow: hidden;
+}
+
+/* Loading Overlay */
+.checkout-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.checkout-overlay.dark-overlay {
+  background: rgba(26, 32, 44, 0.98);
+}
+
+.checkout-overlay.dark-overlay .p-progress-spinner-circle {
+  stroke: #667eea !important;
+}
+
+/* Print Options Dialog */
+.print-dialog :deep(.p-dialog-header) {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+  color: white !important;
+}
+
+/* Receipt Dialog */
+.receipt-dialog :deep(.p-dialog-content) {
+  padding: 0 !important;
+  max-height: 80vh !important;
+}
+
+/* Custom button styles */
+.custom-maximize-btn,
+.custom-close-btn {
+  width: 40px !important;
+  height: 40px !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-maximize-btn:hover,
+.custom-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Dialog header styling */
+:deep(.p-dialog-header) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  padding: 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dialog content area */
+:deep(.p-dialog-content) {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Maximized dialog styles */
+:deep(.maximized-dialog .p-dialog) {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  top: 0 !important;
+  left: 0 !important;
+  transform: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+:deep(.maximized-dialog .p-dialog-content) {
+  height: calc(100vh - 60px) !important;
+}
+
+/* Fix for dialog positioning */
+:deep(.p-dialog) {
+  transition: all 0.3s ease !important;
+}
+</style>
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosHeldInvoices.vue
+
+<template>
+  <Dialog
+    :header="$t('pos.heldInvoices')"
+    v-model:visible="visible"
+    :modal="true"
+    :style="{ width: '700px' }"
+  >
+    <!-- Held Invoices List -->
+    <div v-if="heldInvoices.length > 0" class="held-invoices-list">
+      <DataTable
+        :value="heldInvoices"
+        :paginator="true"
+        :rows="10"
+        class="p-datatable-sm table-scroll-container"
+      >
+        <Column field="invoiceNumber" :header="$t('pos.invoiceNumber')">
+          <template #body="slotProps">
+            <span class="font-mono">{{ slotProps.data.invoiceNumber }}</span>
+          </template>
+        </Column>
+
+        <Column :header="$t('pos.customer')">
+          <template #body="slotProps">
+            <div>
+              <div class="font-bold">
+                {{ slotProps.data.customer?.name || $t("pos.walkInCustomer") }}
+              </div>
+              <div
+                v-if="slotProps.data.customer?.phone"
+                class="text-sm text-color-secondary"
+              >
+                {{ slotProps.data.customer.phone }}
+              </div>
+            </div>
+          </template>
+        </Column>
+
+        <Column :header="$t('pos.items')">
+          <template #body="slotProps">
+            <div class="text-sm">
+              {{ slotProps.data.cartItems?.length || 0 }} {{ $t("pos.items") }}
+            </div>
+          </template>
+        </Column>
+
+        <Column :header="$t('pos.total')">
+          <template #body="slotProps">
+            <div class="font-bold">
+              {{ calculateInvoiceTotal(slotProps.data) }}
+            </div>
+          </template>
+        </Column>
+
+        <Column :header="$t('pos.heldAt')">
+          <template #body="slotProps">
+            <div class="text-sm">
+              {{ formatDate(slotProps.data.heldAt) }}
+            </div>
+          </template>
+        </Column>
+
+        <Column :header="$t('pos.actions')" style="width: 150px">
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-play"
+                @click="loadInvoice(slotProps.data)"
+                class="p-button-success p-button-sm"
+                v-tooltip.top="$t('pos.loadInvoice')"
+              />
+              <Button
+                icon="pi pi-trash"
+                @click="deleteInvoice(slotProps.data.id)"
+                class="p-button-danger p-button-sm"
+                v-tooltip.top="$t('pos.deleteInvoice')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="empty-state text-center py-6">
+      <i class="pi pi-inbox text-6xl text-color-secondary mb-3"></i>
+      <h3 class="text-color-secondary">{{ $t("pos.noHeldInvoices") }}</h3>
+      <p class="text-color-secondary">
+        {{ $t("pos.holdInvoicesWillAppearHere") }}
+      </p>
+    </div>
+
+    <template #footer>
+      <Button
+        :label="$t('common.close')"
+        @click="closeModal"
+        class="p-button-text"
+      />
+    </template>
+  </Dialog>
+</template>
+
+<script>
+import Dialog from "primevue/dialog";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import Button from "primevue/button";
+import Tooltip from "primevue/tooltip";
+
+import PosService from "./PosService.js";
+
+export default {
+  name: "PosHeldInvoices",
+  components: {
+    Dialog,
+    DataTable,
+    Column,
+    Button,
+  },
+  directives: {
+    tooltip: Tooltip,
+  },
+  props: {
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      visible: false,
+      heldInvoices: [],
+      posService: null,
+    };
+  },
+  created() {
+    this.posService = new PosService(this.companyId, this.branchId);
+  },
+  methods: {
+    openModal() {
+      this.visible = true;
+      this.loadHeldInvoices();
+    },
+
+    closeModal() {
+      this.visible = false;
+    },
+
+    loadHeldInvoices() {
+      this.heldInvoices = this.posService.getHeldInvoices();
+    },
+
+    loadInvoice(invoice) {
+      this.$emit("load-invoice", invoice);
+      this.closeModal();
+    },
+
+    deleteInvoice(invoiceId) {
+      if (confirm(this.$t("pos.confirmDeleteInvoice"))) {
+        this.posService.deleteHeldInvoice(invoiceId);
+        this.loadHeldInvoices();
+
+        this.$toast.add({
+          severity: "success",
+          summary: this.$t("pos.invoiceDeleted"),
+          detail: this.$t("pos.heldInvoiceDeleted"),
+          life: 3000,
+        });
+      }
+    },
+
+    calculateInvoiceTotal(invoice) {
+      // Calculate total from cart items
+      let total = 0;
+      if (invoice.cartItems && Array.isArray(invoice.cartItems)) {
+        invoice.cartItems.forEach((item) => {
+          const price = item.has_discount
+            ? item.price_after_discount
+            : item.price;
+          total += price * (item.quantity || 1);
+        });
+      }
+      return `$${total.toFixed(2)}`;
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      return (
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+        " " +
+        date.toLocaleDateString()
+      );
+    },
+  },
+};
+</script>
+
+<style scoped>
+.held-invoices-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.empty-state {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+:deep(.p-datatable) {
+  font-size: 0.875rem;
+}
+
+:deep(.p-datatable .p-button.p-button-sm) {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+</style>
+
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosCustomerSelector.vue
+
+<template>
+  <div class="pos-customer-selector">
+    <!-- Customer Selector -->
+    <div class="customer-selector mb-3">
+      <label class="block font-bold text-sm mb-2">
+        <i class="pi pi-user mr-1"></i>
+        {{ $t("pos.customer") }}
+      </label>
+
+      <Select
+        v-model="selectedCustomerModel"
+        :options="customers"
+        optionLabel="name"
+        :placeholder="$t('pos.selectCustomer')"
+        :filter="true"
+        filterPlaceholder="Search..."
+        :showClear="true"
+        @change="onCustomerChange"
+        @clear="clearCustomer"
+        class="w-full"
+        :loading="loadingCustomers"
+      >
+        <template #option="slotProps">
+          <div class="flex align-items-center gap-2 p-2">
+            <i class="pi pi-user text-primary"></i>
+            <div>
+              <div class="font-bold">{{ slotProps.option.name }}</div>
+              <div class="text-xs text-color-secondary">
+                {{ slotProps.option.phone }}
+                <span v-if="slotProps.option.email">
+                  • {{ slotProps.option.email }}</span
+                >
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template #value="slotProps">
+          <div v-if="slotProps.value" class="flex align-items-center gap-2">
+            <i class="pi pi-user text-primary"></i>
+            <div>
+              <div class="font-bold">{{ slotProps.value.name }}</div>
+              <div class="text-xs text-color-secondary">
+                {{ slotProps.value.phone }}
+              </div>
+            </div>
+          </div>
+        </template>
+      </Select>
+
+      <!-- Create Customer Button -->
+      <Button
+        :label="$t('pos.createNewCustomer')"
+        icon="pi pi-user-plus"
+        @click="showCreateModal = true"
+        class="p-button-outlined p-button-primary w-full mt-2"
+        :disabled="!companyId"
+      />
+    </div>
+
+    <!-- Create Customer Modal -->
+    <Dialog
+      v-model:visible="showCreateModal"
+      :header="$t('pos.createNewCustomer')"
+      :modal="true"
+      :style="{ width: '400px' }"
+    >
+      <div class="p-fluid">
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.name") }} *</label>
+          <InputText
+            v-model="newCustomer.name"
+            :placeholder="$t('pos.enterName')"
+            class="w-full"
+            :class="{ 'p-invalid': errors.name }"
+          />
+          <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+        </div>
+
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.phone") }} *</label>
+          <InputText
+            v-model="newCustomer.phone"
+            :placeholder="$t('pos.enterPhone')"
+            class="w-full"
+            :class="{ 'p-invalid': errors.phone }"
+          />
+          <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
+        </div>
+
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.email") }}</label>
+          <InputText
+            v-model="newCustomer.email"
+            :placeholder="$t('pos.enterEmail')"
+            class="w-full"
+          />
+        </div>
+
+        <div class="field mb-3">
+          <label class="block font-bold mb-2">{{ $t("pos.address") }}</label>
+          <InputText
+            v-model="newCustomer.address"
+            :placeholder="$t('pos.enterAddress')"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button
+          :label="$t('common.cancel')"
+          @click="showCreateModal = false"
+          class="p-button-text"
+        />
+        <Button
+          :label="$t('common.save')"
+          @click="createCustomer"
+          class="p-button-primary"
+          :loading="creatingCustomer"
+        />
+      </template>
+    </Dialog>
+  </div>
+</template>
+
+<script>
+import Select from "primevue/select";
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Dialog from "primevue/dialog";
+
+import PosService from "./PosService.js";
+
+export default {
+  name: "PosCustomerSelector",
+  components: {
+    Select,
+    InputText,
+    Button,
+    Dialog,
+  },
+  props: {
+    companyId: {
+      type: String,
+      required: true,
+    },
+    selectedCustomer: {
+      type: Object,
+      default: null,
+    },
+  },
+  data() {
+    return {
+      selectedCustomerModel: this.selectedCustomer,
+      customers: [],
+      showCreateModal: false,
+      newCustomer: {
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+      },
+      errors: {},
+      creatingCustomer: false,
+      loadingCustomers: false,
+      posService: null,
+    };
+  },
+  watch: {
+    selectedCustomer(newVal) {
+      this.selectedCustomerModel = newVal;
+    },
+    companyId(newCompanyId) {
+      if (newCompanyId) {
+        this.loadCustomers();
+      }
+    },
+  },
+  mounted() {
+    if (this.companyId) {
+      this.loadCustomers();
+    }
+  },
+  methods: {
+    async loadCustomers() {
+      if (!this.companyId) return;
+
+      this.loadingCustomers = true;
+      try {
+        this.posService = new PosService(this.companyId, null);
+        const customersData = await this.posService.getContacts();
+
+        this.customers = customersData.map((customer) => ({
+          id: customer.id,
+          name: customer.name || "",
+          phone: customer.phone || "",
+          email: customer.email || "",
+          address: customer.address || "",
+        }));
+      } catch (error) {
+        console.error("Error loading customers:", error);
+        this.customers = [];
+      } finally {
+        this.loadingCustomers = false;
+      }
+    },
+
+    onCustomerChange(event) {
+      this.$emit("select-customer", event.value);
+    },
+
+    clearCustomer() {
+      this.$emit("select-customer", null);
+    },
+
+    validateCustomer() {
+      this.errors = {};
+
+      if (!this.newCustomer.name.trim()) {
+        this.errors.name = this.$t("pos.nameRequired");
+      }
+
+      if (!this.newCustomer.phone.trim()) {
+        this.errors.phone = this.$t("pos.phoneRequired");
+      }
+
+      return Object.keys(this.errors).length === 0;
+    },
+
+    async createCustomer() {
+      if (!this.validateCustomer()) return;
+
+      this.creatingCustomer = true;
+
+      try {
+        const customerData = {
+          company_id: this.companyId,
+          name: this.newCustomer.name.trim(),
+          phone: this.newCustomer.phone.trim(),
+          email: this.newCustomer.email.trim() || "",
+          address: this.newCustomer.address.trim() || "",
+        };
+
+        const createdCustomer = await this.posService.createContact(
+          customerData
+        );
+
+        if (createdCustomer) {
+          // Add to local list
+          this.customers.unshift({
+            id: createdCustomer.id,
+            name: createdCustomer.name,
+            phone: createdCustomer.phone,
+            email: createdCustomer.email || "",
+            address: createdCustomer.address || "",
+          });
+
+          // Select the new customer
+          this.$emit("select-customer", createdCustomer);
+
+          // Close modal and reset
+          this.showCreateModal = false;
+          this.newCustomer = {
+            name: "",
+            phone: "",
+            email: "",
+            address: "",
+          };
+          this.errors = {};
+        }
+      } catch (error) {
+        console.error("Error creating customer:", error);
+      } finally {
+        this.creatingCustomer = false;
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.pos-customer-selector {
+  width: 100%;
+}
+
+:deep(.p-select) {
+  width: 100%;
+}
+
+:deep(.p-select .p-select-label) {
+  padding: 0.5rem 0.75rem;
+}
+
+:deep(.p-select-items-wrapper) {
+  max-height: 200px;
+}
+
+.customer-option {
+  transition: background-color 0.2s;
+}
+
+.customer-option:hover {
+  background-color: #f8f9fa;
+}
+</style>
+
+
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosCartPanel.vue
+
+<template>
+  <div class="pos-cart-panel" :style="{ height: panelTotalHeight + 'px' }">
+    <!-- Cart Header -->
+    <div class="cart-header p-2 border-round">
+      <div class="flex justify-content-between align-items-center">
+        <h3 class="m-0 text-sm">
+          <i class="pi pi-shopping-cart mr-1"></i>
+          {{ $t("pos.cart") }}
+          <Tag :value="cartItems.length" severity="info" class="ml-1 text-xs" />
+        </h3>
+        <Button
+          :label="$t('pos.clearAll')"
+          icon="pi pi-trash"
+          @click="clearCart"
+          class="p-button-danger p-button-text p-button-sm"
+          :disabled="cartItems.length === 0"
+        />
+      </div>
+    </div>
+
+    <!-- Main Container مع سكرول رئيسي -->
+    <div class="main-scroll-container">
+      <!-- Cart Items Section - بدون ارتفاع ثابت -->
+      <div class="cart-items-section">
+        <div v-if="cartItems.length > 0" class="cart-items-content">
+          <div
+            v-for="item in cartItems"
+            :key="item.id"
+            class="cart-item-wrapper"
+          >
+            <PosCartItem
+              :item="item"
+              :company-id="companyId"
+              :branch-id="branchId"
+              :is-dark-mode="isDarkMode"
+              :show-additional-costs="true"
+              @update="(updates) => $emit('update-item', item.id, updates)"
+              @remove="$emit('remove-item', item.id)"
+            />
+          </div>
+        </div>
+
+        <!-- Empty Cart -->
+        <div v-else class="empty-cart-state">
+          <div class="empty-content">
+            <i
+              class="pi pi-shopping-cart text-4xl text-color-secondary mb-2"
+            ></i>
+            <h5 class="text-color-secondary mb-1">
+              {{ $t("pos.cartEmpty") }}
+            </h5>
+            <p class="text-color-secondary text-xs">
+              {{ $t("pos.addProductsToCart") }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice Details Section -->
+      <div class="invoice-details-section">
+        <!-- Customer Selection -->
+        <div class="selection-card p-2 mb-2">
+          <h5 class="mt-0 mb-1">{{ $t("pos.customer") }}</h5>
+          <PosCustomerSelector
+            :company-id="companyId"
+            :selected-customer="selectedCustomer"
+            @select-customer="$emit('customer-change', $event)"
+          />
+        </div>
+
+        <!-- Warehouse & Payment -->
+        <div class="selection-card p-2 mb-2">
+          <h5 class="mt-0 mb-1">{{ $t("pos.invoiceDetails") }}</h5>
+
+          <div class="grid">
+            <!-- Warehouse -->
+            <div class="col-12 md:col-6 mb-1">
+              <label class="block font-bold mb-1 text-xs">
+                <i class="pi pi-building mr-1"></i>
+                {{ $t("pos.warehouse") }} *
+              </label>
+              <Select
+                :model-value="selectedWarehouse"
+                :options="warehouses"
+                optionLabel="name"
+                optionValue="id"
+                :placeholder="$t('pos.selectWarehouse')"
+                @update:modelValue="onWarehouseChange"
+                class="w-full text-xs"
+                :class="{
+                  'p-invalid': !selectedWarehouse && cartItems.length > 0,
+                }"
+                showClear
+              />
+              <small
+                v-if="!selectedWarehouse && cartItems.length > 0"
+                class="p-error text-xs"
+              >
+                {{ $t("pos.warehouseRequired") }}
+              </small>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="col-12 md:col-6 mb-1">
+              <label class="block font-bold mb-1 text-xs">
+                <i class="pi pi-credit-card mr-1"></i>
+                {{ $t("pos.paymentMethod") }} *
+              </label>
+              <Select
+                :model-value="selectedPaymentMethod"
+                :options="paymentMethods"
+                optionLabel="name"
+                optionValue="id"
+                :placeholder="$t('pos.selectPaymentMethod')"
+                @update:modelValue="onPaymentMethodChange"
+                class="w-full text-xs"
+                :class="{
+                  'p-invalid': !selectedPaymentMethod && cartItems.length > 0,
+                }"
+                showClear
+              />
+              <small
+                v-if="!selectedPaymentMethod && cartItems.length > 0"
+                class="p-error text-xs"
+              >
+                {{ $t("pos.paymentMethodRequired") }}
+              </small>
+            </div>
+
+            <!-- Invoice Notes -->
+            <div class="col-12 mb-1">
+              <label class="block font-bold mb-1 text-xs">
+                <i class="pi pi-comment mr-1"></i>
+                {{ $t("pos.notes") }}
+              </label>
+              <Textarea
+                :model-value="invoiceNotes"
+                @update:modelValue="onInvoiceNotesChange"
+                :placeholder="$t('pos.addNotesHere')"
+                rows="1"
+                class="w-full text-xs"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoice Adjustments -->
+        <div class="adjustments-section p-2 mb-2">
+          <!-- Discounts -->
+          <div class="mb-2">
+            <div class="flex justify-content-between align-items-center mb-1">
+              <h6 class="m-0 text-sm">
+                <i class="pi pi-percentage mr-1"></i>
+                {{ $t("pos.invoiceDiscounts") }}
+              </h6>
+              <Button
+                :label="$t('pos.addDiscount')"
+                icon="pi pi-plus"
+                @click="$emit('add-discount')"
+                class="p-button-success p-button-sm text-xs"
+              />
+            </div>
+
+            <div v-if="invoiceDiscounts.length > 0" class="adjustments-list">
+              <div
+                v-for="discount in invoiceDiscounts"
+                :key="discount.id"
+                class="adjustment-item p-1 mb-1"
+              >
+                <div class="grid">
+                  <div class="col-12 md:col-5">
+                    <InputText
+                      :model-value="discount.name"
+                      @update:modelValue="
+                        (value) => onDiscountUpdate(discount, 'name', value)
+                      "
+                      :placeholder="$t('pos.discountName')"
+                      class="w-full text-xs"
+                    />
+                  </div>
+                  <div class="col-12 md:col-5">
+                    <InputNumber
+                      :model-value="discount.value"
+                      @update:modelValue="
+                        (value) => onDiscountUpdate(discount, 'value', value)
+                      "
+                      :placeholder="$t('pos.discountValue')"
+                      mode="currency"
+                      currency="USD"
+                      locale="en-US"
+                      class="w-full text-xs"
+                    />
+                  </div>
+                  <div class="col-12 md:col-2">
+                    <Button
+                      icon="pi pi-times"
+                      @click="$emit('remove-discount', discount.id)"
+                      class="p-button-danger p-button-text p-button-sm w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-color-secondary text-xs">
+              {{ $t("pos.noDiscountsAdded") }}
+            </div>
+          </div>
+
+          <!-- Additional Costs -->
+          <div>
+            <div class="flex justify-content-between align-items-center mb-1">
+              <h6 class="m-0 text-sm">
+                <i class="pi pi-money-bill mr-1"></i>
+                {{ $t("pos.additionalCosts") }}
+              </h6>
+              <Button
+                :label="$t('pos.addCost')"
+                icon="pi pi-plus"
+                @click="$emit('add-additional-cost')"
+                class="p-button-warning p-button-sm text-xs"
+              />
+            </div>
+
+            <div
+              v-if="invoiceAdditionalCosts.length > 0"
+              class="adjustments-list"
+            >
+              <div
+                v-for="cost in invoiceAdditionalCosts"
+                :key="cost.id"
+                class="adjustment-item p-1 mb-1"
+              >
+                <div class="grid">
+                  <div class="col-12 md:col-5">
+                    <InputText
+                      :model-value="cost.name"
+                      @update:modelValue="
+                        (value) => onAdditionalCostUpdate(cost, 'name', value)
+                      "
+                      :placeholder="$t('pos.costName')"
+                      class="w-full text-xs"
+                    />
+                  </div>
+                  <div class="col-12 md:col-5">
+                    <InputNumber
+                      :model-value="cost.value"
+                      @update:modelValue="
+                        (value) => onAdditionalCostUpdate(cost, 'value', value)
+                      "
+                      :placeholder="$t('pos.costValue')"
+                      mode="currency"
+                      currency="USD"
+                      locale="en-US"
+                      class="w-full text-xs"
+                    />
+                  </div>
+                  <div class="col-12 md:col-2">
+                    <Button
+                      icon="pi pi-times"
+                      @click="$emit('remove-additional-cost', cost.id)"
+                      class="p-button-danger p-button-text p-button-sm w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-color-secondary text-xs">
+              {{ $t("pos.noAdditionalCosts") }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoice Summary -->
+        <div class="invoice-summary p-2">
+          <h5 class="mt-0 mb-1">
+            <i class="pi pi-calculator mr-1"></i>
+            {{ $t("pos.summary") }}
+          </h5>
+
+          <div class="summary-details p-2 mb-2">
+            <div class="flex justify-content-between mb-1 text-xs">
+              <span>{{ $t("pos.subtotal") }}:</span>
+              <span class="font-bold">{{
+                formatCurrency(totals.subtotal)
+              }}</span>
+            </div>
+
+            <div
+              v-if="totals.discountTotal > 0"
+              class="flex justify-content-between mb-1 text-xs text-red-500"
+            >
+              <span>{{ $t("pos.discount") }}:</span>
+              <span class="font-bold"
+                >-{{ formatCurrency(totals.discountTotal) }}</span
+              >
+            </div>
+
+            <div
+              v-if="totals.additionalCostsTotal > 0"
+              class="flex justify-content-between mb-1 text-xs text-green-500"
+            >
+              <span>{{ $t("pos.additionalCosts") }}:</span>
+              <span class="font-bold"
+                >+{{ formatCurrency(totals.additionalCostsTotal) }}</span
+              >
+            </div>
+
+            <div class="flex justify-content-between mb-1 text-xs">
+              <span>{{ $t("pos.taxableAmount") }}:</span>
+              <span class="font-bold">{{
+                formatCurrency(totals.taxableAmount)
+              }}</span>
+            </div>
+
+            <div class="flex justify-content-between mb-1 text-xs">
+              <span>{{ $t("pos.tax") }} ({{ taxRate }}%):</span>
+              <span class="font-bold">{{
+                formatCurrency(totals.taxAmount)
+              }}</span>
+            </div>
+
+            <Divider class="my-1" />
+
+            <div class="flex justify-content-between text-sm font-bold">
+              <span>{{ $t("pos.total") }}:</span>
+              <span class="text-primary">{{
+                formatCurrency(totals.grandTotal)
+              }}</span>
+            </div>
+          </div>
+
+          <!-- Checkout Button -->
+          <Button
+            :label="checkoutButtonLabel"
+            icon="pi pi-check"
+            @click="$emit('checkout')"
+            class="p-button-success w-full p-button-sm"
+            :disabled="!canCheckout"
+            :loading="processingCheckout"
+          >
+            <template #loading>
+              <ProgressSpinner style="width: 16px; height: 16px" />
+              <span class="ml-1 text-xs">{{ $t("pos.processing") }}</span>
+            </template>
+          </Button>
+
+          <small class="block text-center text-color-secondary mt-1 text-xs">
+            {{ $t("pos.checkoutHint") }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import Select from "primevue/select";
+import Button from "primevue/button";
+import Tag from "primevue/tag";
+import Textarea from "primevue/textarea";
+import InputText from "primevue/inputtext";
+import InputNumber from "primevue/inputnumber";
+import Divider from "primevue/divider";
+import ProgressSpinner from "primevue/progressspinner";
+
+export default {
+  name: "PosCartPanel",
+  components: {
+    Select,
+    Button,
+    Tag,
+    Textarea,
+    InputText,
+    InputNumber,
+    Divider,
+    ProgressSpinner,
+  },
+  props: {
+    cartItems: {
+      type: Array,
+      default: () => [],
+    },
+    selectedCustomer: {
+      type: Object,
+      default: null,
+    },
+    selectedWarehouse: {
+      type: String,
+      default: null,
+    },
+    selectedPaymentMethod: {
+      type: String,
+      default: null,
+    },
+    invoiceDiscounts: {
+      type: Array,
+      default: () => [],
+    },
+    invoiceAdditionalCosts: {
+      type: Array,
+      default: () => [],
+    },
+    invoiceNotes: {
+      type: String,
+      default: "",
+    },
+    taxRate: {
+      type: Number,
+      default: 14,
+    },
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+    isDarkMode: {
+      type: Boolean,
+      default: false,
+    },
+    processingCheckout: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      warehouses: [],
+      paymentMethods: [],
+      posService: null,
+      // ارتفاع إجمالي للبانل
+      panelTotalHeight: 500,
+      // مكونات محملة
+      componentsLoaded: false,
+    };
+  },
+  computed: {
+    totals() {
+      let subtotal = 0;
+
+      this.cartItems.forEach((item) => {
+        const price = this.parsePrice(
+          item.has_discount ? item.price_after_discount : item.price
+        );
+        let itemSubtotal = price * (item.quantity || 1);
+
+        if (item.additional_costs && Array.isArray(item.additional_costs)) {
+          item.additional_costs.forEach((cost) => {
+            itemSubtotal += this.parsePrice(cost.value) || 0;
+          });
+        }
+
+        subtotal += itemSubtotal;
+      });
+
+      let discountTotal = 0;
+      if (this.invoiceDiscounts && Array.isArray(this.invoiceDiscounts)) {
+        this.invoiceDiscounts.forEach((discount) => {
+          discountTotal += this.parsePrice(discount.value) || 0;
+        });
+      }
+
+      let additionalCostsTotal = 0;
+      if (
+        this.invoiceAdditionalCosts &&
+        Array.isArray(this.invoiceAdditionalCosts)
+      ) {
+        this.invoiceAdditionalCosts.forEach((cost) => {
+          additionalCostsTotal += this.parsePrice(cost.value) || 0;
+        });
+      }
+
+      const taxableAmount = subtotal - discountTotal + additionalCostsTotal;
+      const taxAmount = (taxableAmount * this.taxRate) / 100;
+      const grandTotal = taxableAmount + taxAmount;
+
+      return {
+        subtotal: parseFloat(subtotal.toFixed(2)),
+        discountTotal: parseFloat(discountTotal.toFixed(2)),
+        additionalCostsTotal: parseFloat(additionalCostsTotal.toFixed(2)),
+        taxAmount: parseFloat(taxAmount.toFixed(2)),
+        grandTotal: parseFloat(grandTotal.toFixed(2)),
+        taxableAmount: parseFloat(taxableAmount.toFixed(2)),
+      };
+    },
+
+    canCheckout() {
+      return (
+        this.cartItems.length > 0 &&
+        this.selectedWarehouse &&
+        this.selectedPaymentMethod
+      );
+    },
+
+    checkoutButtonLabel() {
+      if (this.cartItems.length === 0) return this.$t("pos.emptyCart");
+      if (!this.selectedWarehouse) return this.$t("pos.selectWarehouse");
+      if (!this.selectedPaymentMethod)
+        return this.$t("pos.selectPaymentMethod");
+      return `${this.$t("pos.checkout")} - ${this.formatCurrency(
+        this.totals.grandTotal
+      )}`;
+    },
+  },
+  created() {
+    this.loadComponentsAsync();
+    this.calculatePanelHeight();
+  },
+  watch: {
+    cartItems: {
+      handler() {
+        this.calculatePanelHeight();
+        this.$emit("totals-updated", this.totals);
+      },
+      deep: true,
+      immediate: true,
+    },
+    "cartItems.additional_costs": {
+      handler() {
+        this.calculatePanelHeight();
+        this.$emit("totals-updated", this.totals);
+      },
+      deep: true,
+    },
+  },
+  methods: {
+    async loadComponentsAsync() {
+      try {
+        const [cartItemModule, customerSelectorModule, serviceModule] =
+          await Promise.all([
+            import("./PosCartItem.vue"),
+            import("./PosCustomerSelector.vue"),
+            import("./PosService.js"),
+          ]);
+
+        this.$options.components.PosCartItem = cartItemModule.default;
+        this.$options.components.PosCustomerSelector =
+          customerSelectorModule.default;
+        const PosService = serviceModule.default;
+
+        this.posService = new PosService(this.companyId, this.branchId);
+        await this.loadSelectionData();
+
+        this.componentsLoaded = true;
+      } catch (error) {
+        console.error("Error loading components:", error);
+      }
+    },
+
+    calculatePanelHeight() {
+      if (this.cartItems.length === 0) {
+        // ارتفاع أساسي عندما لا يوجد منتجات
+        this.panelTotalHeight = 500;
+        return;
+      }
+
+      // حساب ارتفاع المنتجات
+      let productsHeight = 0;
+
+      // ارتفاع كل منتج مع العمليات
+      this.cartItems.forEach((item) => {
+        // ارتفاع أساسي لكل منتج: 140px
+        let itemHeight = 140;
+
+        // إذا كان هناك عمليات، أضف مساحة إضافية
+        if (item.additional_costs && item.additional_costs.length > 0) {
+          // كل عملية تحتاج حوالي 75px
+          itemHeight += item.additional_costs.length * 75;
+        }
+
+        productsHeight += itemHeight;
+      });
+
+      // ارتفاع ثابت للأجزاء الأخرى (الهيدر + الفاتورة)
+      const fixedHeight = 50 + 450; // 50px للهيدر، 450px للفاتورة
+
+      // الارتفاع الإجمالي = المنتجات + الأجزاء الثابتة + هامش
+      const calculatedHeight = productsHeight + fixedHeight + 20;
+
+      // الحد الأدنى: 500px، الحد الأقصى: 1000px
+      this.panelTotalHeight = Math.min(Math.max(calculatedHeight, 500), 1000);
+    },
+
+    parsePrice(price) {
+      if (!price && price !== 0) return 0;
+      if (typeof price === "string") {
+        return parseFloat(price.replace(/,/g, ""));
+      }
+      return parseFloat(price);
+    },
+
+    async loadSelectionData() {
+      try {
+        this.warehouses = await this.posService.getWarehouses();
+        this.paymentMethods = await this.posService.getPaymentMethods();
+      } catch (error) {
+        console.error("Error loading selection data:", error);
+      }
+    },
+
+    onWarehouseChange(value) {
+      const warehouse = this.warehouses.find((w) => w.id === value) || null;
+      this.$emit("warehouse-change", warehouse);
+    },
+
+    onPaymentMethodChange(value) {
+      const method = this.paymentMethods.find((p) => p.id === value) || null;
+      this.$emit("payment-method-change", method);
+    },
+
+    onInvoiceNotesChange(value) {
+      this.$emit("invoice-notes-change", value);
+    },
+
+    onDiscountUpdate(discount, field, value) {
+      const updatedDiscount = { ...discount, [field]: value };
+      this.$emit("update-discount", updatedDiscount);
+    },
+
+    onAdditionalCostUpdate(cost, field, value) {
+      const updatedCost = { ...cost, [field]: value };
+      this.$emit("update-additional-cost", updatedCost);
+    },
+
+    clearCart() {
+      this.$emit("clear-cart");
+    },
+
+    formatCurrency(amount) {
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+  },
+};
+</script>
+
+<style scoped>
+.pos-cart-panel {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: height 0.3s ease;
+  min-height: 500px;
+  max-height: 1000px;
+}
+
+.cart-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  flex-shrink: 0;
+}
+
+/* Main Scroll Container - سكرول رئيسي */
+.main-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Cart Items Section - بدون سكرول خاص */
+.cart-items-section {
+  background: white;
+  padding: 8px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.cart-items-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cart-item-wrapper {
+  flex-shrink: 0;
+}
+
+.empty-cart-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 150px;
+}
+
+.empty-content {
+  text-align: center;
+}
+
+/* Invoice Details Section */
+.invoice-details-section {
+  padding: 8px;
+  background: #f8f9fa;
+  min-height: 450px;
+}
+
+.selection-card,
+.adjustments-section,
+.invoice-summary {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.invoice-summary {
+  border-color: #28a745;
+  background: #f8fff9;
+}
+
+.summary-details {
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+/* Adjustments Items */
+.adjustment-item {
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+/* سكرول رئيسي فقط */
+.main-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.main-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* Ensure everything fits */
+:deep(.p-select),
+:deep(.p-inputtext),
+:deep(.p-inputtextarea),
+:deep(.p-inputnumber) {
+  font-size: 12px !important;
+}
+
+:deep(.p-button) {
+  font-size: 12px !important;
+  padding: 5px 10px !important;
+}
+
+:deep(.p-button-sm) {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+}
+
+:deep(.p-tag) {
+  font-size: 10px !important;
+  padding: 1px 4px !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pos-cart-panel {
+    min-height: 400px;
+    max-height: 800px;
+  }
+
+  .invoice-details-section {
+    min-height: 400px;
+  }
+}
+
+/* Fix for small sizes */
+:deep(.p-inputnumber-input) {
+  font-size: 12px !important;
+  padding: 4px !important;
+}
+
+:deep(.p-inputnumber-button) {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+:deep(.p-divider) {
+  margin: 4px 0 !important;
+}
+
+/* تحسينات للعرض */
+.selection-card h5,
+.adjustments-section h6,
+.invoice-summary h5 {
+  color: #495057;
+  font-weight: 600;
+}
+
+.text-red-500 {
+  color: #dc3545 !important;
+}
+
+.text-green-500 {
+  color: #28a745 !important;
+}
+
+.text-primary {
+  color: #007bff !important;
+}
+
+.border-round {
+  border-radius: 6px !important;
+}
+
+.p-error {
+  color: #dc3545 !important;
+  font-size: 11px !important;
+}
+
+.grid {
+  margin: 0 -0.25rem;
+}
+
+.grid > div {
+  padding: 0 0.25rem;
+}
+
+/* تأثير سلس لتغيير الارتفاع */
+.pos-cart-panel {
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cart-item-wrapper {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>
+
+
+
+_____________________________________________________________________
+_____________________________________________________________________
+src\latest\model\branch\parts\pos\PosCartItem.vue
+
+
+<template>
+  <div class="pos-cart-item">
+    <!-- Item Header -->
+    <div class="flex justify-content-between align-items-start mb-2">
+      <div class="flex align-items-start gap-2" style="flex: 1">
+        <!-- Product Image -->
+        <div class="item-image">
+          <img
+            v-if="item.main_image?.file?.file_path"
+            :src="item.main_image.file.file_path"
+            :alt="item.name"
+            class="border-round"
+          />
+          <div v-else class="no-image">
+            <i class="pi pi-image"></i>
+          </div>
+        </div>
+
+        <!-- Product Info -->
+        <div style="flex: 1">
+          <h5 class="m-0 mb-1 text-sm">{{ item.name }}</h5>
+          <p class="text-xs m-0 mb-1 text-color-secondary">
+            {{ item.name_ar }}
+          </p>
+
+          <!-- Price Display -->
+          <div class="flex align-items-center gap-1 mb-2">
+            <span
+              v-if="item.has_discount"
+              class="original-price text-line-through text-xs text-color-secondary"
+            >
+              {{ formatCurrency(parsePrice(item.price)) }}
+            </span>
+            <span class="current-price font-bold text-sm">
+              {{
+                formatCurrency(
+                  parsePrice(
+                    item.has_discount ? item.price_after_discount : item.price
+                  )
+                )
+              }}
+            </span>
+            <Tag
+              v-if="item.has_discount"
+              :value="`-${item.discount_value}%`"
+              severity="danger"
+              size="small"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Remove Button -->
+      <Button
+        icon="pi pi-times"
+        @click="$emit('remove')"
+        class="p-button-danger p-button-text p-button-sm"
+        v-tooltip="$t('pos.removeItem')"
+      />
+    </div>
+
+    <!-- Quantity Controls -->
+    <div class="flex justify-content-between align-items-center mb-3">
+      <div class="flex align-items-center gap-2">
+        <span class="font-bold text-xs">{{ $t("pos.quantity") }}:</span>
+        <InputNumber
+          v-model="item.quantity"
+          :min="1"
+          :max="999"
+          showButtons
+          buttonLayout="horizontal"
+          incrementButtonIcon="pi pi-plus"
+          decrementButtonIcon="pi pi-minus"
+          @input="updateQuantity"
+          class="quantity-input"
+          inputStyle="width: 60px"
+        />
+      </div>
+
+      <!-- Item Total - عرض شامل لتكاليف العمليات -->
+      <div class="item-total font-bold text-sm">
+        {{ formatCurrency(itemTotal) }}
+        <small
+          v-if="itemOperationsTotal > 0"
+          class="text-green-600 text-xs ml-1"
+        >
+          (+{{ formatCurrency(itemOperationsTotal) }})
+        </small>
+      </div>
+    </div>
+
+    <!-- Item Operations Section -->
+    <div class="item-operations" v-if="showAdditionalCosts">
+      <div
+        class="operations-header flex justify-content-between align-items-center mb-2"
+      >
+        <h6 class="m-0 text-xs font-bold">
+          <i class="pi pi-wrench mr-1"></i>
+          {{ $t("pos.itemOperations") }}
+          <small class="text-green-600 ml-1">
+            ({{ formatCurrency(itemOperationsTotal) }})
+          </small>
+        </h6>
+        <Button
+          :label="$t('pos.addOperation')"
+          icon="pi pi-plus"
+          @click="addAdditionalCost"
+          class="p-button-warning p-button-sm text-xs"
+        />
+      </div>
+
+      <!-- Additional Costs List -->
+      <div
+        v-if="item.additional_costs && item.additional_costs.length > 0"
+        class="operations-list"
+      >
+        <div
+          v-for="(cost, index) in item.additional_costs"
+          :key="cost.id || index"
+          class="operation-item p-2 mb-2 border-round"
+        >
+          <div class="grid">
+            <div class="col-12 md:col-5 mb-1">
+              <label class="block text-xs font-bold mb-1">
+                {{ $t("pos.operationName") }}
+              </label>
+              <InputText
+                v-model="cost.name"
+                :placeholder="$t('pos.enterOperationName')"
+                class="w-full text-xs"
+                @input="updateAdditionalCost(cost)"
+              />
+            </div>
+
+            <div class="col-12 md:col-4 mb-1">
+              <label class="block text-xs font-bold mb-1">
+                {{ $t("pos.costValue") }}
+              </label>
+              <InputNumber
+                v-model="cost.value"
+                :placeholder="$t('pos.enterCostValue')"
+                mode="currency"
+                currency="USD"
+                locale="en-US"
+                class="w-full text-xs"
+                @input="updateAdditionalCost(cost)"
+              />
+            </div>
+
+            <div class="col-12 md:col-3 mb-1 flex align-items-end">
+              <Button
+                icon="pi pi-times"
+                @click="removeAdditionalCost(index)"
+                class="p-button-danger p-button-text p-button-sm w-full"
+              />
+            </div>
+          </div>
+
+          <!-- File Upload for Operation -->
+          <div class="mt-2">
+            <div class="file-upload-section">
+              <FileUpload
+                mode="basic"
+                :chooseLabel="$t('pos.uploadFile')"
+                :multiple="false"
+                :maxFileSize="5000000"
+                @select="onFileSelect($event, cost)"
+                class="w-full text-xs"
+                accept="image/*,.pdf,.doc,.docx"
+              />
+              <small class="text-xs text-color-secondary">
+                {{ $t("pos.maxFileSize") }}: 5MB
+              </small>
+
+              <!-- Show uploaded file -->
+              <div v-if="cost.file" class="uploaded-file mt-1">
+                <div class="flex align-items-center gap-1">
+                  <i class="pi pi-file text-xs"></i>
+                  <span class="text-xs">{{ getFileName(cost.file) }}</span>
+                  <span class="text-xs text-color-secondary"
+                    >({{ formatFileSize(cost.file) }})</span
+                  >
+                  <Button
+                    icon="pi pi-times"
+                    @click="removeFile(cost)"
+                    class="p-button-danger p-button-text p-button-xs ml-2"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Item Notes -->
+    <div class="item-notes mt-2">
+      <Textarea
+        v-model="item.notes"
+        :placeholder="$t('pos.itemNotesPlaceholder')"
+        rows="1"
+        class="w-full text-xs"
+        autoResize
+        @input="updateItemNotes"
+      />
+    </div>
+  </div>
+</template>
+
+<script>
+import Button from "primevue/button";
+import Tag from "primevue/tag";
+import InputNumber from "primevue/inputnumber";
+import InputText from "primevue/inputtext";
+import Textarea from "primevue/textarea";
+import FileUpload from "primevue/fileupload";
+import Tooltip from "primevue/tooltip";
+
+export default {
+  name: "PosCartItem",
+  components: {
+    Button,
+    Tag,
+    InputNumber,
+    InputText,
+    Textarea,
+    FileUpload,
+  },
+  directives: {
+    tooltip: Tooltip,
+  },
+  props: {
+    item: {
+      type: Object,
+      required: true,
+    },
+    isDarkMode: {
+      type: Boolean,
+      default: false,
+    },
+    companyId: {
+      type: String,
+      required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+    showAdditionalCosts: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  computed: {
+    // حساب إجمالي تكاليف العمليات على المنتج
+    itemOperationsTotal() {
+      let total = 0;
+      if (
+        this.item.additional_costs &&
+        Array.isArray(this.item.additional_costs)
+      ) {
+        this.item.additional_costs.forEach((cost) => {
+          total += this.parsePrice(cost.value) || 0;
+        });
+      }
+      return parseFloat(total.toFixed(2));
+    },
+
+    // حساب الإجمالي النهائي للمنتج (السعر + تكاليف العمليات)
+    itemTotal() {
+      const price = this.parsePrice(
+        this.item.has_discount
+          ? this.item.price_after_discount
+          : this.item.price
+      );
+
+      let total = price * (this.item.quantity || 1);
+
+      // إضافة تكاليف العمليات على المنتج (مهم: تضاف للإجمالي)
+      total += this.itemOperationsTotal;
+
+      return parseFloat(total.toFixed(2));
+    },
+  },
+  created() {
+    // Initialize additional_costs array if not exists
+    if (!this.item.additional_costs) {
+      this.$set(this.item, "additional_costs", []);
+    }
+  },
+  methods: {
+    parsePrice(price) {
+      if (!price && price !== 0) return 0;
+      if (typeof price === "string") {
+        return parseFloat(price.replace(/,/g, ""));
+      }
+      return parseFloat(price);
+    },
+
+    formatCurrency(amount) {
+      return `$${parseFloat(amount).toFixed(2)}`;
+    },
+
+    formatFileSize(file) {
+      if (!file || !file.size) return "0 B";
+      const bytes = file.size;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      return Math.round(bytes / Math.pow(1024, i), 2) + " " + sizes[i];
+    },
+
+    getFileName(file) {
+      if (file.name) return file.name;
+      if (typeof file === "string") return file.split("/").pop();
+      return "file";
+    },
+
+    updateQuantity() {
+      this.$emit("update", { quantity: this.item.quantity });
+    },
+
+    updateItemNotes() {
+      this.$emit("update", { notes: this.item.notes });
+    },
+
+    addAdditionalCost() {
+      if (!this.item.additional_costs) {
+        this.$set(this.item, "additional_costs", []);
+      }
+
+      this.item.additional_costs.push({
+        id: `op_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: "",
+        value: 0,
+        file: null,
+      });
+
+      this.$emit("update", { additional_costs: this.item.additional_costs });
+    },
+
+    updateAdditionalCost(cost) {
+      this.$emit("update", { additional_costs: this.item.additional_costs });
+    },
+
+    removeAdditionalCost(index) {
+      this.item.additional_costs.splice(index, 1);
+      this.$emit("update", { additional_costs: this.item.additional_costs });
+    },
+
+    onFileSelect(event, cost) {
+      if (event.files && event.files[0]) {
+        cost.file = event.files[0];
+        this.updateAdditionalCost(cost);
+      }
+    },
+
+    removeFile(cost) {
+      cost.file = null;
+      this.updateAdditionalCost(cost);
+    },
+  },
+};
+</script>
+
+<style scoped>
+.pos-cart-item {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 12px;
+  background: white;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.pos-cart-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.item-image {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.no-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #dee2e6;
+  border-radius: 4px;
+  color: #6c757d;
+}
+
+.quantity-input {
+  width: 100px;
+}
+
+.quantity-input :deep(.p-inputnumber-input) {
+  text-align: center;
+  font-weight: bold;
+}
+
+.quantity-input :deep(.p-inputnumber-button) {
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 10px !important;
+}
+
+.item-total {
+  color: #28a745;
+  font-size: 14px;
+}
+
+.original-price {
+  font-size: 11px;
+}
+
+.current-price {
+  font-size: 13px;
+  color: #28a745;
+}
+
+.operations-header {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.operation-item {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.operation-item:hover {
+  background: #f1f3f4;
+}
+
+.file-upload-section {
+  border: 1px dashed #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  background: white;
+}
+
+.uploaded-file {
+  background: #e8f5e8;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+:deep(.p-fileupload-choose) {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+}
+
+:deep(.p-button-xs) {
+  padding: 2px 4px !important;
+  font-size: 10px !important;
+}
+
+.item-notes :deep(.p-inputtextarea) {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+/* تحسينات للأجهزة الصغيرة */
+@media (max-width: 768px) {
+  .item-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .grid > div {
+    width: 100% !important;
+  }
+}
+</style>
+
+_____________________________________________________________________
