@@ -634,194 +634,176 @@ export default {
   },
 };
 </script>
-
 <style scoped>
+/* الأساسيات */
 .pos-cart-panel {
   display: flex;
   flex-direction: column;
   font-size: 12px;
-  background: #fff;
+  background: var(--surface-card);
   border-radius: 8px;
   overflow: hidden;
   transition: height 0.3s ease;
   min-height: 500px;
   max-height: 1000px;
+  color: var(--text-color);
+  border: 1px solid var(--surface-border);
 }
 
+/* الهيدر */
 .cart-header {
-  background: #f8f9fa;
-  border-bottom: 1px solid #dee2e6;
+  background: var(--surface-ground);
+  border-bottom: 1px solid var(--surface-border);
   flex-shrink: 0;
+  padding: 8px 12px;
 }
 
-/* Main Scroll Container - سكرول رئيسي */
+/* الحاوية الرئيسية للسكرول */
 .main-scroll-container {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  max-height: calc(100vh - 200px);
 }
 
-/* Cart Items Section - بدون سكرول خاص */
+/* قسم العناصر في الكارت */
 .cart-items-section {
-  background: white;
+  background: var(--surface-card);
   padding: 8px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .cart-items-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cart-item-wrapper {
   flex-shrink: 0;
 }
 
+/* الكارت الفاضي */
 .empty-cart-state {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
   min-height: 150px;
+  color: var(--text-color-secondary);
 }
 
 .empty-content {
   text-align: center;
 }
 
-/* Invoice Details Section */
+.empty-content i {
+  color: var(--text-color-secondary);
+  opacity: 0.5;
+}
+
+/* قسم تفاصيل الفاتورة */
 .invoice-details-section {
   padding: 8px;
-  background: #f8f9fa;
+  background: var(--surface-ground);
   min-height: 450px;
 }
 
+/* الكروت */
 .selection-card,
 .adjustments-section,
 .invoice-summary {
-  background: white;
-  border: 1px solid #dee2e6;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
   margin-bottom: 8px;
+  padding: 12px;
 }
 
 .invoice-summary {
-  border-color: #28a745;
-  background: #f8fff9;
+  border-color: var(--color-success);
+  background: var(--surface-card);
 }
 
+/* تفاصيل الملخص */
 .summary-details {
-  background: #f8f9fa;
+  background: var(--surface-ground);
   border-radius: 4px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--surface-border);
+  padding: 12px;
 }
 
-/* Adjustments Items */
+/* عناصر الخصومات والتكاليف الإضافية */
 .adjustment-item {
-  background: #f8f9fa;
+  background: var(--surface-ground);
   border-radius: 4px;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--surface-border);
+  padding: 8px;
 }
 
-/* سكرول رئيسي فقط */
+/* السكرول بار */
 .main-scroll-container::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .main-scroll-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: var(--surface-ground);
+  border-radius: 3px;
 }
 
 .main-scroll-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: var(--surface-border);
+  border-radius: 3px;
 }
 
 .main-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: var(--text-color-secondary);
 }
 
-/* Ensure everything fits */
-:deep(.p-select),
-:deep(.p-inputtext),
-:deep(.p-inputtextarea),
-:deep(.p-inputnumber) {
-  font-size: 12px !important;
-}
-
-:deep(.p-button) {
-  font-size: 12px !important;
-  padding: 5px 10px !important;
-}
-
-:deep(.p-button-sm) {
-  padding: 4px 8px !important;
-  font-size: 11px !important;
-}
-
-:deep(.p-tag) {
-  font-size: 10px !important;
-  padding: 1px 4px !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .pos-cart-panel {
-    min-height: 400px;
-    max-height: 800px;
-  }
-
-  .invoice-details-section {
-    min-height: 400px;
-  }
-}
-
-/* Fix for small sizes */
-:deep(.p-inputnumber-input) {
-  font-size: 12px !important;
-  padding: 4px !important;
-}
-
-:deep(.p-inputnumber-button) {
-  width: 24px !important;
-  height: 24px !important;
-}
-
-:deep(.p-divider) {
-  margin: 4px 0 !important;
-}
-
-/* تحسينات للعرض */
-.selection-card h5,
-.adjustments-section h6,
-.invoice-summary h5 {
-  color: #495057;
-  font-weight: 600;
-}
-
+/* ألوان مخصصة */
 .text-red-500 {
-  color: #dc3545 !important;
+  color: var(--color-danger) !important;
 }
 
 .text-green-500 {
-  color: #28a745 !important;
+  color: var(--color-success) !important;
 }
 
 .text-primary {
-  color: #007bff !important;
+  color: var(--color-primary) !important;
 }
 
-.border-round {
-  border-radius: 6px !important;
+.text-color-secondary {
+  color: var(--text-color-secondary) !important;
 }
 
 .p-error {
-  color: #dc3545 !important;
+  color: var(--color-danger) !important;
   font-size: 11px !important;
 }
 
+/* عناوين */
+.selection-card h5,
+.adjustments-section h6,
+.invoice-summary h5 {
+  color: var(--text-color);
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.selection-card h5 {
+  font-size: 14px;
+}
+
+.adjustments-section h6 {
+  font-size: 13px;
+}
+
+.invoice-summary h5 {
+  font-size: 14px;
+}
+
+/* الـ Grid */
 .grid {
   margin: 0 -0.25rem;
 }
@@ -830,11 +812,7 @@ export default {
   padding: 0 0.25rem;
 }
 
-/* تأثير سلس لتغيير الارتفاع */
-.pos-cart-panel {
-  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+/* الأنيميشن */
 .cart-item-wrapper {
   animation: slideIn 0.3s ease;
 }
@@ -847,6 +825,339 @@ export default {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ========== إصلاح مكونات PrimeVue ========== */
+
+/* الأزرار - إصلاح المقاسات */
+:deep(.p-button) {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  height: 32px !important;
+}
+
+:deep(.p-button.p-button-sm) {
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  height: 28px !important;
+}
+
+:deep(.p-button.p-button-text) {
+  padding: 4px 8px !important;
+  height: auto !important;
+}
+
+/* السيليكت - إصلاح الدارك مود */
+:deep(.p-select .p-dropdown) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  border-radius: 4px !important;
+  height: 32px !important;
+}
+
+:deep(.p-select .p-dropdown .p-dropdown-label) {
+  color: var(--text-color) !important;
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+}
+
+:deep(.p-select .p-dropdown .p-dropdown-trigger) {
+  color: var(--text-color-secondary) !important;
+  width: 32px !important;
+}
+
+:deep(.p-select .p-dropdown-panel) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+}
+
+:deep(.p-select .p-dropdown-item) {
+  color: var(--text-color) !important;
+  background: var(--surface-card) !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+}
+
+:deep(.p-select .p-dropdown-item:hover) {
+  background: var(--surface-hover) !important;
+}
+
+:deep(.p-select .p-dropdown-item.p-highlight) {
+  background: var(--primary-color) !important;
+  color: var(--primary-color-text) !important;
+}
+
+/* الحقول النصية */
+:deep(.p-inputtext) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  height: 32px !important;
+}
+
+:deep(.p-inputtext:focus) {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1) !important;
+}
+
+:deep(.p-inputtext.p-invalid) {
+  border-color: var(--color-danger) !important;
+}
+
+/* التيكست اريا */
+:deep(.p-textarea) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  padding: 8px 12px !important;
+}
+
+:deep(.p-textarea:focus) {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1) !important;
+}
+
+/* الأرقام */
+:deep(.p-inputnumber) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  border-radius: 4px !important;
+  height: 32px !important;
+}
+
+:deep(.p-inputnumber-input) {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  color: var(--text-color) !important;
+  background: transparent !important;
+}
+
+:deep(.p-inputnumber-button) {
+  background: var(--surface-ground) !important;
+  border-color: var(--surface-border) !important;
+  color: var(--text-color) !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+:deep(.p-inputnumber-button:hover) {
+  background: var(--surface-hover) !important;
+}
+
+/* التاج */
+:deep(.p-tag) {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+}
+
+/* الديفايدر */
+:deep(.p-divider) {
+  border-color: var(--surface-border) !important;
+  margin: 8px 0 !important;
+}
+
+/* السبينر */
+:deep(.p-progress-spinner) {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+:deep(.p-progress-spinner-circle) {
+  stroke: var(--primary-color) !important;
+}
+
+/* ========== تحسينات للدارك مود ========== */
+
+/* في الدارك مود نحتاج لتقليل التباين قليلاً */
+.dark-mode .pos-cart-panel {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .cart-header {
+  background: var(--surface-800);
+}
+
+.dark-mode .invoice-details-section {
+  background: var(--surface-900);
+}
+
+.dark-mode .summary-details,
+.dark-mode .adjustment-item {
+  background: var(--surface-800);
+}
+
+.dark-mode .main-scroll-container::-webkit-scrollbar-track {
+  background: var(--surface-800);
+}
+
+.dark-mode .main-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--surface-600);
+}
+
+.dark-mode .main-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--surface-500);
+}
+
+/* تحسين رؤية العناصر في الدارك مود */
+.dark-mode .empty-content i,
+.dark-mode .text-color-secondary {
+  opacity: 0.7;
+}
+
+/* زر الشيك اوت في الدارك مود */
+.dark-mode :deep(.p-button.p-button-success) {
+  background: var(--color-success-dark) !important;
+  border-color: var(--color-success-dark) !important;
+}
+
+.dark-mode :deep(.p-button.p-button-success:hover) {
+  background: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+}
+
+/* زر الحذف في الدارك مود */
+.dark-mode :deep(.p-button.p-button-danger.p-button-text) {
+  color: var(--color-danger-light) !important;
+}
+
+.dark-mode :deep(.p-button.p-button-danger.p-button-text:hover) {
+  background: rgba(239, 68, 68, 0.1) !important;
+}
+
+
+/* ========== إصلاح خاص لزراير الكميات في PosCartItem ========== */
+:deep(.cart-item-quantity-controls) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.cart-item-quantity-btn) {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  background: var(--surface-ground) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+}
+
+:deep(.cart-item-quantity-btn:hover) {
+  background: var(--surface-hover) !important;
+  border-color: var(--primary-color) !important;
+}
+
+:deep(.cart-item-quantity-input) {
+  width: 50px !important;
+  min-width: 50px !important;
+  height: 28px !important;
+  text-align: center !important;
+  padding: 0 !important;
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+}
+
+/* إصلاح الزراير في الدارك مود */
+.dark-mode :deep(.cart-item-quantity-btn) {
+  background: var(--surface-700) !important;
+  border-color: var(--surface-600) !important;
+}
+
+.dark-mode :deep(.cart-item-quantity-btn:hover) {
+  background: var(--surface-600) !important;
+  border-color: var(--primary-color-light) !important;
+}
+
+.dark-mode :deep(.cart-item-quantity-input) {
+  background: var(--surface-700) !important;
+  border-color: var(--surface-600) !important;
+  color: var(--text-color) !important;
+}
+
+/* ========== إصلاح عناصر الكارت نفسها ========== */
+/* هذا يضمن أن PosCartItem بيستجيب للدارك مود */
+:deep(.pos-cart-item) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+}
+
+:deep(.pos-cart-item-header),
+:deep(.pos-cart-item-body),
+:deep(.pos-cart-item-footer) {
+  color: var(--text-color) !important;
+}
+
+:deep(.pos-cart-item-title) {
+  color: var(--text-color) !important;
+}
+
+:deep(.pos-cart-item-price) {
+  color: var(--primary-color) !important;
+}
+
+:deep(.pos-cart-item-discount) {
+  color: var(--color-success) !important;
+}
+
+:deep(.pos-cart-item-actions .p-button) {
+  color: var(--text-color-secondary) !important;
+}
+
+:deep(.pos-cart-item-actions .p-button:hover) {
+  color: var(--text-color) !important;
+  background: var(--surface-hover) !important;
+}
+
+/* إصلاح التكلفة الإضافية في الكارت */
+:deep(.additional-cost-item) {
+  background: var(--surface-ground) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+}
+
+.dark-mode :deep(.additional-cost-item) {
+  background: var(--surface-700) !important;
+  border-color: var(--surface-600) !important;
+}
+
+/* ========== الريسبونسف ========== */
+@media (max-width: 768px) {
+  .pos-cart-panel {
+    min-height: 400px;
+    max-height: 700px;
+  }
+  
+  .invoice-details-section {
+    min-height: 400px;
+  }
+  
+  :deep(.p-button) {
+    padding: 5px 10px !important;
+    height: 30px !important;
+  }
+  
+  :deep(.p-inputtext) {
+    padding: 5px 10px !important;
+    height: 30px !important;
   }
 }
 </style>

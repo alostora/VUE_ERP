@@ -1149,7 +1149,8 @@
 /* Search input */
 .search-input {
   padding-left: 2.5rem !important;
-  width: 20rem !important;
+  width: 100% !important; /* ✅ Change to 100% */
+  max-width: 20rem; /* ✅ Optional: Add max-width */
 }
 
 .search-input-full {

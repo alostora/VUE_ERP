@@ -1,28 +1,42 @@
 <template>
-  <div class="layout-wrapper" :class="[currentDirection, currentTheme]">
+  <div
+    class="layout-wrapper"
+    :class="[currentDirection, currentTheme, { 'mobile-view': isMobile }]"
+  >
     <MVVMMainHeader
       @toggle-sidebar="toggleSidebar"
       @language-changed="onLanguageChanged"
       @theme-changed="onThemeChanged"
+      :is-mobile="isMobile"
+      :sidebar-collapsed="sidebarCollapsed"
     />
-    
-    <!-- Overlay للخلفية في الموبايل -->
-    <div 
-      v-if="isMobile && !sidebarCollapsed" 
-      class="sidebar-overlay" 
+
+    <!-- Enhanced Mobile Overlay -->
+    <div
+      v-if="isMobile && !sidebarCollapsed"
+      class="sidebar-overlay"
       @click="toggleSidebar"
+      @touchmove.prevent
     ></div>
-    
-    <div class="layout-container">
+
+    <div
+      class="layout-container"
+      :class="{ 'sidebar-open': isMobile && !sidebarCollapsed }"
+    >
       <MVVMSidebar
         :collapsed="sidebarCollapsed"
         :position="currentDirection"
         :is-mobile="isMobile"
         @toggle="toggleSidebar"
       />
+
       <main
         class="main-content"
-        :class="{ 'content-expanded': sidebarCollapsed }"
+        :class="{
+          'content-expanded': sidebarCollapsed && !isMobile,
+          'mobile-content': isMobile,
+          'sidebar-open': isMobile && !sidebarCollapsed,
+        }"
       >
         <RouterView :company="company" :company_id="company_id" />
         <MVVMFooter />
@@ -32,7 +46,7 @@
 </template>
 
 <script>
-import { RouterView } from 'vue-router'
+import { RouterView } from "vue-router";
 import MVVMMainHeader from "./layouts/MVVMMainHeader.vue";
 import MVVMSidebar from "./layouts/MVVMSidebar.vue";
 import MVVMContent from "./layouts/MVVMContent.vue";
@@ -53,36 +67,83 @@ export default {
         localStorage.getItem("language") === "ar" ? "rtl" : "ltr",
       currentTheme: localStorage.getItem("theme") || "light",
       isMobile: false,
+      windowWidth: 0,
     };
   },
   methods: {
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
+
+      // Prevent body scrolling when sidebar is open on mobile
+      if (this.isMobile) {
+        if (!this.sidebarCollapsed) {
+          document.body.style.overflow = "hidden";
+          document.body.style.position = "fixed";
+          document.body.style.width = "100%";
+        } else {
+          document.body.style.overflow = "";
+          document.body.style.position = "";
+          document.body.style.width = "";
+        }
+      }
     },
+
     onLanguageChanged(language) {
       this.currentDirection = language.dir;
     },
+
     onThemeChanged(theme) {
       this.currentTheme = theme;
     },
+
     checkMobile() {
-      this.isMobile = window.innerWidth <= 768;
-      // إغلاق السايدبار تلقائياً في الموبايل
-      if (this.isMobile) {
+      const width = window.innerWidth;
+      const previousMobileState = this.isMobile;
+
+      // Check for mobile (including tablets in portrait)
+      this.isMobile = width <= 992; // Changed from 768 to 992 for better tablet support
+
+      // Auto-close sidebar on mobile
+      if (this.isMobile && !this.sidebarCollapsed) {
         this.sidebarCollapsed = true;
       }
+
+      // Reset body styles if switching from mobile to desktop
+      if (previousMobileState && !this.isMobile) {
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+      }
+
+      this.windowWidth = width;
+    },
+
+    handleResize() {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        this.checkMobile();
+      }, 100);
     },
   },
+
   mounted() {
     this.checkMobile();
-    window.addEventListener('resize', this.checkMobile);
-    
-    // Initialize theme class
+    window.addEventListener("resize", this.handleResize);
+    window.addEventListener("orientationchange", this.handleResize);
+
+    // Initialize theme
     const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.classList.add(savedTheme + "-mode");
   },
+
   beforeUnmount() {
-    window.removeEventListener('resize', this.checkMobile);
+    window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("orientationchange", this.handleResize);
+
+    // Clean up body styles
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
   },
 };
 </script>
@@ -92,72 +153,122 @@ export default {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--surface-ground);
+  transition: all 0.3s ease;
 }
 
 .layout-container {
   display: flex;
   flex: 1;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 64px);
   position: relative;
+  transition: all 0.3s ease;
 }
 
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  transition: all 0.3s ease;
+  padding: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 100%;
+  background: var(--surface-ground);
+  overflow-x: hidden;
 }
 
-/* LTR - Sidebar on left */
-.layout-wrapper.ltr .main-content {
+/* Desktop - LTR (Sidebar on left) */
+.layout-wrapper.ltr:not(.mobile-view) .main-content {
   margin-left: 280px;
   width: calc(100% - 280px);
 }
 
-.layout-wrapper.ltr .main-content.content-expanded {
-  margin-left: 60px;
-  width: calc(100% - 60px);
+.layout-wrapper.ltr:not(.mobile-view) .main-content.content-expanded {
+  margin-left: 70px;
+  width: calc(100% - 70px);
 }
 
-/* RTL - Sidebar on right */
-.layout-wrapper.rtl .main-content {
+/* Desktop - RTL (Sidebar on right) */
+.layout-wrapper.rtl:not(.mobile-view) .main-content {
   margin-right: 280px;
   width: calc(100% - 280px);
 }
 
-.layout-wrapper.rtl .main-content.content-expanded {
-  margin-right: 60px;
-  width: calc(100% - 60px);
+.layout-wrapper.rtl:not(.mobile-view) .main-content.content-expanded {
+  margin-right: 70px;
+  width: calc(100% - 70px);
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .layout-wrapper.ltr .main-content,
-  .layout-wrapper.rtl .main-content {
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
+/* Mobile & Tablet Styles (up to 992px) */
+@media (max-width: 992px) {
+  .layout-wrapper.mobile-view {
+    overflow-x: hidden;
   }
 
-  .layout-wrapper.ltr .main-content.content-expanded,
-  .layout-wrapper.rtl .main-content.content-expanded {
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
+  .layout-container {
+    position: relative;
   }
-  
-  /* Overlay Styles */
+
+  .main-content {
+    padding: 1rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    transition: transform 0.3s ease;
+  }
+
+  /* When sidebar is open, shift content */
+  .layout-container.sidebar-open .main-content {
+    transform: translateX(280px);
+  }
+
+  .layout-wrapper.rtl .layout-container.sidebar-open .main-content {
+    transform: translateX(-280px);
+  }
+
+  /* Sidebar Overlay */
   .sidebar-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
     z-index: 899;
-    backdrop-filter: blur(2px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  .layout-wrapper.rtl .sidebar-overlay {
+    left: unset;
+    right: 0;
+  }
+}
+
+/* Small Mobile (up to 576px) */
+@media (max-width: 576px) {
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .layout-container.sidebar-open .main-content {
+    transform: translateX(280px);
+  }
+}
+
+/* Animation for overlay */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 992px) {
+  body {
+    overflow-x: hidden;
   }
 }
 </style>

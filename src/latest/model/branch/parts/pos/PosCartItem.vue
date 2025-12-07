@@ -1,5 +1,5 @@
 <template>
-  <div class="pos-cart-item">
+  <div class="pos-cart-item" :class="{ 'dark-mode': isDarkMode }">
     <!-- Item Header -->
     <div class="flex justify-content-between align-items-start mb-2">
       <div class="flex align-items-start gap-2" style="flex: 1">
@@ -364,140 +364,201 @@ export default {
 
 <style scoped>
 .pos-cart-item {
-  border: 1px solid #dee2e6;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
   border-radius: 6px;
   padding: 12px;
-  background: white;
-  margin-bottom: 8px;
-  transition: all 0.3s ease;
+  color: var(--text-color);
+  transition: all 0.2s ease;
 }
 
 .pos-cart-item:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.item-image {
-  width: 60px;
-  height: 60px;
-  flex-shrink: 0;
+.dark-mode .pos-cart-item:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
-.item-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.no-image {
-  width: 100%;
-  height: 100%;
+/* الهيدر */
+.cart-item-header {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #dee2e6;
-  border-radius: 4px;
-  color: #6c757d;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
 }
 
-.quantity-input {
-  width: 100px;
+.cart-item-title {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 13px;
+  flex: 1;
 }
 
-.quantity-input :deep(.p-inputnumber-input) {
-  text-align: center;
-  font-weight: bold;
-}
-
-.quantity-input :deep(.p-inputnumber-button) {
+.cart-item-remove-btn {
+  color: var(--text-color-secondary) !important;
   width: 24px !important;
   height: 24px !important;
-  font-size: 10px !important;
+  padding: 0 !important;
 }
 
-.item-total {
-  color: #28a745;
-  font-size: 14px;
+.cart-item-remove-btn:hover {
+  color: var(--color-danger) !important;
+  background: rgba(239, 68, 68, 0.1) !important;
 }
 
-.original-price {
+/* البودي */
+.cart-item-body {
+  margin-bottom: 8px;
+}
+
+.cart-item-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cart-item-original-price {
+  color: var(--text-color-secondary);
+  text-decoration: line-through;
   font-size: 11px;
 }
 
-.current-price {
+.cart-item-final-price {
+  color: var(--primary-color);
+  font-weight: 600;
   font-size: 13px;
-  color: #28a745;
 }
 
-.operations-header {
-  border-bottom: 1px solid #e9ecef;
-  padding-bottom: 8px;
-  background: #f8f9fa;
-  border-radius: 4px;
-  padding: 8px;
-  margin-bottom: 10px;
+.cart-item-discount-badge {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-.operation-item {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  transition: all 0.3s ease;
+.dark-mode .cart-item-discount-badge {
+  background: var(--color-success-dark);
+  color: var(--color-success-light);
 }
 
-.operation-item:hover {
-  background: #f1f3f4;
-}
-
-.file-upload-section {
-  border: 1px dashed #dee2e6;
-  border-radius: 4px;
-  padding: 8px;
-  background: white;
-}
-
-.uploaded-file {
-  background: #e8f5e8;
-  border: 1px solid #c3e6cb;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 11px;
+/* الكميات - هنا أهم جزء */
+.cart-item-quantity-controls {
   display: flex;
   align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.cart-item-quantity-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 4px !important;
+  background: var(--surface-ground) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  transition: all 0.2s ease !important;
+}
+
+.cart-item-quantity-btn:hover:not(:disabled) {
+  background: var(--surface-hover) !important;
+  border-color: var(--primary-color) !important;
+  transform: translateY(-1px);
+}
+
+.cart-item-quantity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cart-item-quantity-input {
+  width: 50px !important;
+  min-width: 50px !important;
+  height: 28px !important;
+  text-align: center !important;
+  padding: 0 4px !important;
+  background: var(--surface-card) !important;
+  border: 1px solid var(--surface-border) !important;
+  color: var(--text-color) !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600;
+}
+
+.cart-item-quantity-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.1) !important;
+  outline: none !important;
+}
+
+/* الدارك مود للكميات */
+.dark-mode .cart-item-quantity-btn {
+  background: var(--surface-700) !important;
+  border-color: var(--surface-600) !important;
+}
+
+.dark-mode .cart-item-quantity-btn:hover:not(:disabled) {
+  background: var(--surface-600) !important;
+  border-color: var(--primary-color-light) !important;
+}
+
+.dark-mode .cart-item-quantity-input {
+  background: var(--surface-700) !important;
+  border-color: var(--surface-600) !important;
+  color: var(--text-color) !important;
+}
+
+/* الفوتر */
+.cart-item-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--surface-border);
+}
+
+.cart-item-subtotal {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 13px;
+}
+
+/* التكاليف الإضافية */
+.additional-costs-section {
+  margin-top: 8px;
+}
+
+.additional-cost-item {
+  display: flex;
   justify-content: space-between;
-}
-
-:deep(.p-fileupload-choose) {
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-}
-
-:deep(.p-button-xs) {
-  padding: 2px 4px !important;
-  font-size: 10px !important;
-}
-
-.item-notes :deep(.p-inputtextarea) {
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-  border: 1px solid #dee2e6;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
+  margin-top: 4px;
+  font-size: 11px;
 }
 
-/* تحسينات للأجهزة الصغيرة */
-@media (max-width: 768px) {
-  .item-image {
-    width: 50px;
-    height: 50px;
-  }
+.dark-mode .additional-cost-item {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+}
 
-  .grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+.additional-cost-name {
+  color: var(--text-color);
+}
 
-  .grid > div {
-    width: 100% !important;
-  }
+.additional-cost-value {
+  color: var(--color-warning);
+  font-weight: 600;
 }
 </style>

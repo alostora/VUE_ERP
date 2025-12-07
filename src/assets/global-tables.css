@@ -1,0 +1,1156 @@
+/* =================================================== */
+/* UNIVERSAL TABLE STYLES FOR ALL MODULES */
+/* =================================================== */
+
+/* --------------------------------------------------- */
+/* 1. TABLE PAGE STRUCTURE - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-page {
+  padding: 1.5rem;
+  background: var(--surface-ground);
+  min-height: calc(100vh - 120px);
+  width: 100%;
+}
+
+/* Table wrapper */
+.table-wrapper {
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* --------------------------------------------------- */
+/* 2. TABLE HEADER - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.table-title {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Primary action button */
+.table-action-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: var(--primary-color-text);
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  border: 1px solid var(--primary-color);
+}
+
+.table-action-primary:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+/* Secondary action button */
+.table-action-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.table-action-secondary:hover {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+
+/* --------------------------------------------------- */
+/* 3. TABLE FILTERS & SEARCH - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-filters {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--surface-card);
+}
+
+/* Search container */
+.search-container {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 0%;
+  transform: translateY(-50%);
+  color: var(--text-color-secondary);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+/* Filter select */
+.table-filter-select {
+  min-width: 150px;
+}
+
+/* Clear filter button */
+.table-filter-clear {
+  padding: 0.75rem 1rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color-secondary);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-filter-clear:hover {
+  background: var(--surface-hover);
+  color: var(--text-color);
+}
+
+/* --------------------------------------------------- */
+/* 4. TABLE CONTENT - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-content {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Base table styles */
+.data-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Table header */
+.data-table thead {
+  background: var(--surface-ground);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.data-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 2px solid var(--surface-border);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Table body */
+.data-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  color: var(--text-color);
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+
+.data-table tbody tr {
+  background: var(--surface-card);
+  transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* --------------------------------------------------- */
+/* 5. COLUMN WIDTH CLASSES - SEMANTIC & REUSABLE */
+/* --------------------------------------------------- */
+
+/* Identifier columns (ID, Serial) */
+.col-identifier {
+  width: 100px;
+  min-width: 100px;
+  text-align: center;
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+/* Name/Title columns */
+.col-name {
+  width: 200px;
+  min-width: 200px;
+  font-weight: 500;
+}
+
+/* Email columns */
+.col-email {
+  width: 250px;
+  min-width: 250px;
+  font-family: monospace;
+  font-size: 0.8125rem;
+}
+
+/* Date/Time columns */
+.col-date {
+  width: 150px;
+  min-width: 150px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--text-color-secondary);
+}
+
+/* Status columns */
+.col-status {
+  width: 120px;
+  min-width: 120px;
+  text-align: center;
+}
+
+/* Numeric columns */
+.col-number {
+  width: 100px;
+  min-width: 100px;
+  text-align: right;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/* Phone columns */
+.col-phone {
+  width: 150px;
+  min-width: 150px;
+  font-family: monospace;
+  font-size: 0.8125rem;
+}
+
+/* Address/Text columns */
+.col-text {
+  width: 200px;
+  min-width: 200px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+/* Actions columns */
+.col-actions {
+  width: 180px;
+  min-width: 180px;
+  text-align: center;
+}
+
+/* Description columns */
+.col-description {
+  width: 300px;
+  min-width: 300px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--text-color-secondary);
+}
+
+/* Category columns */
+.col-category {
+  width: 150px;
+  min-width: 150px;
+}
+
+/* Code/Reference columns */
+.col-code {
+  width: 120px;
+  min-width: 120px;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+/* Image/Avatar columns */
+.col-image {
+  width: 80px;
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Selection columns */
+.col-selection {
+  width: 60px;
+  min-width: 60px;
+  text-align: center;
+}
+
+/* --------------------------------------------------- */
+/* 6. ACTION BUTTONS - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-actions-cell {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Base action button */
+.table-action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--surface-ground);
+  color: var(--text-color-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.table-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* View button */
+.table-action-view {
+  color: var(--color-success);
+  border-color: var(--color-success);
+  background: rgba(var(--color-success-rgb), 0.1);
+}
+
+.table-action-view:hover {
+  background: var(--color-success);
+  color: white;
+}
+
+/* Edit button */
+.table-action-edit {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.table-action-edit:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Delete button */
+.table-action-delete {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: rgba(var(--color-danger-rgb), 0.1);
+}
+
+.table-action-delete:hover {
+  background: var(--color-danger);
+  color: white;
+}
+
+/* --------------------------------------------------- */
+/* 7. STATUS BADGES - UNIVERSAL */
+/* --------------------------------------------------- */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.status-active {
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+}
+
+.status-inactive {
+  background: var(--color-warning-light);
+  color: var(--color-warning-dark);
+}
+
+.status-pending {
+  background: var(--color-info-light);
+  color: var(--color-info-dark);
+}
+
+.status-blocked {
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
+}
+
+.status-draft {
+  background: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+/* --------------------------------------------------- */
+/* 8. PAGINATION - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-pagination {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--surface-card);
+}
+
+.pagination-info {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn {
+  padding: 0.5rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn-active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color-text);
+}
+
+.pagination-btn-active:hover {
+  background: var(--primary-color-dark);
+}
+
+.pagination-pages {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.pagination-page {
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-page:hover {
+  background: var(--surface-hover);
+}
+
+.pagination-page-active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color-text);
+}
+
+/* --------------------------------------------------- */
+/* 9. LOADING & EMPTY STATES - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-loading {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: var(--surface-card);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--surface-border);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: table-spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.loading-text {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+@keyframes table-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.table-empty {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  background: var(--surface-card);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: var(--text-color-secondary);
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.empty-description {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  max-width: 400px;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: var(--primary-color-text);
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.empty-action:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-2px);
+}
+
+/* --------------------------------------------------- */
+/* 10. MOBILE CARD VIEW - UNIVERSAL */
+/* --------------------------------------------------- */
+.table-mobile-view {
+  display: none;
+}
+
+.table-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.table-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-ground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  color: var(--text-color-secondary);
+}
+
+.card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.card-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-status {
+  flex-shrink: 0;
+}
+
+.card-body {
+  padding: 1rem 0;
+  border-top: 1px solid var(--surface-border);
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.card-field {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.card-field:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.card-label {
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  min-width: 100px;
+  font-size: 0.8125rem;
+}
+
+.card-value {
+  color: var(--text-color);
+  text-align: right;
+  flex: 1;
+  font-size: 0.8125rem;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+/* --------------------------------------------------- */
+/* 11. RESPONSIVE BREAKPOINTS - UNIVERSAL */
+/* --------------------------------------------------- */
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .table-page {
+    padding: 1.25rem;
+  }
+
+  .table-header {
+    padding: 1.25rem;
+  }
+
+  .table-title {
+    font-size: 1.375rem;
+  }
+
+  .table-filters {
+    padding: 1rem 1.25rem;
+  }
+
+  .search-container {
+    min-width: 200px;
+  }
+
+  .table-action-primary,
+  .table-action-secondary {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .col-name {
+    width: 180px;
+    min-width: 180px;
+  }
+  .col-email {
+    width: 220px;
+    min-width: 220px;
+  }
+  .col-text {
+    width: 180px;
+    min-width: 180px;
+  }
+  .col-description {
+    width: 250px;
+    min-width: 250px;
+  }
+}
+
+/* Mobile (up to 768px) */
+@media (max-width: 768px) {
+  .table-page {
+    padding: 1rem;
+    min-height: calc(100vh - 100px);
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .table-title {
+    text-align: center;
+    font-size: 1.25rem;
+  }
+
+  .table-actions {
+    justify-content: center;
+  }
+
+  .table-action-primary,
+  .table-action-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .search-container {
+    min-width: 100%;
+  }
+
+  .table-filter-select {
+    width: 100%;
+  }
+
+  .table-filter-clear {
+    width: 100%;
+  }
+
+  /* Hide desktop table, show mobile cards */
+  /* .table-content {
+    display: none;
+  } */
+  /* 
+  .table-mobile-view {
+    display: block;
+  } */
+  .responsive-table {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .responsive-table :deep(.p-datatable-wrapper) {
+    min-width: 600px;
+  }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .table-pagination {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .pagination-controls {
+    order: -1;
+  }
+}
+
+/* Small Mobile (up to 480px) */
+@media (max-width: 480px) {
+  .table-page {
+    padding: 0.75rem;
+  }
+
+  .table-header {
+    padding: 0.875rem;
+  }
+
+  .table-title {
+    font-size: 1.125rem;
+  }
+
+  .table-filters {
+    padding: 0.875rem;
+  }
+
+  .table-action-primary,
+  .table-action-secondary {
+    padding: 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .table-card {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+
+  .card-field {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .card-label,
+  .card-value {
+    width: 100%;
+    text-align: left;
+  }
+
+  .card-actions {
+    gap: 0.375rem;
+  }
+
+  .table-action-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* --------------------------------------------------- */
+/* 12. DARK MODE ADJUSTMENTS - UNIVERSAL */
+/* --------------------------------------------------- */
+.dark-mode .table-page {
+  background: var(--surface-900);
+}
+
+.dark-mode .table-wrapper {
+  background: var(--surface-800);
+  border-color: var(--surface-700);
+}
+
+.dark-mode .table-header {
+  border-color: var(--surface-700);
+}
+
+.dark-mode .table-title {
+  color: var(--text-color);
+}
+
+.dark-mode .table-filters {
+  background: var(--surface-800);
+  border-color: var(--surface-700);
+}
+
+.dark-mode .search-input {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+  color: var(--text-color);
+}
+
+.dark-mode .search-input::placeholder {
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .data-table thead {
+  background: var(--surface-700);
+}
+
+.dark-mode .data-table th {
+  border-color: var(--surface-600);
+  color: var(--text-color);
+}
+
+.dark-mode .data-table td {
+  border-color: var(--surface-700);
+  color: var(--text-color);
+}
+
+.dark-mode .data-table tbody tr {
+  background: var(--surface-800);
+}
+
+.dark-mode .data-table tbody tr:hover {
+  background: var(--surface-700);
+}
+
+.dark-mode .table-action-btn {
+  background: var(--surface-700);
+}
+
+.dark-mode .status-active {
+  background: var(--color-success-dark);
+  color: var(--color-success-light);
+}
+
+.dark-mode .status-inactive {
+  background: var(--color-warning-dark);
+  color: var(--color-warning-light);
+}
+
+.dark-mode .status-pending {
+  background: var(--color-info-dark);
+  color: var(--color-info-light);
+}
+
+.dark-mode .status-blocked {
+  background: var(--color-danger-dark);
+  color: var(--color-danger-light);
+}
+
+.dark-mode .table-pagination {
+  background: var(--surface-800);
+  border-color: var(--surface-700);
+}
+
+.dark-mode .pagination-btn,
+.dark-mode .pagination-page {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+  color: var(--text-color);
+}
+
+.dark-mode .pagination-btn:hover:not(:disabled),
+.dark-mode .pagination-page:hover {
+  background: var(--surface-600);
+}
+
+.dark-mode .table-loading,
+.dark-mode .table-empty {
+  background: var(--surface-800);
+}
+
+.dark-mode .empty-icon {
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .table-card {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+}
+
+.dark-mode .card-avatar {
+  background: var(--surface-600);
+  color: var(--text-color-secondary);
+}
+
+/* --------------------------------------------------- */
+/* 13. UTILITY CLASSES - UNIVERSAL */
+/* --------------------------------------------------- */
+
+/* Text alignment */
+.text-left {
+  text-align: left !important;
+}
+.text-center {
+  text-align: center !important;
+}
+.text-right {
+  text-align: right !important;
+}
+
+/* Spacing */
+.table-mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+.table-mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+.table-mb-3 {
+  margin-bottom: 1rem !important;
+}
+.table-mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+.table-mt-1 {
+  margin-top: 0.25rem !important;
+}
+.table-mt-2 {
+  margin-top: 0.5rem !important;
+}
+.table-mt-3 {
+  margin-top: 1rem !important;
+}
+.table-mt-4 {
+  margin-top: 1.5rem !important;
+}
+
+/* Hide/show utilities */
+.hide-on-mobile {
+  display: none !important;
+}
+@media (min-width: 769px) {
+  .hide-on-mobile {
+    display: table-cell !important;
+  }
+}
+
+.hide-on-tablet {
+  display: none !important;
+}
+@media (min-width: 1025px) {
+  .hide-on-tablet {
+    display: table-cell !important;
+  }
+}
+
+.show-on-mobile {
+  display: table-cell !important;
+}
+@media (min-width: 769px) {
+  .show-on-mobile {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------- */
+/* 14. PRIMEVUE INTEGRATION - UNIVERSAL */
+/* --------------------------------------------------- */
+
+/* PrimeVue DataTable integration */
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+  white-space: nowrap;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+  vertical-align: middle;
+}
+
+/* --------------------------------------------------- */
+/* 15. PRINT STYLES - UNIVERSAL */
+/* --------------------------------------------------- */
+@media print {
+  .table-header,
+  .table-filters,
+  .table-actions,
+  .col-actions,
+  .table-pagination,
+  .table-mobile-view {
+    display: none !important;
+  }
+
+  .table-page {
+    padding: 0;
+    background: white;
+  }
+
+  .table-wrapper {
+    border: none;
+    box-shadow: none;
+  }
+
+  .data-table {
+    min-width: auto;
+    font-size: 12pt;
+  }
+
+  .data-table th,
+  .data-table td {
+    border: 1px solid #ddd !important;
+    padding: 8pt !important;
+    color: black !important;
+  }
+
+  .data-table tbody tr {
+    background: white !important;
+  }
+}

@@ -1,53 +1,104 @@
 <template>
-  <header class="main-header">
-    <Menubar :model="translatedMenuItems">
+  <header class="main-header" :class="{ 'mobile-header': isMobile }">
+    <Menubar :model="translatedMenuItems" class="header-menubar">
       <template #start>
         <div class="header-start">
+          <!-- Menu Toggle Button - Different icon for mobile -->
           <Button
-            icon="pi pi-bars"
+            :icon="
+              isMobile
+                ? 'pi pi-bars'
+                : sidebarCollapsed
+                ? 'pi pi-bars'
+                : 'pi pi-align-justify'
+            "
             @click="$emit('toggle-sidebar')"
             text
             rounded
+            class="menu-toggle-btn"
+            :severity="isMobile ? 'secondary' : 'primary'"
+            v-tooltip="
+              isMobile
+                ? 'Menu'
+                : sidebarCollapsed
+                ? 'Expand Sidebar'
+                : 'Collapse Sidebar'
+            "
           />
-          <span class="app-title">{{ $t("app.title") }}</span>
+
+          <!-- App Title - Hide on very small mobile -->
+          <span class="app-title" :class="{ 'hidden-on-small': isMobile }">
+            {{ $t("app.title") }}
+          </span>
+
+          <!-- Mobile-only Logo -->
+          <div v-if="isMobile" class="mobile-logo">
+            <i class="pi pi-shield"></i>
+          </div>
         </div>
       </template>
 
       <template #end>
-        <div class="header-end">
-          <div class="search-container">
-            <InputText :placeholder="$t('header.search')" type="text" />
-            <Button icon="pi pi-search" text />
+        <div class="header-end" :class="{ 'mobile-end': isMobile }">
+          <!-- Search - Collapsible on mobile -->
+          <div
+            class="search-container"
+            :class="{ 'search-expanded': searchExpanded }"
+          >
+            <transition name="slide-fade">
+              <InputText
+                v-if="!isMobile || searchExpanded"
+                :placeholder="$t('header.search')"
+                type="text"
+                class="search-input"
+                @blur="searchExpanded = false"
+              />
+            </transition>
+
+            <Button
+              :icon="searchExpanded ? 'pi pi-times' : 'pi pi-search'"
+              text
+              rounded
+              @click="toggleSearch"
+              class="search-toggle-btn"
+              v-tooltip="searchExpanded ? 'Close Search' : 'Search'"
+            />
           </div>
 
           <div class="action-buttons">
+            <!-- Theme Toggle -->
             <Button
               @click="toggleTheme"
               :icon="currentTheme.icon"
               :severity="currentTheme.severity"
               text
               rounded
+              class="theme-toggle-btn"
               :title="currentTheme.title"
             />
 
+            <!-- Language Toggle -->
             <Button
               @click="toggleLanguage"
               :icon="currentLanguage.icon"
               text
               rounded
+              class="language-toggle-btn"
               :title="currentLanguage.label"
             />
 
+            <!-- User Menu -->
             <div class="user-menu-container">
               <Menu ref="userMenu" :model="logoutMenuItem" :popup="true" />
 
               <Button
-                icon="pi pi-user"
+                :icon="isMobile ? 'pi pi-user' : 'pi pi-user'"
                 rounded
                 text
                 severity="secondary"
-                class="p-button-lg"
+                class="user-menu-btn"
                 @click="toggleUserMenu"
+                :label="!isMobile ? userInitial : ''"
               />
             </div>
           </div>
@@ -72,9 +123,20 @@ export default {
     Avatar,
     Menu,
   },
+  props: {
+    isMobile: {
+      type: Boolean,
+      default: false,
+    },
+    sidebarCollapsed: {
+      type: Boolean,
+      default: false,
+    },
+  },
   emits: ["toggle-sidebar", "language-changed", "theme-changed"],
   data() {
     return {
+      searchExpanded: false,
       currentLang: this.$i18n.locale,
       currentTheme:
         localStorage.getItem("theme") === "dark"
@@ -111,6 +173,10 @@ export default {
     };
   },
   computed: {
+    userInitial() {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      return user.name ? user.name.charAt(0).toUpperCase() : "U";
+    },
     currentLanguage() {
       return (
         this.languages.find((lang) => lang.code === this.currentLang) ||
@@ -125,6 +191,12 @@ export default {
     },
   },
   methods: {
+    toggleSearch() {
+      if (this.isMobile) {
+        this.searchExpanded = !this.searchExpanded;
+      }
+    },
+
     toggleUserMenu(event) {
       this.$refs.userMenu.toggle(event);
     },
@@ -132,7 +204,7 @@ export default {
     logout() {
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
-      
+
       this.$toast.add({
         severity: "info",
         summary: "Logged Out",
@@ -140,7 +212,7 @@ export default {
         life: 3000,
       });
 
-      this.$router.push("/login"); 
+      this.$router.push("/login");
     },
 
     toggleLanguage() {
@@ -193,19 +265,11 @@ export default {
       const savedTheme = localStorage.getItem("theme") || "light";
       this.applyTheme(savedTheme);
     },
-
-    isMobile() {
-      return window.innerWidth <= 768;
-    },
   },
   mounted() {
     const langConfig = this.currentLanguage;
     document.documentElement.dir = langConfig.dir;
     document.documentElement.lang = this.currentLang;
-
-    if (this.isMobile()) {
-      this.$emit("toggle-sidebar");
-    }
 
     this.initializeTheme();
   },
@@ -217,81 +281,194 @@ export default {
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 64px;
+}
+
+.header-menubar {
+  border: none;
+  border-radius: 0;
+  padding: 0 1rem;
+  background: transparent;
+  height: 100%;
 }
 
 .header-start {
   display: flex;
   align-items: center;
   gap: 1rem;
+  height: 100%;
+}
+
+.menu-toggle-btn {
+  width: 40px;
+  height: 40px;
 }
 
 .app-title {
   font-weight: 600;
   font-size: 1.25rem;
+  color: var(--text-color);
+  white-space: nowrap;
+}
+
+.mobile-logo {
+  display: none;
+  color: var(--primary-500);
+  font-size: 1.5rem;
 }
 
 .header-end {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem;
+  height: 100%;
 }
 
 .search-container {
   display: flex;
   align-items: center;
-  flex-grow: 1; /* Allow search to take space on desktop */
+  transition: all 0.3s ease;
+}
+
+.search-input {
+  transition: all 0.3s ease;
+  width: 250px;
+}
+
+.search-toggle-btn {
+  width: 40px;
+  height: 40px;
 }
 
 .action-buttons {
-  /* Group theme, language, and user menu buttons */
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
+.theme-toggle-btn,
+.language-toggle-btn {
+  width: 40px;
+  height: 40px;
+}
+
 .user-menu-container {
-  /* This ensures the Menu component anchors correctly relative to the button */
   position: relative;
 }
 
-/* Adjust Avatar button size for better clickability */
-.user-menu-container .p-button-lg {
-  width: 2.5rem;
-  height: 2.5rem;
+.user-menu-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
 }
 
-:deep(.p-menubar) {
-  border: none;
-  border-radius: 0;
-  padding: 0.5rem 1rem;
-  background: transparent;
-}
-
-/* Theme transition for smooth mode switching */
-:deep(*) {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease;
-}
-
-/* --- 📱 Mobile View Adjustments (Maximum Width 768px) --- */
+/* Mobile Styles */
 @media (max-width: 768px) {
-    
-    /* 1. Hide the Search Input Text to save space */
-    .search-container :deep(.p-inputtext) {
-        display: none;
-    }
+  .main-header {
+    height: 56px;
+  }
 
-    /* 2. Remove the search container's ability to grow */
-    .search-container {
-        flex-grow: 0; 
-        /* Add some padding next to the search icon */
-        padding-left: 0.5rem; 
-        padding-right: 0.5rem;
-    }
-    
-    /* 3. Ensure the main header elements don't wrap and fit */
-    .header-start, .header-end {
-        flex-shrink: 0;
-    }
+  .header-menubar {
+    padding: 0 0.75rem;
+  }
+
+  .header-start {
+    gap: 0.75rem;
+  }
+
+  .app-title.hidden-on-small {
+    display: none;
+  }
+
+  .mobile-logo {
+    display: block;
+  }
+
+  .menu-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .header-end.mobile-end {
+    gap: 0.5rem;
+  }
+
+  .search-container {
+    order: 2;
+  }
+
+  .search-input {
+    width: 200px;
+  }
+
+  .search-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .theme-toggle-btn,
+  .language-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-menu-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+  }
+
+  .action-buttons {
+    gap: 0.25rem;
+  }
+}
+
+/* Very Small Mobile */
+@media (max-width: 480px) {
+  .header-menubar {
+    padding: 0 0.5rem;
+  }
+
+  .search-input {
+    width: 160px;
+  }
+
+  .app-title {
+    font-size: 1.1rem;
+  }
+}
+
+/* Search Animation */
+.slide-fade-enter-active {
+  transition: all 0.3s ease;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(-10px);
+  opacity: 0;
+}
+
+/* RTL Support */
+[dir="rtl"] .slide-fade-enter-from,
+[dir="rtl"] .slide-fade-leave-to {
+  transform: translateX(10px);
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .menu-toggle-btn,
+  .search-toggle-btn,
+  .theme-toggle-btn,
+  .language-toggle-btn,
+  .user-menu-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 </style>

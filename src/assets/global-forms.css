@@ -1,0 +1,659 @@
+/* =================================================== */
+/* GLOBAL FORM STYLES FOR ALL MODULES */
+/* =================================================== */
+
+/* --------------------------------------------------- */
+/* 1. FORM CONTAINERS - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--surface-card);
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.form-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--surface-border);
+}
+
+.form-title {
+  margin: 0;
+  color: var(--text-color);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.form-subtitle {
+  margin: 0.5rem 0 0 0;
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+/* --------------------------------------------------- */
+/* 2. FORM GROUPS - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.form-label.required::after {
+  content: " *";
+  color: var(--color-danger);
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-color-secondary);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------- */
+/* 3. FORM CONTROLS - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+  outline: none;
+}
+
+.form-control::placeholder {
+  color: var(--text-color-secondary);
+  opacity: 0.7;
+}
+
+.form-control:disabled {
+  background: var(--surface-ground);
+  color: var(--text-color-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Textarea specific */
+.form-control.textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Select specific */
+.form-control.select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+/* --------------------------------------------------- */
+/* 4. FORM VALIDATION - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-control.invalid {
+  border-color: var(--color-danger);
+}
+
+.form-control.invalid:focus {
+  box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.1);
+}
+
+.validation-error {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-danger);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.validation-success {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-success);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------- */
+/* 5. CHECKBOXES & RADIOS - UNIVERSAL */
+/* --------------------------------------------------- */
+.checkbox-group,
+.radio-group {
+  margin-bottom: 1rem;
+}
+
+.checkbox-label,
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.checkbox-input,
+.radio-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+.checkbox-input:disabled,
+.radio-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.checkbox-label:has(.checkbox-input:disabled),
+.radio-label:has(.radio-input:disabled) {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------- */
+/* 6. FORM ACTIONS - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.form-actions.center {
+  justify-content: center;
+}
+
+.form-actions.space-between {
+  justify-content: space-between;
+}
+
+/* Submit Button */
+.form-submit-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: var(--primary-color-text);
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--primary-color);
+}
+
+.form-submit-btn:hover {
+  background: var(--primary-color-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.form-submit-btn:active {
+  transform: translateY(0);
+}
+
+.form-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Cancel Button */
+.form-cancel-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--surface-ground);
+  color: var(--text-color);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-cancel-btn:hover {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+
+.form-cancel-btn:active {
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------- */
+/* 7. FORM SECTIONS - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: var(--surface-ground);
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+}
+
+.section-title {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.section-description {
+  margin: 0 0 1.5rem 0;
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------- */
+/* 8. FORM MESSAGES - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-message {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.form-message.success {
+  background: rgba(var(--color-success-rgb), 0.1);
+  border: 1px solid var(--color-success);
+  color: var(--color-success-dark);
+}
+
+.form-message.error {
+  background: rgba(var(--color-danger-rgb), 0.1);
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger-dark);
+}
+
+.form-message.warning {
+  background: rgba(var(--color-warning-rgb), 0.1);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning-dark);
+}
+
+.form-message.info {
+  background: rgba(var(--color-info-rgb), 0.1);
+  border: 1px solid var(--color-info);
+  color: var(--color-info-dark);
+}
+
+/* --------------------------------------------------- */
+/* 9. FORM LOADING STATES - UNIVERSAL */
+/* --------------------------------------------------- */
+.form-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.form-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border: 2px solid var(--primary-color);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* --------------------------------------------------- */
+/* 10. RESPONSIVE FORMS - UNIVERSAL */
+/* --------------------------------------------------- */
+
+/* Tablet (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .form-container {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Mobile (up to 768px) */
+@media (max-width: 768px) {
+  .form-container {
+    padding: 1.25rem;
+    margin: 0.5rem;
+    max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .form-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .form-title {
+    font-size: 1.25rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .form-submit-btn,
+  .form-cancel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Small Mobile (up to 480px) */
+@media (max-width: 480px) {
+  .form-container {
+    padding: 1rem;
+    margin: 0.25rem;
+    border-radius: 6px;
+  }
+
+  .form-title {
+    font-size: 1.125rem;
+  }
+
+  .form-subtitle {
+    font-size: 0.8125rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-control {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .form-label {
+    font-size: 0.8125rem;
+  }
+}
+
+/* --------------------------------------------------- */
+/* 11. DARK MODE FORMS - UNIVERSAL */
+/* --------------------------------------------------- */
+.dark-mode .form-container {
+  background: var(--surface-800);
+  border-color: var(--surface-700);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .form-header {
+  border-color: var(--surface-700);
+}
+
+.dark-mode .form-title {
+  color: var(--text-color);
+}
+
+.dark-mode .form-subtitle {
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .form-label {
+  color: var(--text-color);
+}
+
+.dark-mode .form-control {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+  color: var(--text-color);
+}
+
+.dark-mode .form-control:focus {
+  border-color: var(--primary-color-light);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.dark-mode .form-control::placeholder {
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .form-control:disabled {
+  background: var(--surface-600);
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .form-help {
+  color: var(--text-color-secondary);
+}
+
+.dark-mode .form-cancel-btn {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+  color: var(--text-color);
+}
+
+.dark-mode .form-cancel-btn:hover {
+  background: var(--surface-600);
+}
+
+.dark-mode .form-section {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
+}
+
+.dark-mode .section-title {
+  color: var(--text-color);
+}
+
+.dark-mode .section-description {
+  color: var(--text-color-secondary);
+}
+
+/* --------------------------------------------------- */
+/* 12. PRIMEVUE FORM COMPONENTS - UNIVERSAL */
+/* --------------------------------------------------- */
+
+/* PrimeVue InputText */
+:deep(.p-inputtext) {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+:deep(.p-inputtext:focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+  outline: none;
+}
+
+:deep(.p-inputtext.p-invalid) {
+  border-color: var(--color-danger);
+}
+
+:deep(.p-inputtext.p-invalid:focus) {
+  box-shadow: 0 0 0 3px rgba(var(--color-danger-rgb), 0.1);
+}
+
+/* PrimeVue Textarea */
+:deep(.p-textarea) {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* PrimeVue Select/Dropdown */
+:deep(.p-dropdown) {
+  width: 100%;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+:deep(.p-dropdown:not(.p-disabled).p-focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+:deep(.p-dropdown.p-invalid) {
+  border-color: var(--color-danger);
+}
+
+/* PrimeVue Checkbox */
+:deep(.p-checkbox .p-checkbox-box) {
+  border: 2px solid var(--surface-border);
+  background: var(--surface-card);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+:deep(.p-checkbox .p-checkbox-box.p-highlight) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+:deep(.p-checkbox .p-checkbox-box.p-highlight:hover) {
+  background: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+}
+
+/* PrimeVue RadioButton */
+:deep(.p-radiobutton .p-radiobutton-box) {
+  border: 2px solid var(--surface-border);
+  background: var(--surface-card);
+  width: 18px;
+  height: 18px;
+}
+
+:deep(.p-radiobutton .p-radiobutton-box.p-highlight) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+:deep(.p-radiobutton .p-radiobutton-box.p-highlight:hover) {
+  background: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+}
+
+/* PrimeVue Button in Forms */
+:deep(.p-button) {
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+:deep(.p-button.p-button-primary) {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+:deep(.p-button.p-button-primary:hover) {
+  background: var(--primary-color-dark);
+  border-color: var(--primary-color-dark);
+  transform: translateY(-2px);
+}
+
+:deep(.p-button.p-button-secondary) {
+  background: var(--surface-ground);
+  border-color: var(--surface-border);
+  color: var(--text-color);
+}
+
+:deep(.p-button.p-button-secondary:hover) {
+  background: var(--surface-hover);
+  transform: translateY(-2px);
+}
+
+:deep(.p-button:disabled) {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* --------------------------------------------------- */
+/* 13. ANIMATIONS - UNIVERSAL */
+/* --------------------------------------------------- */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-container {
+  animation: fadeIn 0.3s ease;
+}

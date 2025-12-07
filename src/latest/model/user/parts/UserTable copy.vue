@@ -12,22 +12,16 @@
       </div>
 
       <!-- Filters -->
-      <!-- Filters with Clear Button -->
-      <!-- Filters - Quick fix -->
-      <div class="table-filters flex flex-wrap gap-2">
-        <!-- Search -->
-        <div class="search-container flex-1 min-w-[250px]">
+      <div class="table-filters">
+        <div class="search-container">
           <InputText
             v-model="query_string"
             :placeholder="$t('users.search')"
+            class="search-input"
             @input="handleSearchInput"
-            class="search-input w-full"
           />
-          <i class="pi pi-search search-icon" />
-        </div>
+          <i class="pi pi-search search-icon"></i>
 
-        <!-- Per page select -->
-        <div class="flex items-center gap-2">
           <Select
             v-model="per_page"
             :options="perPageOptions"
@@ -35,7 +29,7 @@
             optionValue="value"
             :placeholder="$t('users.show')"
             @change="getData(propSearchUrl)"
-            class="w-full md:w-32"
+            class="w-10rem"
           />
         </div>
       </div>

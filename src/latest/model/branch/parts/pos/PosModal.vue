@@ -94,6 +94,7 @@
       />
 
       <!-- Cart Panel -->
+      <div :class="['pos-container', { 'dark-mode': isDarkMode }]">
       <PosCartPanel
         ref="cartPanel"
         :cart-items="cartItems"
@@ -126,6 +127,7 @@
             : 'cart-panel-vertical',
         ]"
       />
+    </div>
     </div>
 
     <!-- Held Invoices Modal -->
