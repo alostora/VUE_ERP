@@ -89,7 +89,7 @@ export default {
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  position: absolute; /* غيرنا لـ absolute */
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -156,6 +156,25 @@ export default {
 
   .header-end .p-button-text {
     display: none;
+  }
+
+  .header-end {
+    gap: 0.25rem;
+  }
+
+  .company-logo {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 576px) {
+  .company-logo {
+    display: none;
+  }
+
+  .header-start {
+    gap: 0.5rem;
   }
 }
 </style>

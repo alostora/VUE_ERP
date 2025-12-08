@@ -12,16 +12,16 @@
       </div>
 
       <!-- Filters -->
-      <!-- Filters with Clear Button -->
-      <!-- Filters - Quick fix -->
-      <div class="table-filters flex flex-wrap gap-2">
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+      >
         <!-- Search -->
-        <div class="search-container flex-1 min-w-[250px]">
+        <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
             :placeholder="$t('users.search')"
             @input="handleSearchInput"
-            class="search-input w-full"
+            class="search-input"
           />
           <i class="pi pi-search search-icon" />
         </div>

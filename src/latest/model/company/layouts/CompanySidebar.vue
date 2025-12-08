@@ -149,25 +149,11 @@ export default {
           icon: "pi pi-pound",
           route: `/company/${this.$route.params.company_id}/discounts`,
         },
-        /* 
-        {
-          label: "companies.branches",
-          icon: "pi pi-map-marker",
-          route: "#",
-          disabled: true,
-        },
-        {
-          label: "companies.employees",
-          icon: "pi pi-users",
-          route: "#",
-          disabled: true,
-        }, */
       ],
     };
   },
 
   computed: {
-    // Use computed property to get company_id
     companyId() {
       return this.$route.params.company_id;
     },
@@ -192,9 +178,9 @@ export default {
   width: 280px;
   height: calc(100vh - 70px);
   background: var(--surface-card);
-  position: absolute; /* غيرنا من fixed لـ absolute */
+  position: absolute;
   top: 70px;
-  left: 0; /* علشان الانجليزي */
+  left: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 700;
   display: flex;
@@ -206,7 +192,7 @@ export default {
 /* RTL Support */
 .company-sidebar.rtl {
   left: auto;
-  right: 0; /* علشان العربي */
+  right: 0;
   border-right: none;
   border-left: 1px solid var(--surface-border);
 }
@@ -442,5 +428,32 @@ export default {
 /* Smooth animations */
 .company-sidebar * {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .company-sidebar:not(.collapsed) {
+    width: 240px;
+  }
+
+  .brand-text {
+    max-width: 120px;
+  }
+}
+
+/* Mobile Navigation Items */
+@media (max-width: 768px) {
+  .nav-item {
+    min-height: 44px;
+  }
+
+  .nav-label {
+    font-size: 0.95rem;
+  }
+
+  .sidebar-nav {
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
 }
 </style>

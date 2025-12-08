@@ -92,43 +92,6 @@ export default {
 };
 </script>
 
-____________________
-
-*********************************
-____________________
-src\Home.vue
-
-<template>
-  <RouterView />
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      token: "",
-      error_message: "",
-    };
-  },
-  methods: {
-    checkIfAuth() {
-      this.token = localStorage.getItem("authToken");
-
-      if (this.token) {
-        this.$router.push("/");
-      } else {
-        this.$router.push("/login");
-      }
-    },
-  },
-
-  beforeCreate() {},
-
-  created() {
-    this.checkIfAuth();
-  },
-};
-</script>
 
 ____________________
 
@@ -212,52 +175,60 @@ ____________________
 ____________________
 src\latest\views\HomePage.vue
 <template>
-  <div class="layout-wrapper" :class="[currentDirection, currentTheme]">
-    <MVVMMainHeader
+  <div class="app-layout" :class="layoutClasses">
+    <!-- Header -->
+    <AppHeader
       @toggle-sidebar="toggleSidebar"
       @language-changed="onLanguageChanged"
       @theme-changed="onThemeChanged"
+      :is-mobile="isMobile"
+      :sidebar-collapsed="sidebarCollapsed"
     />
-    
-    <!-- Overlay للخلفية في الموبايل -->
-    <div 
-      v-if="isMobile && !sidebarCollapsed" 
-      class="sidebar-overlay" 
+
+    <!-- Mobile Overlay -->
+    <div
+      v-if="isMobile && !sidebarCollapsed"
+      class="mobile-overlay"
       @click="toggleSidebar"
     ></div>
-    
+
     <div class="layout-container">
-      <MVVMSidebar
+      <!-- Sidebar -->
+      <AppSidebar
         :collapsed="sidebarCollapsed"
         :position="currentDirection"
         :is-mobile="isMobile"
         @toggle="toggleSidebar"
       />
-      <main
-        class="main-content"
-        :class="{ 'content-expanded': sidebarCollapsed }"
-      >
-        <RouterView :company="company" :company_id="company_id" />
-        <MVVMFooter />
+
+      <!-- Main Content -->
+      <main class="main-content" :class="contentClasses">
+        <div class="content-wrapper">
+          <RouterView />
+        </div>
       </main>
     </div>
+
+    <Toast />
+    <ConfirmDialog />
   </div>
 </template>
 
 <script>
-import { RouterView } from 'vue-router'
-import MVVMMainHeader from "./layouts/MVVMMainHeader.vue";
-import MVVMSidebar from "./layouts/MVVMSidebar.vue";
-import MVVMContent from "./layouts/MVVMContent.vue";
-import MVVMFooter from "./layouts/MVVMFooter.vue";
+import { RouterView } from "vue-router";
+import AppHeader from "./layouts/MVVMMainHeader.vue";
+import AppSidebar from "./layouts/MVVMSidebar.vue";
+import Toast from "primevue/toast";
+import ConfirmDialog from "primevue/confirmdialog";
 
 export default {
+  name: "HomePage",
   components: {
     RouterView,
-    MVVMMainHeader,
-    MVVMSidebar,
-    MVVMContent,
-    MVVMFooter,
+    AppHeader,
+    AppSidebar,
+    Toast,
+    ConfirmDialog,
   },
   data() {
     return {
@@ -266,192 +237,313 @@ export default {
         localStorage.getItem("language") === "ar" ? "rtl" : "ltr",
       currentTheme: localStorage.getItem("theme") || "light",
       isMobile: false,
+      resizeTimeout: null,
     };
+  },
+  computed: {
+    layoutClasses() {
+      return {
+        "layout-ltr": this.currentDirection === "ltr",
+        "layout-rtl": this.currentDirection === "rtl",
+        "mobile-layout": this.isMobile,
+      };
+    },
+    contentClasses() {
+      return {
+        "content-expanded": this.sidebarCollapsed && !this.isMobile,
+        "mobile-content": this.isMobile,
+        "sidebar-open": this.isMobile && !this.sidebarCollapsed,
+      };
+    },
   },
   methods: {
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
+
+      // Prevent body scrolling when sidebar is open on mobile
+      if (this.isMobile) {
+        if (!this.sidebarCollapsed) {
+          document.body.style.overflow = "hidden";
+        } else {
+          document.body.style.overflow = "";
+        }
+      }
     },
+
     onLanguageChanged(language) {
       this.currentDirection = language.dir;
+      document.documentElement.dir = language.dir;
+      document.documentElement.lang = language.code;
+
+      // Update i18n locale
+      this.$i18n.locale = language.code;
     },
+
     onThemeChanged(theme) {
       this.currentTheme = theme;
+      document.documentElement.classList.remove("light-mode", "dark-mode");
+      document.documentElement.classList.add(theme + "-mode");
     },
+
     checkMobile() {
-      this.isMobile = window.innerWidth <= 768;
-      // إغلاق السايدبار تلقائياً في الموبايل
+      const width = window.innerWidth;
+      this.isMobile = width <= 768;
+
+      // Auto-collapse sidebar on mobile
       if (this.isMobile) {
         this.sidebarCollapsed = true;
       }
     },
+
+    handleResize() {
+      clearTimeout(this.resizeTimeout);
+      this.resizeTimeout = setTimeout(() => {
+        this.checkMobile();
+      }, 100);
+    },
   },
   mounted() {
     this.checkMobile();
-    window.addEventListener('resize', this.checkMobile);
-    
-    // Initialize theme class
+    window.addEventListener("resize", this.handleResize);
+
+    // Set initial theme
     const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.classList.add(savedTheme + "-mode");
+
+    // Set initial language direction
+    const savedLang = localStorage.getItem("language") || "en";
+    document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = savedLang;
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this.checkMobile);
+    window.removeEventListener("resize", this.handleResize);
+    document.body.style.overflow = "";
   },
 };
 </script>
 
 <style scoped>
-.layout-wrapper {
+/* Base Layout */
+.app-layout {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: var(--surface-ground);
 }
 
 .layout-container {
   display: flex;
-  flex: 1;
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 64px);
   position: relative;
 }
 
+/* Main Content */
 .main-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 1rem;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface-ground);
   min-height: 100%;
 }
 
-/* LTR - Sidebar on left */
-.layout-wrapper.ltr .main-content {
+/* Desktop - LTR */
+.layout-ltr:not(.mobile-layout) .main-content {
   margin-left: 280px;
   width: calc(100% - 280px);
 }
 
-.layout-wrapper.ltr .main-content.content-expanded {
-  margin-left: 60px;
-  width: calc(100% - 60px);
+.layout-ltr:not(.mobile-layout) .main-content.content-expanded {
+  margin-left: 70px;
+  width: calc(100% - 70px);
 }
 
-/* RTL - Sidebar on right */
-.layout-wrapper.rtl .main-content {
+/* Desktop - RTL */
+.layout-rtl:not(.mobile-layout) .main-content {
   margin-right: 280px;
   width: calc(100% - 280px);
 }
 
-.layout-wrapper.rtl .main-content.content-expanded {
-  margin-right: 60px;
-  width: calc(100% - 60px);
+.layout-rtl:not(.mobile-layout) .main-content.content-expanded {
+  margin-right: 70px;
+  width: calc(100% - 70px);
 }
 
-/* Mobile responsive */
+/* Content Wrapper */
+.content-wrapper {
+  padding: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: calc(100vh - 64px - 3rem); /* Viewport - header - padding */
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Mobile & Tablet Styles */
 @media (max-width: 768px) {
-  .layout-wrapper.ltr .main-content,
-  .layout-wrapper.rtl .main-content {
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
+  .mobile-layout {
+    overflow-x: hidden;
   }
 
-  .layout-wrapper.ltr .main-content.content-expanded,
-  .layout-wrapper.rtl .main-content.content-expanded {
-    margin-left: 0;
-    margin-right: 0;
-    width: 100%;
+  .main-content {
+    padding: 0;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    transition: transform 0.3s ease;
   }
-  
-  /* Overlay Styles */
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 899;
-    backdrop-filter: blur(2px);
+
+  /* When sidebar is open, shift content */
+  .sidebar-open .main-content {
+    transform: translateX(280px);
+  }
+
+  .layout-rtl .sidebar-open .main-content {
+    transform: translateX(-280px);
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+    min-height: calc(100vh - 56px - 2rem); /* Mobile header - padding */
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 0.75rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .app-header,
+  .app-sidebar {
+    display: none !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .content-wrapper {
+    padding: 0;
   }
 }
 </style>
+
+
 ____________________
 
 *********************************
 ____________________
 src\latest\views\layouts\MVVMSidebar.vue
+
 <template>
   <aside
-    class="modern-sidebar"
+    class="app-sidebar"
     :class="[position, { collapsed: collapsed, mobile: isMobile }]"
+    :style="{ width: sidebarWidth }"
   >
-    <div class="sidebar-content">
-      <!-- Header مع زر الإغلاق -->
-      <div class="sidebar-header" v-if="!collapsed">
+    <div class="sidebar-container">
+      <!-- Header -->
+      <div class="sidebar-header">
         <div class="sidebar-brand">
-          <i class="pi pi-shield brand-icon"></i>
-          <span class="brand-text">ERP System</span>
+          <div class="brand-icon">
+            <i class="pi pi-shield"></i>
+          </div>
+          <transition name="fade-slide">
+            <span v-if="!collapsed" class="brand-text">ERP System</span>
+          </transition>
         </div>
 
-        <!-- زر الإغلاق - يظهر فقط في الموبايل وعندما السايدبار مفتوح -->
+        <!-- Close Button for Mobile -->
         <Button
           v-if="isMobile && !collapsed"
           icon="pi pi-times"
           @click="$emit('toggle')"
           text
           rounded
+          severity="secondary"
+          size="small"
           class="close-btn"
-          v-tooltip="'Close'"
+        />
+
+        <!-- Collapse Toggle for Desktop -->
+        <Button
+          v-if="!isMobile"
+          :icon="collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"
+          @click="$emit('toggle')"
+          text
+          rounded
+          severity="secondary"
+          size="small"
+          class="collapse-btn"
         />
       </div>
 
+      <!-- Navigation -->
       <nav class="sidebar-nav">
-        <div v-for="item in items" :key="item.label" class="nav-item-wrapper">
+        <div
+          v-for="item in navItems"
+          :key="item.label"
+          class="nav-item-wrapper"
+        >
           <router-link
             v-if="item.route"
-            v-slot="{ isActive }"
+            v-slot="{ isActive, navigate }"
             :to="item.route"
             custom
           >
             <div
               class="nav-item"
               :class="{ active: isActive, collapsed: collapsed }"
-              @click="handleNavigation(item.route)"
+              @click="navigate"
+              @keyup.enter="navigate"
+              role="button"
+              tabindex="0"
             >
               <div class="nav-icon">
                 <i :class="item.icon"></i>
               </div>
-              <span class="nav-label">{{ $t(item.label) }}</span>
+              <transition name="fade">
+                <span class="nav-label" v-if="!collapsed">{{
+                  $t(item.label)
+                }}</span>
+              </transition>
               <div class="active-indicator" v-if="isActive && !collapsed"></div>
             </div>
           </router-link>
         </div>
       </nav>
-
-      <div class="sidebar-footer" v-if="!collapsed && !isMobile">
-        <div class="user-section">
-          <Avatar
-            icon="pi pi-user"
-            shape="circle"
-            size="large"
-            class="user-avatar"
-          />
-          <div class="user-info">
-            <div class="user-name">John Doe</div>
-            <div class="user-role">Administrator</div>
-          </div>
-        </div>
-      </div>
     </div>
   </aside>
 </template>
 
 <script>
-import Avatar from "primevue/avatar";
 import Button from "primevue/button";
 
 export default {
+  name: "AppSidebar",
   components: {
-    Avatar,
     Button,
   },
   props: {
@@ -469,9 +561,15 @@ export default {
     },
   },
   emits: ["toggle"],
-  data() {
-    return {
-      items: [
+  computed: {
+    sidebarWidth() {
+      if (this.isMobile) {
+        return this.collapsed ? "0px" : "280px";
+      }
+      return this.collapsed ? "70px" : "280px";
+    },
+    navItems() {
+      return [
         { label: "menu.home", icon: "pi pi-home", route: "/" },
         { label: "menu.users", icon: "pi pi-users", route: "/users" },
         { label: "menu.countries", icon: "pi pi-flag", route: "/countries" },
@@ -481,155 +579,48 @@ export default {
           route: "/governorates",
         },
         { label: "menu.cities", icon: "pi pi-building", route: "/cities" },
-
         {
           label: "menu.companies",
           icon: "pi pi-briefcase",
           route: "/companies",
         },
-      ],
-    };
-  },
-  methods: {
-    handleNavigation(route) {
-      this.$router.push(route);
-      // Auto-close sidebar on mobile after navigation
-      if (this.isMobile) {
-        this.$emit("toggle");
-      }
+      ];
     },
   },
 };
 </script>
 
 <style scoped>
-/* Base Styles (Desktop) */
-.modern-sidebar {
-  width: 280px;
-  height: calc(100vh - 60px);
+/* Base Sidebar */
+.app-sidebar {
+  height: calc(100vh - 64px);
   background: var(--surface-card);
   position: fixed;
-  top: 60px;
+  top: 64px;
+  left: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 900;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--surface-border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* RTL Adjustments for Desktop */
-.modern-sidebar.rtl {
+/* RTL Support */
+.app-sidebar.rtl {
+  left: auto;
   right: 0;
-  left: unset;
   border-right: none;
   border-left: 1px solid var(--surface-border);
 }
 
-.sidebar-content {
+.sidebar-container {
   display: flex;
   flex-direction: column;
   height: 100%;
   padding: 1rem 0;
   background: var(--surface-card);
-  position: relative;
-  z-index: 1101;
 }
-
-/* --- Mobile Styles (max-width: 768px) --- */
-@media (max-width: 768px) {
-  .modern-sidebar {
-    height: 100vh;
-    top: 0;
-    width: 280px !important;
-    z-index: 1100;
-    box-shadow: none;
-    transform: translateX(-100%);
-  }
-
-  .modern-sidebar.rtl {
-    transform: translateX(100%);
-  }
-
-  /* Expanded LTR: Show sidebar */
-  .modern-sidebar:not(.collapsed):not(.rtl) {
-    transform: translateX(0);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Expanded RTL: Show sidebar */
-  .modern-sidebar:not(.collapsed).rtl {
-    transform: translateX(0);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
-  }
-
-  /* Force collapsed state to remain hidden */
-  .modern-sidebar.collapsed:not(.rtl) {
-    transform: translateX(-100%);
-  }
-  .modern-sidebar.collapsed.rtl {
-    transform: translateX(100%);
-  }
-
-  .close-btn {
-    display: block !important;
-    color: var(--text-color-secondary);
-  }
-
-  .close-btn:hover {
-    color: var(--text-color);
-    background: var(--surface-hover);
-  }
-
-  .sidebar-header {
-    padding: 1rem 1.5rem;
-  }
-
-  .sidebar-nav {
-    padding: 0 1rem;
-  }
-
-  .nav-item {
-    padding: 1rem;
-    margin: 0.25rem 0;
-  }
-
-  .sidebar-footer {
-    display: none;
-  }
-}
-
-/* --- Desktop Collapsed State (min-width: 769px) --- */
-@media (min-width: 769px) {
-  .modern-sidebar.collapsed {
-    width: 70px;
-  }
-
-  .modern-sidebar.collapsed .nav-item {
-    padding: 0.75rem;
-    justify-content: center;
-  }
-
-  .modern-sidebar.collapsed .nav-icon {
-    margin: 0;
-  }
-
-  .modern-sidebar.collapsed .nav-label {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
-  }
-
-  .modern-sidebar.collapsed .active-indicator {
-    display: none;
-  }
-
-  .close-btn {
-    display: none !important;
-  }
-}
-
-/* --- Common Navigation & Footer Styles --- */
 
 /* Sidebar Header */
 .sidebar-header {
@@ -648,29 +639,36 @@ export default {
 }
 
 .brand-icon {
-  color: var(--primary-500);
-  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-icon i {
+  color: white;
+  font-size: 1.25rem;
 }
 
 .brand-text {
   font-weight: 600;
   font-size: 1.1rem;
   color: var(--text-color);
+  white-space: nowrap;
 }
 
-.close-btn {
-  display: none;
-}
-
-/* باقي الـ styles نفسها بدون تغيير */
-/* ... Navigation, Footer, etc. ... */
-
+/* Navigation */
 .sidebar-nav {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding: 0 0.75rem;
+  overflow-y: auto;
 }
 
 .nav-item {
@@ -683,6 +681,8 @@ export default {
   position: relative;
   color: var(--text-color-secondary);
   text-decoration: none;
+  outline: none;
+  min-height: 44px;
 }
 
 .nav-item:hover {
@@ -714,6 +714,7 @@ export default {
   justify-content: center;
   margin-right: 0.75rem;
   flex-shrink: 0;
+  font-size: 1.125rem;
 }
 
 .rtl .nav-icon {
@@ -725,6 +726,7 @@ export default {
   transition: all 0.3s ease;
   white-space: nowrap;
   flex: 1;
+  font-size: 0.9375rem;
 }
 
 .active-indicator {
@@ -732,7 +734,7 @@ export default {
   right: 0.5rem;
   width: 4px;
   height: 20px;
-  background: var(--primary-500);
+  background: var(--color-primary);
   border-radius: 2px;
 }
 
@@ -741,21 +743,100 @@ export default {
   left: 0.5rem;
 }
 
-.sidebar-footer {
-  padding: 1rem 1.5rem 0;
-  border-top: 1px solid var(--surface-border);
-  margin-top: auto;
+/* Close & Collapse Buttons */
+.close-btn,
+.collapse-btn {
+  width: 32px;
+  height: 32px;
 }
 
-.user-section {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .app-sidebar {
+    height: 100vh;
+    top: 0;
+    width: 280px !important;
+    z-index: 1000;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar.rtl {
+    transform: translateX(100%);
+  }
+
+  .app-sidebar:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  .app-sidebar.rtl:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  .close-btn {
+    display: flex !important;
+  }
+
+  .collapse-btn {
+    display: none !important;
+  }
 }
 
-/* Smooth animations for all elements */
-.modern-sidebar * {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Desktop Collapsed State */
+@media (min-width: 769px) {
+  .app-sidebar.collapsed {
+    width: 70px;
+  }
+
+  .app-sidebar.collapsed .nav-item {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+
+  .app-sidebar.collapsed .nav-icon {
+    margin: 0;
+  }
+
+  .app-sidebar.collapsed .nav-label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  .app-sidebar.collapsed .active-indicator {
+    display: none;
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+}
+
+/* Animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.rtl .fade-slide-enter-from,
+.rtl .fade-slide-leave-to {
+  transform: translateX(10px);
 }
 </style>
 
@@ -765,308 +846,490 @@ ____________________
 *********************************
 ____________________
 src\latest\views\layouts\MVVMMainHeader.vue
+
+<!-- في MVVMMainHeader.vue -->
 <template>
-  <header class="main-header">
-    <Menubar :model="translatedMenuItems">
-      <template #start>
-        <div class="header-start">
-          <Button
-            icon="pi pi-bars"
-            @click="$emit('toggle-sidebar')"
-            text
-            rounded
+  <header class="app-header" :class="{ 'mobile-header': isMobile }">
+    <div class="header-container">
+      <!-- Left Section -->
+      <div class="header-left">
+        <Button
+          :icon="
+            isMobile
+              ? 'pi pi-bars'
+              : sidebarCollapsed
+              ? 'pi pi-bars'
+              : 'pi pi-align-justify'
+          "
+          @click="$emit('toggle-sidebar')"
+          text
+          rounded
+          class="menu-toggle"
+        />
+
+        <div class="app-brand">
+          <div class="app-title">{{ $t("app.title") }}</div>
+        </div>
+      </div>
+
+      <!-- Center Section -->
+      <div class="header-center">
+        <div class="search-container">
+          <i class="pi pi-search search-icon"></i>
+          <InputText
+            v-model="searchQuery"
+            :placeholder="$t('common.search')"
+            type="text"
+            class="search-input"
           />
-          <span class="app-title">{{ $t("app.title") }}</span>
         </div>
-      </template>
+      </div>
 
-      <template #end>
-        <div class="header-end">
-          <div class="search-container">
-            <InputText :placeholder="$t('header.search')" type="text" />
-            <Button icon="pi pi-search" text />
-          </div>
+      <!-- Right Section -->
+      <div class="header-right">
+        <!-- Theme Toggle -->
+        <Button
+          @click="toggleTheme"
+          :icon="themeIcon"
+          :severity="themeSeverity"
+          text
+          rounded
+          class="theme-toggle"
+          :title="themeTitle"
+        />
 
-          <div class="action-buttons">
-            <Button
-              @click="toggleTheme"
-              :icon="currentTheme.icon"
-              :severity="currentTheme.severity"
-              text
-              rounded
-              :title="currentTheme.title"
+        <!-- Language Toggle -->
+        <Button
+          @click="toggleLanguage"
+          :icon="'pi pi-globe'"
+          text
+          rounded
+          class="language-toggle"
+          :title="languageTitle"
+        />
+
+        <!-- User Menu with Logout -->
+        <div class="user-menu-container">
+          <Menu ref="userMenu" :model="userMenuItems" :popup="true" />
+
+          <div class="user-menu" @click="toggleUserMenu">
+            <Avatar
+              icon="pi pi-user"
+              shape="circle"
+              size="large"
+              class="user-avatar"
             />
-
-            <Button
-              @click="toggleLanguage"
-              :icon="currentLanguage.icon"
-              text
-              rounded
-              :title="currentLanguage.label"
-            />
-
-            <div class="user-menu-container">
-              <Menu ref="userMenu" :model="logoutMenuItem" :popup="true" />
-
-              <Button
-                icon="pi pi-user"
-                rounded
-                text
-                severity="secondary"
-                class="p-button-lg"
-                @click="toggleUserMenu"
-              />
-            </div>
+            <span class="user-name" v-if="!isMobile">{{ userName }}</span>
+            <i class="pi pi-chevron-down user-arrow"></i>
           </div>
         </div>
-      </template>
-    </Menubar>
+      </div>
+    </div>
   </header>
 </template>
 
 <script>
-import Menubar from "primevue/menubar";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Avatar from "primevue/avatar";
 import Menu from "primevue/menu";
 
 export default {
+  name: "AppHeader",
   components: {
-    Menubar,
     Button,
     InputText,
     Avatar,
     Menu,
   },
+  props: {
+    isMobile: {
+      type: Boolean,
+      default: false,
+    },
+    sidebarCollapsed: {
+      type: Boolean,
+      default: false,
+    },
+  },
   emits: ["toggle-sidebar", "language-changed", "theme-changed"],
   data() {
     return {
-      currentLang: this.$i18n.locale,
-      currentTheme:
-        localStorage.getItem("theme") === "dark"
-          ? {
-              mode: "dark",
-              icon: "pi pi-moon",
-              severity: "secondary",
-              title: "Switch to Light Mode",
-            }
-          : {
-              mode: "light",
-              icon: "pi pi-sun",
-              severity: "warning",
-              title: "Switch to Dark Mode",
-            },
-      languages: [
-        { code: "en", label: "English", icon: "pi pi-globe", dir: "ltr" },
-        { code: "ar", label: "العربية", icon: "pi pi-globe", dir: "rtl" },
-      ],
-      menuItems: [
-        { label: "menu.home", icon: "pi pi-home" },
-        { label: "menu.users", icon: "pi pi-folder" },
-        { label: "menu.settings", icon: "pi pi-cog" },
-      ],
-      logoutMenuItem: [
-        {
-          label: this.$t("header.logout") || "Logout",
-          icon: "pi pi-sign-out",
-          command: () => {
-            this.logout();
-          },
-        },
-      ],
+      searchQuery: "",
+      currentTheme: localStorage.getItem("theme") || "light",
+      currentLanguage: localStorage.getItem("language") || "en",
+      showUserMenu: false,
     };
   },
   computed: {
-    currentLanguage() {
-      return (
-        this.languages.find((lang) => lang.code === this.currentLang) ||
-        this.languages[0]
-      );
+    themeIcon() {
+      return this.currentTheme === "dark" ? "pi pi-moon" : "pi pi-sun";
     },
-    translatedMenuItems() {
-      return this.menuItems.map((item) => ({
-        ...item,
-        label: this.$t(item.label),
-      }));
+    themeSeverity() {
+      return this.currentTheme === "dark" ? "secondary" : "warning";
+    },
+    themeTitle() {
+      return this.currentTheme === "dark"
+        ? this.$t("common.switchToLight")
+        : this.$t("common.switchToDark");
+    },
+    languageTitle() {
+      return this.currentLanguage === "en"
+        ? "التبديل إلى العربية"
+        : "Switch to English";
+    },
+    userName() {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      return user.name || "Admin";
+    },
+    userMenuItems() {
+      return [
+        {
+          label: this.userName,
+          icon: "pi pi-user",
+          disabled: true,
+          class: "menu-header",
+        },
+        {
+          separator: true,
+        },
+        {
+          label: this.$t("common.profile"),
+          icon: "pi pi-user-edit",
+          command: () => this.$router.push("/profile"),
+        },
+        {
+          label: this.$t("common.settings"),
+          icon: "pi pi-cog",
+          command: () => this.$router.push("/settings"),
+        },
+        {
+          separator: true,
+        },
+        {
+          label: this.$t("common.logout"),
+          icon: "pi pi-sign-out",
+          command: () => this.logout(),
+        },
+      ];
     },
   },
   methods: {
+    toggleTheme() {
+      const newTheme = this.currentTheme === "light" ? "dark" : "light";
+      this.currentTheme = newTheme;
+      localStorage.setItem("theme", newTheme);
+      this.applyTheme(newTheme);
+      this.$emit("theme-changed", newTheme);
+
+      // Show toast notification
+      this.showToast(
+        "success",
+        this.$t("common.themeChanged"),
+        this.$t("common.switchedTo") +
+          " " +
+          (newTheme === "dark"
+            ? this.$t("common.darkMode")
+            : this.$t("common.lightMode"))
+      );
+    },
+
+    toggleLanguage() {
+      const newLang = this.currentLanguage === "en" ? "ar" : "en";
+      this.currentLanguage = newLang;
+      localStorage.setItem("language", newLang);
+
+      // Update i18n
+      this.$i18n.locale = newLang;
+
+      // Update HTML attributes for RTL
+      document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
+      document.documentElement.lang = newLang;
+
+      this.$emit("language-changed", {
+        code: newLang,
+        dir: newLang === "ar" ? "rtl" : "ltr",
+      });
+
+      // Force re-render
+      this.$forceUpdate();
+
+      // Show toast notification
+      this.showToast(
+        "success",
+        this.$t("common.languageChanged"),
+        this.$t("common.switchedTo") +
+          " " +
+          (newLang === "en" ? "English" : "العربية")
+      );
+    },
+
     toggleUserMenu(event) {
       this.$refs.userMenu.toggle(event);
     },
 
-    logout() {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-      
-      this.$toast.add({
-        severity: "info",
-        summary: "Logged Out",
-        detail: "You have been successfully signed out.",
-        life: 3000,
-      });
-
-      this.$router.push("/login"); 
-    },
-
-    toggleLanguage() {
-      this.currentLang = this.currentLang === "en" ? "ar" : "en";
-      const newLang = this.currentLanguage;
-
-      this.$i18n.locale = newLang.code;
-      localStorage.setItem("language", newLang.code);
-      document.documentElement.dir = newLang.dir;
-      document.documentElement.lang = newLang.code;
-
-      this.$forceUpdate();
-      this.$emit("language-changed", newLang);
-    },
-
-    toggleTheme() {
-      const newTheme = this.currentTheme.mode === "light" ? "dark" : "light";
-
-      this.currentTheme =
-        newTheme === "dark"
-          ? {
-              mode: "dark",
-              icon: "pi pi-moon",
-              severity: "secondary",
-              title: "Switch to Light Mode",
-            }
-          : {
-              mode: "light",
-              icon: "pi pi-sun",
-              severity: "warning",
-              title: "Switch to Dark Mode",
-            };
-
-      localStorage.setItem("theme", newTheme);
-      this.applyTheme(newTheme);
-      this.$emit("theme-changed", newTheme);
-    },
-
     applyTheme(theme) {
-      if (theme === "dark") {
-        document.documentElement.classList.add("dark-mode");
-        document.documentElement.classList.remove("light-mode");
-      } else {
-        document.documentElement.classList.add("light-mode");
-        document.documentElement.classList.remove("dark-mode");
+      // Remove existing theme classes
+      document.documentElement.classList.remove("light-mode", "dark-mode");
+      // Add new theme class
+      document.documentElement.classList.add(theme + "-mode");
+
+      // Force PrimeVue theme update
+      const event = new CustomEvent("theme-change", { detail: theme });
+      document.dispatchEvent(event);
+    },
+
+    logout() {
+      this.$confirm.require({
+        message: this.$t("common.confirmLogout"),
+        header: this.$t("common.logout"),
+        icon: "pi pi-exclamation-triangle",
+        acceptClass: "p-button-danger",
+        accept: () => {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
+
+          this.showToast(
+            "info",
+            this.$t("common.loggedOut"),
+            this.$t("common.logoutSuccess")
+          );
+
+          setTimeout(() => {
+            this.$router.push("/login");
+          }, 1000);
+        },
+        reject: () => {
+          this.showToast(
+            "info",
+            this.$t("common.cancelled"),
+            this.$t("common.logoutCancelled")
+          );
+        },
+      });
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({
+          severity,
+          summary,
+          detail,
+          life: 3000,
+        });
       }
-    },
-
-    initializeTheme() {
-      const savedTheme = localStorage.getItem("theme") || "light";
-      this.applyTheme(savedTheme);
-    },
-
-    isMobile() {
-      return window.innerWidth <= 768;
     },
   },
   mounted() {
-    const langConfig = this.currentLanguage;
-    document.documentElement.dir = langConfig.dir;
-    document.documentElement.lang = this.currentLang;
+    // Apply initial theme
+    const savedTheme = localStorage.getItem("theme") || "light";
+    this.applyTheme(savedTheme);
 
-    if (this.isMobile()) {
-      this.$emit("toggle-sidebar");
-    }
-
-    this.initializeTheme();
+    // Apply initial language
+    const savedLang = localStorage.getItem("language") || "en";
+    document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = savedLang;
   },
 };
 </script>
 
 <style scoped>
-.main-header {
+/* Base Header */
+.app-header {
+  height: 64px;
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 
-.header-start {
+.header-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  gap: 1rem;
+}
+
+/* Left Section */
+.header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex: 1;
+}
+
+.menu-toggle {
+  width: 40px;
+  height: 40px;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
 }
 
 .app-title {
   font-weight: 600;
   font-size: 1.25rem;
+  color: var(--text-color);
 }
 
-.header-end {
+/* Center Section */
+.header-center {
+  flex: 2;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
 }
 
 .search-container {
-  display: flex;
-  align-items: center;
-  flex-grow: 1; /* Allow search to take space on desktop */
+  position: relative;
+  width: 100%;
+  max-width: 400px;
 }
 
-.action-buttons {
-  /* Group theme, language, and user menu buttons */
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color-secondary);
+  pointer-events: none;
+}
+
+.rtl .search-icon {
+  left: auto;
+  right: 0.75rem;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.5rem;
+}
+
+.rtl .search-input {
+  padding-left: 0.75rem;
+  padding-right: 2.5rem;
+}
+
+/* Right Section */
+.header-right {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
+.theme-toggle,
+.language-toggle {
+  width: 40px;
+  height: 40px;
+}
+
 .user-menu-container {
-  /* This ensures the Menu component anchors correctly relative to the button */
   position: relative;
 }
 
-/* Adjust Avatar button size for better clickability */
-.user-menu-container .p-button-lg {
-  width: 2.5rem;
-  height: 2.5rem;
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
 
-:deep(.p-menubar) {
-  border: none;
-  border-radius: 0;
-  padding: 0.5rem 1rem;
-  background: transparent;
+.user-menu:hover {
+  background: var(--surface-hover);
 }
 
-/* Theme transition for smooth mode switching */
-:deep(*) {
-  transition: background-color 0.3s ease, color 0.3s ease,
-    border-color 0.3s ease;
+.user-avatar {
+  background: var(--surface-ground);
+  color: var(--text-color-secondary);
 }
 
-/* --- 📱 Mobile View Adjustments (Maximum Width 768px) --- */
+.user-name {
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.user-arrow {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+/* Menu Styling */
+:deep(.p-menu) {
+  min-width: 200px;
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.menu-header) {
+  opacity: 1 !important;
+  cursor: default;
+}
+
+:deep(.menu-header:hover) {
+  background: transparent !important;
+}
+
+/* Mobile Styles */
 @media (max-width: 768px) {
-    
-    /* 1. Hide the Search Input Text to save space */
-    .search-container :deep(.p-inputtext) {
-        display: none;
-    }
+  .app-header.mobile-header {
+    height: 56px;
+  }
 
-    /* 2. Remove the search container's ability to grow */
-    .search-container {
-        flex-grow: 0; 
-        /* Add some padding next to the search icon */
-        padding-left: 0.5rem; 
-        padding-right: 0.5rem;
-    }
-    
-    /* 3. Ensure the main header elements don't wrap and fit */
-    .header-start, .header-end {
-        flex-shrink: 0;
-    }
+  .header-container {
+    padding: 0 1rem;
+  }
+
+  .app-title {
+    display: none;
+  }
+
+  .search-container {
+    max-width: 200px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .theme-toggle,
+  .language-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .menu-toggle {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-container {
+    display: none;
+  }
 }
 </style>
+
+
 ____________________
 
 *********************************
 ____________________
 src\latest\views\layouts\MVVMFooter.vue
+
 
 <template>
   <footer class="modern-footer">
@@ -1506,11 +1769,13 @@ export default {
 }
 </style>
 
+
 ____________________
 
 ***************************
 ____________________
 src\latest\views\layouts\MVVMContent.vue
+
 <template>
   <div class="modern-content">
     <!-- Welcome Header -->
@@ -2501,6 +2766,7 @@ export default {
   height: 4px;
 }
 </style>
+
 
 
 ____________________

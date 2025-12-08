@@ -1,0 +1,1412 @@
+_____________________________
+src\latest\model\company\routes\company-routes.js
+
+
+import CompanyTable from "../parts/CompanyTable.vue";
+import CompanyShow from "../parts/CompanyShow.vue";
+import category_routes from "../../category/routes/category_routes";
+import measurement_unit_routes from "../../measurement_unit/routes/measurement_unit_routes";
+import variant_routes from "../../variant/routes/variant_routes";
+import product_routes from "../../product/routes/product_routes";
+import final_product_routes from "../../final_product/routes/final_product_routes";
+import branch_routes from "../../branch/routes/branch_routes";
+import invoice_stage_routes from "../../invoice_stage/routes/invoice_stage_routes";
+import tax_routes from "../../tax/routes/tax_routes";
+import discount_routes from "../../discount/routes/discount_routes";
+import contact_routes from "../../contact/routes/contact_routes";
+import CompanyDetails from "../parts/CompanyDetails.vue";
+
+const company_routes = [
+     {
+          path: "/companies",
+          name: "companies",
+          component: CompanyTable,
+          props: true,
+     },
+     {
+          path: "/company/:company_id/show",
+          name: "company-show",
+          component: CompanyShow,
+          props: (route) => ({
+               company_id: route.params.company_id
+          }),
+          redirect: { name: 'company-details' },
+          children: [
+               {
+                    path: "/company/:company_id/details",
+                    name: "company-details",
+                    component: CompanyDetails,
+                    props: (route) => ({
+                         company_id: route.params.company_id
+                    }),
+               },
+               ...category_routes,
+               ...measurement_unit_routes,
+               ...variant_routes,
+               ...product_routes,
+               ...final_product_routes,
+               ...branch_routes,
+               ...contact_routes,
+               ...invoice_stage_routes,
+               ...tax_routes,
+               ...discount_routes,
+          ],
+     }
+];
+
+export default company_routes;
+
+
+_____________________________
+*****************************
+_____________________________
+src\latest\model\company\parts\CompanyShow.vue
+
+
+<template>
+  <div class="company-show-wrapper" :class="layoutClasses">
+    <!-- نحط كل حاجة في container واحد -->
+    <div class="company-layout-container">
+      <!-- Company Header -->
+      <CompanyHeader
+        :company="company"
+        :current-page="$route.name"
+        @toggle-sidebar="toggleSidebar"
+        @go-back="goBackToCompanies"
+        @edit-company="editCompany"
+      />
+
+      <!-- Company Sidebar -->
+      <CompanySidebar
+        :company="company"
+        :collapsed="sidebarCollapsed"
+        :position="currentDirection"
+        :is-mobile="isMobile"
+        @toggle="toggleSidebar"
+      />
+
+      <!-- Mobile Overlay -->
+      <div
+        v-if="isMobile && !sidebarCollapsed"
+        class="company-sidebar-overlay"
+        @click="toggleSidebar"
+      ></div>
+
+      <!-- Main Content -->
+      <main
+        class="company-main-content"
+        :class="{ 'sidebar-collapsed': sidebarCollapsed }"
+      >
+        <div class="company-show-page">
+          <!-- Loading State -->
+          <div
+            v-if="loading"
+            class="flex justify-content-center align-items-center py-6"
+          >
+            <ProgressSpinner />
+            <p class="ml-3">{{ $t("common.loading") }}</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="error" class="error-state">
+            <Message severity="error" class="mb-3">
+              {{ error }}
+            </Message>
+            <Button
+              :label="$t('common.retry')"
+              icon="pi pi-refresh"
+              @click="fetchCompany"
+            />
+          </div>
+
+          <!-- Company Content -->
+          <div v-else-if="company.id" class="company-content"></div>
+
+          <RouterView :company="company" :company_id="company_id" />
+        </div>
+      </main>
+    </div>
+
+    <!-- Edit Company Modal -->
+    <CompanyEditModal
+      ref="companyEditModal"
+      :company="company"
+      @company-updated="handleCompanyUpdated"
+    />
+
+    <Toast />
+  </div>
+</template>
+
+<script>
+import { RouterView } from "vue-router";
+import { useTable } from "../../../views/layouts/constants/composables/useTable";
+import general_request from "../../../views/layouts/constants/general_request";
+
+// Import Company Layouts
+import CompanyHeader from "../layouts/CompanyHeader.vue";
+import CompanySidebar from "../layouts/CompanySidebar.vue";
+
+// Import Components
+import CompanyDetails from "../parts/details/CompanyDetails.vue";
+import CompanyStatistics from "../parts/details/CompanyStatistics.vue";
+
+// Import Edit Modal
+import CompanyEditModal from "./CompanyEditModal.vue";
+
+import Button from "primevue/button";
+import ProgressSpinner from "primevue/progressspinner";
+import Message from "primevue/message";
+import Toast from "primevue/toast";
+import Divider from "primevue/divider";
+
+export default {
+  name: "CompanyShow",
+  components: {
+    RouterView,
+    CompanyHeader,
+    CompanySidebar,
+    CompanyEditModal, // ضيفنا الـ modal هنا
+    Button,
+    ProgressSpinner,
+    Message,
+    Toast,
+    Divider,
+  },
+  mixins: [useTable()],
+  props: {
+    company_id: {
+      type: String,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      company: {},
+      loading: false,
+      error: "",
+      sidebarCollapsed: false,
+      isMobile: false,
+      currentLanguage: localStorage.getItem("language") || "en",
+    };
+  },
+  computed: {
+    currentDirection() {
+      return this.currentLanguage === "ar" ? "rtl" : "ltr";
+    },
+    layoutClasses() {
+      return {
+        "company-ltr": this.currentDirection === "ltr",
+        "company-rtl": this.currentDirection === "rtl",
+        "mobile-view": this.isMobile,
+      };
+    },
+  },
+  mounted() {
+    this.fetchCompany();
+    this.checkMobile();
+    this.setupLanguageListener();
+    window.addEventListener("resize", this.checkMobile);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.checkMobile);
+    if (this.languageUnwatch) {
+      this.languageUnwatch();
+    }
+  },
+  methods: {
+    async fetchCompany() {
+      this.loading = true;
+      this.error = "";
+
+      try {
+        const companyId = this.company_id || this.$route.params.company_id;
+
+        if (!companyId) {
+          throw new Error("Company ID is missing");
+        }
+
+        const url = `${general_request.BASE_URL}/admin/company/${companyId}`;
+        const response = await this.$http.get(url, {
+          headers: general_request.headers,
+        });
+
+        if (response.data && response.data.data) {
+          this.company = response.data.data;
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        this.error =
+          error.response?.data?.message ||
+          error.message ||
+          this.$t("errors.failedToLoadCompany");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    },
+
+    goBackToCompanies() {
+      this.$router.push("/companies");
+    },
+
+    editCompany() {
+      // افتح الـ modal للتحرير
+      this.$refs.companyEditModal.openModal();
+    },
+
+    handleCompanyUpdated(updatedCompany) {
+      // update الـ company data بعد التعديل
+      this.company = { ...this.company, ...updatedCompany };
+
+      // show success message
+      this.showToast(
+        "success",
+        this.$t("common.success"),
+        this.$t("companies.companyUpdated")
+      );
+
+      // refresh البيانات علشان نتأكد إن كل حاجة updated
+      this.fetchCompany();
+    },
+
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768;
+      if (this.isMobile) {
+        this.sidebarCollapsed = true;
+      }
+    },
+
+    setupLanguageListener() {
+      this.languageUnwatch = this.$watch("$i18n.locale", (newLocale) => {
+        this.currentLanguage = newLocale;
+      });
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({
+          severity: severity,
+          summary: summary,
+          detail: detail,
+          life: 3000,
+        });
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.company-show-wrapper {
+  min-height: 100vh;
+  background: var(--surface-ground);
+  position: relative;
+}
+
+/* الـ container الجديد علشان نحصر كل حاجة */
+.company-layout-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden; /* مهم جداً علشان نحصر المحتوى */
+}
+
+.company-main-content {
+  min-height: calc(100vh - 70px);
+  margin-left: 280px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  background: var(--surface-ground);
+  margin-top: 70px;
+  position: relative;
+  z-index: 1;
+}
+
+/* When sidebar is collapsed */
+.company-main-content.sidebar-collapsed {
+  margin-left: 70px;
+}
+
+/* RTL Support */
+.company-rtl .company-main-content {
+  margin-left: 0;
+  margin-right: 280px;
+}
+
+.company-rtl .company-main-content.sidebar-collapsed {
+  margin-right: 70px;
+}
+
+.company-show-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.company-sidebar-overlay {
+  position: absolute; /* غيرنا لـ absolute علشان يفضل داخل الـ container */
+  top: 70px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 70px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 699;
+  backdrop-filter: blur(2px);
+}
+
+.error-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.company-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .company-layout-container {
+    overflow: visible; /* في الموبايل بنسمح بالـ overlay */
+  }
+
+  .company-main-content {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100%;
+    margin-top: 70px;
+  }
+
+  .company-sidebar-overlay {
+    top: 70px;
+    z-index: 899;
+  }
+}
+</style>
+
+
+_____________________________
+*****************************
+_____________________________
+
+src\latest\model\company\layouts\CompanySidebar.vue
+
+
+<template>
+  <aside
+    class="company-sidebar"
+    :class="[position, { collapsed: collapsed, mobile: isMobile }]"
+  >
+    <div class="sidebar-content">
+      <!-- Header -->
+      <div class="sidebar-header" v-if="!collapsed">
+        <div class="sidebar-brand">
+          <i class="pi pi-building brand-icon"></i>
+          <span class="brand-text">{{ company.name }}</span>
+        </div>
+
+        <!-- Close button for mobile -->
+        <Button
+          v-if="isMobile && !collapsed"
+          icon="pi pi-times"
+          @click="$emit('toggle')"
+          text
+          rounded
+          class="close-btn"
+          v-tooltip="'Close'"
+        />
+      </div>
+
+      <nav class="sidebar-nav">
+        <div v-for="item in items" :key="item.label" class="nav-item-wrapper">
+          <router-link
+            v-if="item.route"
+            v-slot="{ isActive }"
+            :to="item.route"
+            custom
+          >
+            <div
+              class="nav-item"
+              :class="{ active: isActive, collapsed: collapsed }"
+              @click="handleNavigation(item.route)"
+            >
+              <div class="nav-icon">
+                <i :class="item.icon"></i>
+              </div>
+              <span class="nav-label">{{ $t(item.label) }}</span>
+              <div class="active-indicator" v-if="isActive && !collapsed"></div>
+            </div>
+          </router-link>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer" v-if="!collapsed && !isMobile">
+        <div class="company-stats">
+          <div class="stat-item">
+            <i class="pi pi-folder stat-icon"></i>
+            <span class="stat-value">12</span>
+            <span class="stat-label">{{ $t("companies.categories") }}</span>
+          </div>
+          <div class="stat-item">
+            <i class="pi pi-shopping-bag stat-icon"></i>
+            <span class="stat-value">156</span>
+            <span class="stat-label">{{ $t("companies.products") }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</template>
+
+<script>
+import Button from "primevue/button";
+
+export default {
+  name: "CompanySidebar",
+  components: {
+    Button,
+  },
+  props: {
+    company: {
+      type: Object,
+      required: true,
+    },
+    collapsed: {
+      type: Boolean,
+      default: false,
+    },
+    position: {
+      type: String,
+      default: "ltr",
+    },
+    isMobile: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ["toggle"],
+  data() {
+    return {
+      items: [
+        {
+          label: "companies.companyDetails",
+          icon: "pi pi-building",
+          route: `/company/${this.$route.params.company_id}/details`,
+        },
+        {
+          label: "companies.categories",
+          icon: "pi pi-folder",
+          route: `/company/${this.$route.params.company_id}/categories`,
+        },
+        {
+          label: "companies.measurementUnits",
+          icon: "pi pi-calculator",
+          route: `/company/${this.$route.params.company_id}/measurement-units`,
+        },
+        {
+          label: "companies.variants",
+          icon: "pi pi-palette",
+          route: `/company/${this.$route.params.company_id}/variants`,
+        },
+        {
+          label: "companies.products",
+          icon: "pi pi-shopping-bag",
+          route: `/company/${this.$route.params.company_id}/products`,
+        },
+        {
+          label: "companies.finalProducts",
+          icon: "pi pi-tags",
+          route: `/company/${this.$route.params.company_id}/final-products`,
+        },
+        {
+          label: "companies.contacts",
+          icon: "pi pi-address-book",
+          route: `/company/${this.$route.params.company_id}/contacts`,
+        },
+        {
+          label: "companies.branches",
+          icon: "pi pi-map-marker",
+          route: `/company/${this.$route.params.company_id}/branches`,
+        },
+        {
+          label: "companies.invoiceStages",
+          icon: "pi pi-receipt",
+          route: `/company/${this.$route.params.company_id}/invoice-stages`,
+        },
+        {
+          label: "companies.taxes",
+          icon: "pi pi-percentage",
+          route: `/company/${this.$route.params.company_id}/taxes`,
+        },
+        {
+          label: "companies.discounts",
+          icon: "pi pi-pound",
+          route: `/company/${this.$route.params.company_id}/discounts`,
+        },
+        /* 
+        {
+          label: "companies.branches",
+          icon: "pi pi-map-marker",
+          route: "#",
+          disabled: true,
+        },
+        {
+          label: "companies.employees",
+          icon: "pi pi-users",
+          route: "#",
+          disabled: true,
+        }, */
+      ],
+    };
+  },
+
+  computed: {
+    // Use computed property to get company_id
+    companyId() {
+      return this.$route.params.company_id;
+    },
+  },
+
+  methods: {
+    handleNavigation(route) {
+      if (route && route !== "#") {
+        this.$router.push(route);
+        if (this.isMobile) {
+          this.$emit("toggle");
+        }
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+/* Base Styles */
+.company-sidebar {
+  width: 280px;
+  height: calc(100vh - 70px);
+  background: var(--surface-card);
+  position: absolute; /* غيرنا من fixed لـ absolute */
+  top: 70px;
+  left: 0; /* علشان الانجليزي */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 700;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--surface-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* RTL Support */
+.company-sidebar.rtl {
+  left: auto;
+  right: 0; /* علشان العربي */
+  border-right: none;
+  border-left: 1px solid var(--surface-border);
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 0;
+  background: var(--surface-card);
+  position: relative;
+  z-index: 701;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .company-sidebar {
+    height: 100vh;
+    top: 0;
+    width: 280px !important;
+    z-index: 900;
+    box-shadow: none;
+    transform: translateX(-100%);
+  }
+
+  .company-sidebar.rtl {
+    transform: translateX(100%);
+  }
+
+  .company-sidebar:not(.collapsed):not(.rtl) {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .company-sidebar:not(.collapsed).rtl {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .company-sidebar.collapsed:not(.rtl) {
+    transform: translateX(-100%);
+  }
+  .company-sidebar.collapsed.rtl {
+    transform: translateX(100%);
+  }
+
+  .close-btn {
+    display: block !important;
+  }
+}
+
+/* Desktop Collapsed State */
+@media (min-width: 769px) {
+  .company-sidebar.collapsed {
+    width: 70px;
+  }
+
+  .company-sidebar.collapsed .nav-item {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+
+  .company-sidebar.collapsed .nav-icon {
+    margin: 0;
+  }
+
+  .company-sidebar.collapsed .nav-label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  .company-sidebar.collapsed .active-indicator {
+    display: none;
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 0 1.5rem 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  color: var(--primary-500);
+  font-size: 1.5rem;
+}
+
+.brand-text {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+}
+
+.nav-item:hover:not(.disabled) {
+  background: var(--surface-hover);
+  color: var(--text-color);
+  transform: translateX(4px);
+}
+
+.rtl .nav-item:hover:not(.disabled) {
+  transform: translateX(-4px);
+}
+
+.nav-item.active {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  font-weight: 500;
+}
+
+.nav-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dark-mode .nav-item.active {
+  background: var(--primary-900);
+  color: var(--primary-300);
+}
+
+.nav-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.rtl .nav-icon {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+.nav-label {
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.active-indicator {
+  position: absolute;
+  right: 0.5rem;
+  width: 4px;
+  height: 20px;
+  background: var(--primary-500);
+  border-radius: 2px;
+}
+
+.rtl .active-indicator {
+  right: auto;
+  left: 0.5rem;
+}
+
+/* Footer with Stats */
+.sidebar-footer {
+  padding: 1rem 1.5rem 0;
+  border-top: 1px solid var(--surface-border);
+  margin-top: auto;
+}
+
+.company-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: var(--surface-ground);
+}
+
+.stat-icon {
+  color: var(--primary-500);
+  font-size: 1rem;
+}
+
+.stat-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  margin-left: auto;
+}
+
+/* Smooth animations */
+.company-sidebar * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+
+_____________________________
+*****************************
+_____________________________
+src\latest\model\company\layouts\CompanyHeader.vue
+
+
+<template>
+  <header class="company-header">
+    <Menubar :model="menuItems">
+      <template #start>
+        <div class="header-start">
+          <Button
+            icon="pi pi-bars"
+            @click="$emit('toggle-sidebar')"
+            text
+            rounded
+          />
+          <div class="company-info">
+            <img
+              v-if="company.logo"
+              :src="company.logo.file_path"
+              :alt="company.name"
+              class="company-logo"
+            />
+            <div class="company-details">
+              <span class="company-name">{{ company.name }}</span>
+              <span class="company-page">{{ currentPageTitle }}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template #end>
+        <div class="header-end">
+          <Button
+            icon="pi pi-arrow-left"
+            :label="$t('common.back')"
+            class="p-button-text"
+            @click="$emit('go-back')"
+          />
+          <Button
+            icon="pi pi-pencil"
+            :label="$t('common.edit')"
+            class="p-button-outlined"
+            @click="$emit('edit-company')"
+          />
+        </div>
+      </template>
+    </Menubar>
+  </header>
+</template>
+
+<script>
+import Menubar from "primevue/menubar";
+import Button from "primevue/button";
+
+export default {
+  name: "CompanyHeader",
+  components: {
+    Menubar,
+    Button,
+  },
+  props: {
+    company: {
+      type: Object,
+      required: true,
+    },
+    currentPage: {
+      type: String,
+      default: "company-show",
+    },
+  },
+  emits: ["toggle-sidebar", "go-back", "edit-company"],
+  data() {
+    return {
+      menuItems: [], // Empty menu for company header
+    };
+  },
+  computed: {
+    currentPageTitle() {
+      const titles = {
+        "company-show": this.$t("companies.companyDetails"),
+        "company-categories": this.$t("companies.categories"),
+        "company-products": this.$t("companies.products"),
+        "company-branches": this.$t("companies.branches"),
+      };
+      return titles[this.currentPage] || this.$t("companies.companyDetails");
+    },
+  },
+};
+</script>
+
+<style scoped>
+.company-header {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: absolute; /* غيرنا لـ absolute */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 800;
+  height: 70px;
+}
+
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.company-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.company-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid var(--surface-border);
+}
+
+.company-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.company-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.company-page {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  line-height: 1.2;
+}
+
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:deep(.p-menubar) {
+  border: none;
+  border-radius: 0;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  height: 70px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .company-details {
+    display: none;
+  }
+
+  .header-end .p-button-text {
+    display: none;
+  }
+}
+</style>
+
+
+
+_____________________________
+*****************************
+_____________________________
+src\latest\model\company\parts\details\CompanyDetails.vue
+
+
+<template>
+  <div class="company-details">
+    <!-- Cover Image -->
+    <div class="cover-image-section mb-4">
+      <img
+        v-if="company.cover"
+        :src="company.cover.file_path"
+        :alt="company.name"
+        class="cover-image"
+      />
+      <div v-else class="cover-placeholder">
+        <i class="pi pi-image text-6xl text-color-secondary"></i>
+        <p class="text-color-secondary mt-2">
+          {{ $t("companies.noCoverImage") }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Main Details Card -->
+    <Card>
+      <template #title>
+        <div class="flex align-items-center gap-3">
+          <img
+            v-if="company.logo"
+            :src="company.logo.file_path"
+            :alt="company.name"
+            class="company-logo-large"
+          />
+          <div>
+            <h2 class="m-0">{{ company.name }}</h2>
+            <p class="m-0 text-color-secondary">{{ company.name_ar }}</p>
+          </div>
+        </div>
+      </template>
+      <template #content>
+        <div class="grid">
+          <!-- Contact Information -->
+          <div class="col-12 md:col-6">
+            <h4 class="mb-3">{{ $t("companies.contactInfo") }}</h4>
+            <div class="space-y-3">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-phone text-primary"></i>
+                <span>{{ company.phone || $t("companies.notProvided") }}</span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-envelope text-primary"></i>
+                <span>{{ company.email || $t("companies.notProvided") }}</span>
+              </div>
+              <div class="flex align-items-start gap-2">
+                <i class="pi pi-map-marker text-primary mt-1"></i>
+                <span>{{
+                  company.address || $t("companies.notProvided")
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Information -->
+          <div class="col-12 md:col-6">
+            <h4 class="mb-3">{{ $t("companies.locationInfo") }}</h4>
+            <div class="space-y-3">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-globe text-primary"></i>
+                <span>{{
+                  company.country?.name || $t("companies.notProvided")
+                }}</span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-building text-primary"></i>
+                <span>{{
+                  company.governorate?.name || $t("companies.notProvided")
+                }}</span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-home text-primary"></i>
+                <span>{{
+                  company.city?.name || $t("companies.notProvided")
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Media -->
+          <div class="col-12 md:col-6 mt-4">
+            <h4 class="mb-3">{{ $t("companies.socialMedia") }}</h4>
+            <div class="space-y-3">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-external-link text-primary"></i>
+                <span>{{
+                  company.website_url || $t("companies.notProvided")
+                }}</span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-facebook text-primary"></i>
+                <span>{{
+                  company.facebook_url || $t("companies.notProvided")
+                }}</span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-twitter text-primary"></i>
+                <span>{{
+                  company.twitter_url || $t("companies.notProvided")
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Business Information -->
+          <div class="col-12 md:col-6 mt-4">
+            <h4 class="mb-3">{{ $t("companies.businessInfo") }}</h4>
+            <div class="space-y-3">
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-money-bill text-primary"></i>
+                <span>{{
+                  company.currency?.name || $t("companies.notProvided")
+                }}</span>
+              </div>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-user text-primary"></i>
+                <span>{{
+                  company.client?.name || $t("companies.notProvided")
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </Card>
+  </div>
+</template>
+
+<script>
+import Card from "primevue/card";
+
+export default {
+  name: "CompanyDetails",
+  components: {
+    Card,
+  },
+  props: {
+    company: {
+      type: Object,
+      required: true,
+    },
+  },
+};
+</script>
+
+<style scoped>
+.company-details {
+  max-width: 100%;
+}
+
+.cover-image-section {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cover-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.cover-placeholder {
+  height: 200px;
+  background: var(--surface-ground);
+  border: 2px dashed var(--surface-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.company-logo-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--surface-border);
+}
+
+.space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+:deep(.p-card-title) {
+  display: flex;
+  align-items: center;
+}
+</style>
+
+
+_____________________________
+*****************************
+_____________________________
+src\latest\model\company\parts\details\CompanyStatistics.vue
+
+
+
+<template>
+  <div class="company-statistics">
+    <h4 class="mb-4">{{ $t("companies.companyStatistics") }}</h4>
+
+    <div class="grid">
+      <!-- Total Categories -->
+      <div class="col-6 md:col-3">
+        <Card class="stat-card">
+          <template #content>
+            <div class="flex justify-content-between align-items-center">
+              <div>
+                <div class="text-2xl font-bold text-primary">
+                  {{ statistics.totalCategories }}
+                </div>
+                <div class="text-color-secondary">
+                  {{ $t("companies.totalCategories") }}
+                </div>
+              </div>
+              <i class="pi pi-folder text-3xl text-primary"></i>
+            </div>
+          </template>
+        </Card>
+      </div>
+
+      <!-- Total Products -->
+      <div class="col-6 md:col-3">
+        <Card class="stat-card">
+          <template #content>
+            <div class="flex justify-content-between align-items-center">
+              <div>
+                <div class="text-2xl font-bold text-green-500">
+                  {{ statistics.totalProducts }}
+                </div>
+                <div class="text-color-secondary">
+                  {{ $t("companies.totalProducts") }}
+                </div>
+              </div>
+              <i class="pi pi-shopping-bag text-3xl text-green-500"></i>
+            </div>
+          </template>
+        </Card>
+      </div>
+
+      <!-- Total Branches -->
+      <div class="col-6 md:col-3">
+        <Card class="stat-card">
+          <template #content>
+            <div class="flex justify-content-between align-items-center">
+              <div>
+                <div class="text-2xl font-bold text-blue-500">
+                  {{ statistics.totalBranches }}
+                </div>
+                <div class="text-color-secondary">
+                  {{ $t("companies.totalBranches") }}
+                </div>
+              </div>
+              <i class="pi pi-map-marker text-3xl text-blue-500"></i>
+            </div>
+          </template>
+        </Card>
+      </div>
+
+      <!-- Total Employees -->
+      <div class="col-6 md:col-3">
+        <Card class="stat-card">
+          <template #content>
+            <div class="flex justify-content-between align-items-center">
+              <div>
+                <div class="text-2xl font-bold text-orange-500">
+                  {{ statistics.totalEmployees }}
+                </div>
+                <div class="text-color-secondary">
+                  {{ $t("companies.totalEmployees") }}
+                </div>
+              </div>
+              <i class="pi pi-users text-3xl text-orange-500"></i>
+            </div>
+          </template>
+        </Card>
+      </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="grid mt-3">
+      <div class="col-12 md:col-4">
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <i class="pi pi-chart-line text-4xl text-purple-500 mb-2"></i>
+              <div class="text-xl font-bold">$12,450</div>
+              <div class="text-color-secondary">Monthly Revenue</div>
+            </div>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12 md:col-4">
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <i class="pi pi-shopping-cart text-4xl text-cyan-500 mb-2"></i>
+              <div class="text-xl font-bold">245</div>
+              <div class="text-color-secondary">Monthly Orders</div>
+            </div>
+          </template>
+        </Card>
+      </div>
+      <div class="col-12 md:col-4">
+        <Card>
+          <template #content>
+            <div class="text-center">
+              <i class="pi pi-star text-4xl text-yellow-500 mb-2"></i>
+              <div class="text-xl font-bold">4.8</div>
+              <div class="text-color-secondary">Customer Rating</div>
+            </div>
+          </template>
+        </Card>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import Card from "primevue/card";
+
+export default {
+  name: "CompanyStatistics",
+  components: {
+    Card,
+  },
+  props: {
+    company: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      statistics: {
+        totalCategories: 12,
+        totalProducts: 156,
+        totalBranches: 3,
+        totalEmployees: 24,
+      },
+    };
+  },
+};
+</script>
+
+<style scoped>
+.stat-card {
+  height: 100%;
+}
+
+:deep(.p-card-content) {
+  padding: 1.5rem;
+}
+
+.company-statistics h4 {
+  color: var(--text-color);
+  font-weight: 600;
+}
+</style>
+
+
+_____________________________
+*****************************
+_____________________________
+
+
+
+
+
+
+
+
+

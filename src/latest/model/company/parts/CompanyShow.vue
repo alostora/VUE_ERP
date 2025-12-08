@@ -1,8 +1,6 @@
 <template>
   <div class="company-show-wrapper" :class="layoutClasses">
-    <!-- نحط كل حاجة في container واحد -->
     <div class="company-layout-container">
-      <!-- Company Header -->
       <CompanyHeader
         :company="company"
         :current-page="$route.name"
@@ -11,7 +9,6 @@
         @edit-company="editCompany"
       />
 
-      <!-- Company Sidebar -->
       <CompanySidebar
         :company="company"
         :collapsed="sidebarCollapsed"
@@ -20,20 +17,17 @@
         @toggle="toggleSidebar"
       />
 
-      <!-- Mobile Overlay -->
       <div
         v-if="isMobile && !sidebarCollapsed"
         class="company-sidebar-overlay"
         @click="toggleSidebar"
       ></div>
 
-      <!-- Main Content -->
       <main
         class="company-main-content"
         :class="{ 'sidebar-collapsed': sidebarCollapsed }"
       >
         <div class="company-show-page">
-          <!-- Loading State -->
           <div
             v-if="loading"
             class="flex justify-content-center align-items-center py-6"
@@ -42,7 +36,6 @@
             <p class="ml-3">{{ $t("common.loading") }}</p>
           </div>
 
-          <!-- Error State -->
           <div v-else-if="error" class="error-state">
             <Message severity="error" class="mb-3">
               {{ error }}
@@ -54,7 +47,6 @@
             />
           </div>
 
-          <!-- Company Content -->
           <div v-else-if="company.id" class="company-content"></div>
 
           <RouterView :company="company" :company_id="company_id" />
@@ -62,7 +54,6 @@
       </main>
     </div>
 
-    <!-- Edit Company Modal -->
     <CompanyEditModal
       ref="companyEditModal"
       :company="company"
@@ -78,15 +69,8 @@ import { RouterView } from "vue-router";
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import general_request from "../../../views/layouts/constants/general_request";
 
-// Import Company Layouts
 import CompanyHeader from "../layouts/CompanyHeader.vue";
 import CompanySidebar from "../layouts/CompanySidebar.vue";
-
-// Import Components
-import CompanyDetails from "../parts/details/CompanyDetails.vue";
-import CompanyStatistics from "../parts/details/CompanyStatistics.vue";
-
-// Import Edit Modal
 import CompanyEditModal from "./CompanyEditModal.vue";
 
 import Button from "primevue/button";
@@ -101,7 +85,7 @@ export default {
     RouterView,
     CompanyHeader,
     CompanySidebar,
-    CompanyEditModal, // ضيفنا الـ modal هنا
+    CompanyEditModal,
     Button,
     ProgressSpinner,
     Message,
@@ -190,22 +174,16 @@ export default {
     },
 
     editCompany() {
-      // افتح الـ modal للتحرير
       this.$refs.companyEditModal.openModal();
     },
 
     handleCompanyUpdated(updatedCompany) {
-      // update الـ company data بعد التعديل
       this.company = { ...this.company, ...updatedCompany };
-
-      // show success message
       this.showToast(
         "success",
         this.$t("common.success"),
         this.$t("companies.companyUpdated")
       );
-
-      // refresh البيانات علشان نتأكد إن كل حاجة updated
       this.fetchCompany();
     },
 
@@ -243,12 +221,11 @@ export default {
   position: relative;
 }
 
-/* الـ container الجديد علشان نحصر كل حاجة */
 .company-layout-container {
   position: relative;
   min-height: 100vh;
   width: 100%;
-  overflow: hidden; /* مهم جداً علشان نحصر المحتوى */
+  overflow: hidden;
 }
 
 .company-main-content {
@@ -262,12 +239,10 @@ export default {
   z-index: 1;
 }
 
-/* When sidebar is collapsed */
 .company-main-content.sidebar-collapsed {
   margin-left: 70px;
 }
 
-/* RTL Support */
 .company-rtl .company-main-content {
   margin-left: 0;
   margin-right: 280px;
@@ -280,12 +255,12 @@ export default {
 .company-show-page {
   width: 100%;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.5rem;
   transition: all 0.3s ease;
 }
 
 .company-sidebar-overlay {
-  position: absolute; /* غيرنا لـ absolute علشان يفضل داخل الـ container */
+  position: fixed;
   top: 70px;
   left: 0;
   width: 100%;
@@ -304,21 +279,34 @@ export default {
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+  .company-show-page {
+    padding: 1.25rem;
   }
 }
 
-/* Mobile responsive */
+@media (max-width: 1024px) {
+  .company-main-content:not(.mobile-view) {
+    margin-left: 240px;
+  }
+
+  .company-main-content.sidebar-collapsed:not(.mobile-view) {
+    margin-left: 70px;
+  }
+
+  .company-rtl .company-main-content:not(.mobile-view) {
+    margin-right: 240px;
+  }
+
+  .company-rtl .company-main-content.sidebar-collapsed:not(.mobile-view) {
+    margin-right: 70px;
+  }
+}
+
 @media (max-width: 768px) {
-  .company-layout-container {
-    overflow: visible; /* في الموبايل بنسمح بالـ overlay */
+  .company-show-page {
+    padding: 1rem;
   }
 
   .company-main-content {
@@ -331,6 +319,37 @@ export default {
   .company-sidebar-overlay {
     top: 70px;
     z-index: 899;
+  }
+
+  .error-state {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .company-show-page {
+    padding: 0.75rem;
+  }
+
+  .error-state {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .company-show-page {
+    padding: 0.5rem;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

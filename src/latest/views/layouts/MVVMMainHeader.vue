@@ -1,123 +1,93 @@
+<!-- في MVVMMainHeader.vue -->
 <template>
-  <header class="main-header" :class="{ 'mobile-header': isMobile }">
-    <Menubar :model="translatedMenuItems" class="header-menubar">
-      <template #start>
-        <div class="header-start">
-          <!-- Menu Toggle Button - Different icon for mobile -->
-          <Button
-            :icon="
-              isMobile
-                ? 'pi pi-bars'
-                : sidebarCollapsed
-                ? 'pi pi-bars'
-                : 'pi pi-align-justify'
-            "
-            @click="$emit('toggle-sidebar')"
-            text
-            rounded
-            class="menu-toggle-btn"
-            :severity="isMobile ? 'secondary' : 'primary'"
-            v-tooltip="
-              isMobile
-                ? 'Menu'
-                : sidebarCollapsed
-                ? 'Expand Sidebar'
-                : 'Collapse Sidebar'
-            "
+  <header class="app-header" :class="{ 'mobile-header': isMobile }">
+    <div class="header-container">
+      <!-- Left Section -->
+      <div class="header-left">
+        <Button
+          :icon="
+            isMobile
+              ? 'pi pi-bars'
+              : sidebarCollapsed
+              ? 'pi pi-bars'
+              : 'pi pi-align-justify'
+          "
+          @click="$emit('toggle-sidebar')"
+          text
+          rounded
+          class="menu-toggle"
+        />
+
+        <div class="app-brand">
+          <div class="app-title">{{ $t("app.title") }}</div>
+        </div>
+      </div>
+
+      <!-- Center Section -->
+      <div class="header-center">
+        <div class="search-container">
+          <i class="pi pi-search search-icon"></i>
+          <InputText
+            v-model="searchQuery"
+            :placeholder="$t('common.search')"
+            type="text"
+            class="search-input"
           />
+        </div>
+      </div>
 
-          <!-- App Title - Hide on very small mobile -->
-          <span class="app-title" :class="{ 'hidden-on-small': isMobile }">
-            {{ $t("app.title") }}
-          </span>
+      <!-- Right Section -->
+      <div class="header-right">
+        <!-- Theme Toggle -->
+        <Button
+          @click="toggleTheme"
+          :icon="themeIcon"
+          :severity="themeSeverity"
+          text
+          rounded
+          class="theme-toggle"
+          :title="themeTitle"
+        />
 
-          <!-- Mobile-only Logo -->
-          <div v-if="isMobile" class="mobile-logo">
-            <i class="pi pi-shield"></i>
+        <!-- Language Toggle -->
+        <Button
+          @click="toggleLanguage"
+          :icon="'pi pi-globe'"
+          text
+          rounded
+          class="language-toggle"
+          :title="languageTitle"
+        />
+
+        <!-- User Menu with Logout -->
+        <div class="user-menu-container">
+          <Menu ref="userMenu" :model="userMenuItems" :popup="true" />
+
+          <div class="user-menu" @click="toggleUserMenu">
+            <Avatar
+              icon="pi pi-user"
+              shape="circle"
+              size="large"
+              class="user-avatar"
+            />
+            <span class="user-name" v-if="!isMobile">{{ userName }}</span>
+            <i class="pi pi-chevron-down user-arrow"></i>
           </div>
         </div>
-      </template>
-
-      <template #end>
-        <div class="header-end" :class="{ 'mobile-end': isMobile }">
-          <!-- Search - Collapsible on mobile -->
-          <div
-            class="search-container"
-            :class="{ 'search-expanded': searchExpanded }"
-          >
-            <transition name="slide-fade">
-              <InputText
-                v-if="!isMobile || searchExpanded"
-                :placeholder="$t('header.search')"
-                type="text"
-                class="search-input"
-                @blur="searchExpanded = false"
-              />
-            </transition>
-
-            <Button
-              :icon="searchExpanded ? 'pi pi-times' : 'pi pi-search'"
-              text
-              rounded
-              @click="toggleSearch"
-              class="search-toggle-btn"
-              v-tooltip="searchExpanded ? 'Close Search' : 'Search'"
-            />
-          </div>
-
-          <div class="action-buttons">
-            <!-- Theme Toggle -->
-            <Button
-              @click="toggleTheme"
-              :icon="currentTheme.icon"
-              :severity="currentTheme.severity"
-              text
-              rounded
-              class="theme-toggle-btn"
-              :title="currentTheme.title"
-            />
-
-            <!-- Language Toggle -->
-            <Button
-              @click="toggleLanguage"
-              :icon="currentLanguage.icon"
-              text
-              rounded
-              class="language-toggle-btn"
-              :title="currentLanguage.label"
-            />
-
-            <!-- User Menu -->
-            <div class="user-menu-container">
-              <Menu ref="userMenu" :model="logoutMenuItem" :popup="true" />
-
-              <Button
-                :icon="isMobile ? 'pi pi-user' : 'pi pi-user'"
-                rounded
-                text
-                severity="secondary"
-                class="user-menu-btn"
-                @click="toggleUserMenu"
-                :label="!isMobile ? userInitial : ''"
-              />
-            </div>
-          </div>
-        </div>
-      </template>
-    </Menubar>
+      </div>
+    </div>
   </header>
 </template>
 
 <script>
-import Menubar from "primevue/menubar";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Avatar from "primevue/avatar";
 import Menu from "primevue/menu";
 
 export default {
+  name: "AppHeader",
   components: {
-    Menubar,
     Button,
     InputText,
     Avatar,
@@ -136,221 +106,279 @@ export default {
   emits: ["toggle-sidebar", "language-changed", "theme-changed"],
   data() {
     return {
-      searchExpanded: false,
-      currentLang: this.$i18n.locale,
-      currentTheme:
-        localStorage.getItem("theme") === "dark"
-          ? {
-              mode: "dark",
-              icon: "pi pi-moon",
-              severity: "secondary",
-              title: "Switch to Light Mode",
-            }
-          : {
-              mode: "light",
-              icon: "pi pi-sun",
-              severity: "warning",
-              title: "Switch to Dark Mode",
-            },
-      languages: [
-        { code: "en", label: "English", icon: "pi pi-globe", dir: "ltr" },
-        { code: "ar", label: "العربية", icon: "pi pi-globe", dir: "rtl" },
-      ],
-      menuItems: [
-        { label: "menu.home", icon: "pi pi-home" },
-        { label: "menu.users", icon: "pi pi-folder" },
-        { label: "menu.settings", icon: "pi pi-cog" },
-      ],
-      logoutMenuItem: [
-        {
-          label: this.$t("header.logout") || "Logout",
-          icon: "pi pi-sign-out",
-          command: () => {
-            this.logout();
-          },
-        },
-      ],
+      searchQuery: "",
+      currentTheme: localStorage.getItem("theme") || "light",
+      currentLanguage: localStorage.getItem("language") || "en",
+      showUserMenu: false,
     };
   },
   computed: {
-    userInitial() {
+    themeIcon() {
+      return this.currentTheme === "dark" ? "pi pi-moon" : "pi pi-sun";
+    },
+    themeSeverity() {
+      return this.currentTheme === "dark" ? "secondary" : "warning";
+    },
+    themeTitle() {
+      return this.currentTheme === "dark"
+        ? this.$t("common.switchToLight")
+        : this.$t("common.switchToDark");
+    },
+    languageTitle() {
+      return this.currentLanguage === "en"
+        ? "التبديل إلى العربية"
+        : "Switch to English";
+    },
+    userName() {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      return user.name ? user.name.charAt(0).toUpperCase() : "U";
+      return user.name || "Admin";
     },
-    currentLanguage() {
-      return (
-        this.languages.find((lang) => lang.code === this.currentLang) ||
-        this.languages[0]
-      );
-    },
-    translatedMenuItems() {
-      return this.menuItems.map((item) => ({
-        ...item,
-        label: this.$t(item.label),
-      }));
+    userMenuItems() {
+      return [
+        {
+          label: this.userName,
+          icon: "pi pi-user",
+          disabled: true,
+          class: "menu-header",
+        },
+        {
+          separator: true,
+        },
+        {
+          label: this.$t("common.profile"),
+          icon: "pi pi-user-edit",
+          command: () => this.$router.push("/profile"),
+        },
+        {
+          label: this.$t("common.settings"),
+          icon: "pi pi-cog",
+          command: () => this.$router.push("/settings"),
+        },
+        {
+          separator: true,
+        },
+        {
+          label: this.$t("common.logout"),
+          icon: "pi pi-sign-out",
+          command: () => this.logout(),
+        },
+      ];
     },
   },
   methods: {
-    toggleSearch() {
-      if (this.isMobile) {
-        this.searchExpanded = !this.searchExpanded;
-      }
+    toggleTheme() {
+      const newTheme = this.currentTheme === "light" ? "dark" : "light";
+      this.currentTheme = newTheme;
+      localStorage.setItem("theme", newTheme);
+      this.applyTheme(newTheme);
+      this.$emit("theme-changed", newTheme);
+
+      // Show toast notification
+      this.showToast(
+        "success",
+        this.$t("common.themeChanged"),
+        this.$t("common.switchedTo") +
+          " " +
+          (newTheme === "dark"
+            ? this.$t("common.darkMode")
+            : this.$t("common.lightMode"))
+      );
+    },
+
+    toggleLanguage() {
+      const newLang = this.currentLanguage === "en" ? "ar" : "en";
+      this.currentLanguage = newLang;
+      localStorage.setItem("language", newLang);
+
+      // Update i18n
+      this.$i18n.locale = newLang;
+
+      // Update HTML attributes for RTL
+      document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
+      document.documentElement.lang = newLang;
+
+      this.$emit("language-changed", {
+        code: newLang,
+        dir: newLang === "ar" ? "rtl" : "ltr",
+      });
+
+      // Force re-render
+      this.$forceUpdate();
+
+      // Show toast notification
+      this.showToast(
+        "success",
+        this.$t("common.languageChanged"),
+        this.$t("common.switchedTo") +
+          " " +
+          (newLang === "en" ? "English" : "العربية")
+      );
     },
 
     toggleUserMenu(event) {
       this.$refs.userMenu.toggle(event);
     },
 
-    logout() {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("user");
-
-      this.$toast.add({
-        severity: "info",
-        summary: "Logged Out",
-        detail: "You have been successfully signed out.",
-        life: 3000,
-      });
-
-      this.$router.push("/login");
-    },
-
-    toggleLanguage() {
-      this.currentLang = this.currentLang === "en" ? "ar" : "en";
-      const newLang = this.currentLanguage;
-
-      this.$i18n.locale = newLang.code;
-      localStorage.setItem("language", newLang.code);
-      document.documentElement.dir = newLang.dir;
-      document.documentElement.lang = newLang.code;
-
-      this.$forceUpdate();
-      this.$emit("language-changed", newLang);
-    },
-
-    toggleTheme() {
-      const newTheme = this.currentTheme.mode === "light" ? "dark" : "light";
-
-      this.currentTheme =
-        newTheme === "dark"
-          ? {
-              mode: "dark",
-              icon: "pi pi-moon",
-              severity: "secondary",
-              title: "Switch to Light Mode",
-            }
-          : {
-              mode: "light",
-              icon: "pi pi-sun",
-              severity: "warning",
-              title: "Switch to Dark Mode",
-            };
-
-      localStorage.setItem("theme", newTheme);
-      this.applyTheme(newTheme);
-      this.$emit("theme-changed", newTheme);
-    },
-
     applyTheme(theme) {
-      if (theme === "dark") {
-        document.documentElement.classList.add("dark-mode");
-        document.documentElement.classList.remove("light-mode");
-      } else {
-        document.documentElement.classList.add("light-mode");
-        document.documentElement.classList.remove("dark-mode");
-      }
+      // Remove existing theme classes
+      document.documentElement.classList.remove("light-mode", "dark-mode");
+      // Add new theme class
+      document.documentElement.classList.add(theme + "-mode");
+
+      // Force PrimeVue theme update
+      const event = new CustomEvent("theme-change", { detail: theme });
+      document.dispatchEvent(event);
     },
 
-    initializeTheme() {
-      const savedTheme = localStorage.getItem("theme") || "light";
-      this.applyTheme(savedTheme);
+    logout() {
+      this.$confirm.require({
+        message: this.$t("common.confirmLogout"),
+        header: this.$t("common.logout"),
+        icon: "pi pi-exclamation-triangle",
+        acceptClass: "p-button-danger",
+        accept: () => {
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("user");
+
+          this.showToast(
+            "info",
+            this.$t("common.loggedOut"),
+            this.$t("common.logoutSuccess")
+          );
+
+          setTimeout(() => {
+            this.$router.push("/login");
+          }, 1000);
+        },
+        reject: () => {
+          this.showToast(
+            "info",
+            this.$t("common.cancelled"),
+            this.$t("common.logoutCancelled")
+          );
+        },
+      });
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({
+          severity,
+          summary,
+          detail,
+          life: 3000,
+        });
+      }
     },
   },
   mounted() {
-    const langConfig = this.currentLanguage;
-    document.documentElement.dir = langConfig.dir;
-    document.documentElement.lang = this.currentLang;
+    // Apply initial theme
+    const savedTheme = localStorage.getItem("theme") || "light";
+    this.applyTheme(savedTheme);
 
-    this.initializeTheme();
+    // Apply initial language
+    const savedLang = localStorage.getItem("language") || "en";
+    document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = savedLang;
   },
 };
 </script>
 
 <style scoped>
-.main-header {
+/* Base Header */
+.app-header {
+  height: 64px;
   background: var(--surface-card);
   border-bottom: 1px solid var(--surface-border);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
-  z-index: 1000;
-  height: 64px;
+  left: 0;
+  right: 0;
+  z-index: 100;
 }
 
-.header-menubar {
-  border: none;
-  border-radius: 0;
-  padding: 0 1rem;
-  background: transparent;
+.header-container {
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  gap: 1rem;
 }
 
-.header-start {
+/* Left Section */
+.header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
-  height: 100%;
+  flex: 1;
 }
 
-.menu-toggle-btn {
+.menu-toggle {
   width: 40px;
   height: 40px;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
 }
 
 .app-title {
   font-weight: 600;
   font-size: 1.25rem;
   color: var(--text-color);
-  white-space: nowrap;
 }
 
-.mobile-logo {
-  display: none;
-  color: var(--primary-500);
-  font-size: 1.5rem;
-}
-
-.header-end {
+/* Center Section */
+.header-center {
+  flex: 2;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  height: 100%;
+  justify-content: center;
 }
 
 .search-container {
-  display: flex;
-  align-items: center;
-  transition: all 0.3s ease;
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color-secondary);
+  pointer-events: none;
+}
+
+.rtl .search-icon {
+  left: auto;
+  right: 0.75rem;
 }
 
 .search-input {
-  transition: all 0.3s ease;
-  width: 250px;
+  width: 100%;
+  padding-left: 2.5rem;
 }
 
-.search-toggle-btn {
-  width: 40px;
-  height: 40px;
+.rtl .search-input {
+  padding-left: 0.75rem;
+  padding-right: 2.5rem;
 }
 
-.action-buttons {
+/* Right Section */
+.header-right {
+  flex: 1;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
-.theme-toggle-btn,
-.language-toggle-btn {
+.theme-toggle,
+.language-toggle {
   width: 40px;
   height: 40px;
 }
@@ -359,116 +387,89 @@ export default {
   position: relative;
 }
 
-.user-menu-btn {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.user-menu:hover {
+  background: var(--surface-hover);
+}
+
+.user-avatar {
+  background: var(--surface-ground);
+  color: var(--text-color-secondary);
+}
+
+.user-name {
+  font-weight: 500;
+  color: var(--text-color);
+  font-size: 0.875rem;
+}
+
+.user-arrow {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+
+/* Menu Styling */
+:deep(.p-menu) {
+  min-width: 200px;
+  border: 1px solid var(--surface-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.menu-header) {
+  opacity: 1 !important;
+  cursor: default;
+}
+
+:deep(.menu-header:hover) {
+  background: transparent !important;
 }
 
 /* Mobile Styles */
 @media (max-width: 768px) {
-  .main-header {
+  .app-header.mobile-header {
     height: 56px;
   }
 
-  .header-menubar {
-    padding: 0 0.75rem;
-  }
-
-  .header-start {
-    gap: 0.75rem;
-  }
-
-  .app-title.hidden-on-small {
-    display: none;
-  }
-
-  .mobile-logo {
-    display: block;
-  }
-
-  .menu-toggle-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .header-end.mobile-end {
-    gap: 0.5rem;
-  }
-
-  .search-container {
-    order: 2;
-  }
-
-  .search-input {
-    width: 200px;
-  }
-
-  .search-toggle-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .theme-toggle-btn,
-  .language-toggle-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .user-menu-btn {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-  }
-
-  .action-buttons {
-    gap: 0.25rem;
-  }
-}
-
-/* Very Small Mobile */
-@media (max-width: 480px) {
-  .header-menubar {
-    padding: 0 0.5rem;
-  }
-
-  .search-input {
-    width: 160px;
+  .header-container {
+    padding: 0 1rem;
   }
 
   .app-title {
-    font-size: 1.1rem;
+    display: none;
+  }
+
+  .search-container {
+    max-width: 200px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .theme-toggle,
+  .language-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .menu-toggle {
+    width: 36px;
+    height: 36px;
   }
 }
 
-/* Search Animation */
-.slide-fade-enter-active {
-  transition: all 0.3s ease;
-}
-.slide-fade-leave-active {
-  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
-}
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateX(-10px);
-  opacity: 0;
-}
-
-/* RTL Support */
-[dir="rtl"] .slide-fade-enter-from,
-[dir="rtl"] .slide-fade-leave-to {
-  transform: translateX(10px);
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) and (pointer: coarse) {
-  .menu-toggle-btn,
-  .search-toggle-btn,
-  .theme-toggle-btn,
-  .language-toggle-btn,
-  .user-menu-btn {
-    min-width: 44px;
-    min-height: 44px;
+@media (max-width: 480px) {
+  .search-container {
+    display: none;
   }
 }
 </style>

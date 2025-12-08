@@ -1,0 +1,1467 @@
+_____________________________
+*****************************
+_____________________________
+src\latest\model\branch\routes\branch_routes.js
+
+
+
+
+import BranchTable from "../parts/BranchTable.vue";
+import BranchDetails from "../parts/details/BranchDetails.vue";
+import BranchShow from "../parts/BranchShow.vue";
+import WarehouseTable from "../../warehouse/parts/WarehouseTable.vue";
+import EmployeeTable from "../../employee/parts/EmployeeTable.vue";
+
+const branch_routes = [
+     {
+          path: "/company/:company_id/branches",
+          name: "company-branches",
+          component: BranchTable,
+          props: true,
+     },
+     {
+          path: "/company/:company_id/branches/:branch_id",
+          name: "company-branch-show",
+          redirect: { name: 'branch-details' },
+          component: BranchShow,
+          props: true,
+          children: [
+               {
+                    path: "branch-details",
+                    name: "branch-details",
+                    component: BranchDetails,
+                    props: true,
+               },
+               {
+                    path: "warehouses",
+                    name: "branch-warehouses",
+                    component: WarehouseTable,
+                    props: true,
+               },
+               {
+                    path: "employees",
+                    name: "branch-employees",
+                    component: EmployeeTable,
+                    props: true,
+               },
+          ]
+     }
+];
+
+export default branch_routes;
+
+_____________________________
+*****************************
+_____________________________
+
+src\latest\model\branch\parts\BranchShow.vue
+
+
+
+<template>
+  <div class="branch-show-wrapper" :class="layoutClasses">
+    <div class="branch-layout-container">
+      <!-- Branch Header -->
+      <BranchHeader
+        :branch="branch"
+        :current-page="$route.name"
+        @toggle-sidebar="toggleSidebar"
+        @go-back="goBackToBranches"
+        @edit-branch="editBranch"
+      />
+
+      <!-- Branch Sidebar -->
+      <BranchSidebar
+        :branch="branch"
+        :collapsed="sidebarCollapsed"
+        :position="currentDirection"
+        :isMobile="isMobile"
+        @toggle="toggleSidebar"
+      />
+
+      <!-- Mobile Overlay -->
+      <div
+        v-if="isMobile && !sidebarCollapsed"
+        class="branch-sidebar-overlay"
+        @click="toggleSidebar"
+      ></div>
+      <!-- Main Content -->
+
+      <main
+        class="branch-main-content"
+        :class="{ 'sidebar-collapsed': sidebarCollapsed }"
+      >
+        
+        <div class="branch-show-page">
+          <!-- Nested routes if needed -->
+          <RouterView :branch="branch" :branch_id="branch_id" />
+        </div>
+      </main>
+    </div>
+
+    <PosModal ref="posModal" :company-id="companyId" :branch-id="branchId" />
+    <Toast />
+  </div>
+</template>
+
+<script>
+import { RouterView } from "vue-router";
+import general_request from "../../../views/layouts/constants/general_request";
+
+import BranchHeader from "../layouts/BranchHeader.vue";
+import BranchSidebar from "../layouts/BranchSidebar.vue";
+import BranchEditModal from "./BranchEditModal.vue";
+import PosModal from "./pos/PosModal.vue";
+
+export default {
+  name: "BranchShow",
+  components: {
+    RouterView,
+    BranchHeader,
+    BranchSidebar,
+    BranchEditModal,
+    PosModal,
+  },
+  props: {
+    branch_id: {
+      type: String,
+      required: false, // will fallback to route param
+    },
+    company_id: {
+      type: String,
+      required: false,
+    },
+  },
+  data() {
+    return {
+      branch: {},
+      company: {},
+      loading: false,
+      error: "",
+      sidebarCollapsed: false,
+      isMobile: false,
+      currentLanguage: localStorage.getItem("language") || "en",
+      hasPosAccess: true, // Set to true to always show, false to hide
+    };
+  },
+  computed: {
+    companyId() {
+      return this.$route.params.company_id;
+    },
+    branchId() {
+      return this.$route.params.branch_id;
+    },
+    currentDirection() {
+      return this.currentLanguage === "ar" ? "rtl" : "ltr";
+    },
+    layoutClasses() {
+      return {
+        "branch-ltr": this.currentDirection === "ltr",
+        "branch-rtl": this.currentDirection === "rtl",
+        "mobile-view": this.isMobile,
+      };
+    },
+  },
+  mounted() {
+    this.fetchBranch();
+    this.checkMobile();
+    this.setupLanguageListener();
+    window.addEventListener("resize", this.checkMobile);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.checkMobile);
+    if (this.languageUnwatch) {
+      this.languageUnwatch();
+    }
+  },
+  methods: {
+    async fetchBranch() {
+      this.loading = true;
+      this.error = "";
+
+      try {
+        const branchId = this.branch_id || this.$route.params.branch_id;
+        if (!branchId) {
+          throw new Error("Branch ID is missing");
+        }
+
+        const url = `${general_request.BASE_URL}/admin/company/branch/${branchId}`;
+        const response = await this.$http.get(url, {
+          headers: general_request.headers,
+        });
+
+        if (response.data && response.data.data) {
+          this.branch = response.data.data;
+          this.company = response.data.data.company || {};
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        this.error =
+          error.response?.data?.message ||
+          error.message ||
+          this.$t("errors.failedToLoadBranch") ||
+          "Failed to load branch";
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    cleanFilePath(path) {
+      if (!path) return "";
+      try {
+        // Some API values include backticks/spaces; strip them
+        return String(path)
+          .replace(/[`'\"]/g, "")
+          .trim();
+      } catch (e) {
+        return path;
+      }
+    },
+
+    formatDate(value) {
+      if (!value) return "-";
+      try {
+        const d = new Date(value);
+        return d.toLocaleString();
+      } catch (e) {
+        return value;
+      }
+    },
+
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    },
+
+    goBackToBranches() {
+      const companyId = this.company_id || this.$route.params.company_id;
+      if (companyId) {
+        this.$router.push(`/company/${companyId}/branches`);
+      } else {
+        this.$router.push(`/company/branches`);
+      }
+    },
+
+    editBranch() {
+      this.$refs.branchEditModal &&
+        this.$refs.branchEditModal.openModal &&
+        this.$refs.branchEditModal.openModal();
+    },
+
+    handleBranchUpdated(updatedBranch) {
+      this.branch = { ...this.branch, ...updatedBranch };
+      this.showToast(
+        "success",
+        this.$t("common.success") || "Success",
+        this.$t("branches.branchUpdated") || "Branch updated"
+      );
+      this.fetchBranch();
+    },
+
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768;
+      if (this.isMobile) {
+        this.sidebarCollapsed = true;
+      }
+    },
+
+    setupLanguageListener() {
+      this.languageUnwatch = this.$watch("$i18n.locale", (newLocale) => {
+        this.currentLanguage = newLocale;
+      });
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({ severity, summary, detail, life: 3000 });
+      }
+    },
+
+    openPosModal() {
+      if (this.$refs.posModal) {
+        this.$refs.posModal.openModal();
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.branch-show-wrapper {
+  min-height: 100vh;
+  background: var(--surface-ground);
+  position: relative;
+}
+
+.branch-layout-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.branch-main-content {
+  min-height: calc(100vh - 70px);
+  margin-left: 280px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  background: var(--surface-ground);
+  margin-top: 70px;
+  position: relative;
+  z-index: 1;
+}
+
+.branch-main-content.sidebar-collapsed {
+  margin-left: 70px;
+}
+
+.branch-rtl .branch-main-content {
+  margin-left: 0;
+  margin-right: 280px;
+}
+
+.branch-rtl .branch-main-content.sidebar-collapsed {
+  margin-right: 70px;
+}
+
+.branch-show-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.branch-sidebar-overlay {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 70px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 699;
+  backdrop-filter: blur(2px);
+}
+
+.error-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.branch-content {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Company Hero styles */
+.company-hero {
+  position: relative;
+  height: 180px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.company-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.85);
+}
+
+.company-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.15));
+}
+
+.company-hero-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  z-index: 2;
+}
+
+.company-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.company-titles .company-name {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.company-info-grid {
+  background: var(--surface-card);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .branch-layout-container {
+    overflow: visible;
+  }
+
+  .branch-main-content {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100%;
+    margin-top: 70px;
+  }
+
+  .branch-sidebar-overlay {
+    top: 70px;
+    z-index: 899;
+  }
+}
+</style>
+
+
+
+
+_____________________________
+*****************************
+_____________________________
+
+src\latest\model\branch\layouts\BranchSidebar.vue
+
+
+<template>
+  <aside
+    class="branch-sidebar"
+    :class="[position, { collapsed: collapsed, mobile: isMobile }]"
+  >
+    <div class="sidebar-content">
+      <!-- Header -->
+      <div class="sidebar-header" v-if="!collapsed">
+        <div class="sidebar-brand">
+          <i class="pi pi-map-marker brand-icon"></i>
+          <span class="brand-text">{{ branch.name }}</span>
+        </div>
+
+        <!-- Close button for mobile -->
+        <Button
+          v-if="isMobile && !collapsed"
+          icon="pi pi-times"
+          @click="$emit('toggle')"
+          text
+          rounded
+          class="close-btn"
+          v-tooltip="'Close'"
+        />
+      </div>
+
+      <nav class="sidebar-nav">
+        <div v-for="item in items" :key="item.label" class="nav-item-wrapper">
+          <router-link
+            v-if="item.route"
+            v-slot="{ isActive }"
+            :to="item.route"
+            custom
+          >
+            <div
+              class="nav-item"
+              :class="{ active: isActive, collapsed: collapsed }"
+              @click="handleNavigation(item.route)"
+            >
+              <div class="nav-icon">
+                <i :class="item.icon"></i>
+              </div>
+              <span class="nav-label">{{ $t(item.label) }}</span>
+              <div class="active-indicator" v-if="isActive && !collapsed"></div>
+            </div>
+          </router-link>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer" v-if="!collapsed && !isMobile"></div>
+    </div>
+  </aside>
+</template>
+
+<script>
+import Button from "primevue/button";
+
+export default {
+  name: "BranchSidebar",
+  components: {
+    Button,
+  },
+  props: {
+    branch: {
+      type: Object,
+      required: true,
+    },
+    collapsed: {
+      type: Boolean,
+      default: false,
+    },
+    position: {
+      type: String,
+      default: "ltr",
+    },
+    isMobile: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  emits: ["toggle"],
+  data() {
+    return {
+      items: [
+        {
+          label: "branches.branchDetails",
+          icon: "pi pi-map",
+          route: `/company/${this.$route.params.company_id}/branches/${this.$route.params.branch_id}`,
+        },
+        {
+          label: "warehouses.warehouses",
+          icon: "pi pi-building",
+          route: `/company/${this.$route.params.company_id}/branches/${this.$route.params.branch_id}/warehouses`,
+        },
+        {
+          label: "employees.employees",
+          icon: "pi pi-wrench",
+          route: `/company/${this.$route.params.company_id}/branches/${this.$route.params.branch_id}/employees`,
+        },
+        {
+          label: "branches.backToList",
+          icon: "pi pi-arrow-left",
+          route: `/company/${this.$route.params.company_id}/branches`,
+        },
+      ],
+    };
+  },
+  computed: {
+    companyId() {
+      return this.$route.params.company_id;
+    },
+    branchId() {
+      return this.$route.params.branch_id;
+    },
+  },
+  methods: {
+    handleNavigation(route) {
+      if (route && route !== "#") {
+        this.$router.push(route);
+        if (this.isMobile) {
+          this.$emit("toggle");
+        }
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.branch-sidebar {
+  width: 280px;
+  height: calc(100vh - 70px);
+  background: var(--surface-card);
+  position: absolute;
+  top: 70px;
+  left: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 700;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--surface-border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.branch-sidebar.rtl {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--surface-border);
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1rem 0;
+  background: var(--surface-card);
+  position: relative;
+  z-index: 701;
+}
+
+@media (max-width: 768px) {
+  .branch-sidebar {
+    height: 100vh;
+    top: 0;
+    width: 280px !important;
+    z-index: 900;
+    box-shadow: none;
+    transform: translateX(-100%);
+  }
+
+  .branch-sidebar.rtl {
+    transform: translateX(100%);
+  }
+
+  .branch-sidebar:not(.collapsed):not(.rtl) {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .branch-sidebar:not(.collapsed).rtl {
+    transform: translateX(0);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .branch-sidebar.collapsed:not(.rtl) {
+    transform: translateX(-100%);
+  }
+  .branch-sidebar.collapsed.rtl {
+    transform: translateX(100%);
+  }
+
+  .close-btn {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .branch-sidebar.collapsed {
+    width: 70px;
+  }
+
+  .branch-sidebar.collapsed .nav-item {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+
+  .branch-sidebar.collapsed .nav-icon {
+    margin: 0;
+  }
+
+  .branch-sidebar.collapsed .nav-label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  .branch-sidebar.collapsed .active-indicator {
+    display: none;
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+}
+
+.sidebar-header {
+  padding: 0 1.5rem 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-icon {
+  color: var(--primary-500);
+  font-size: 1.5rem;
+}
+
+.brand-text {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  color: var(--text-color-secondary);
+  text-decoration: none;
+}
+
+.nav-item:hover:not(.disabled) {
+  background: var(--surface-hover);
+  color: var(--text-color);
+  transform: translateX(4px);
+}
+
+.rtl .nav-item:hover:not(.disabled) {
+  transform: translateX(-4px);
+}
+
+.nav-item.active {
+  background: var(--primary-50);
+  color: var(--primary-600);
+  font-weight: 500;
+}
+
+.nav-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dark-mode .nav-item.active {
+  background: var(--primary-900);
+  color: var(--primary-300);
+}
+
+.nav-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.rtl .nav-icon {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+.nav-label {
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.active-indicator {
+  position: absolute;
+  right: 0.5rem;
+  width: 4px;
+  height: 20px;
+  background: var(--primary-500);
+  border-radius: 2px;
+}
+
+.rtl .active-indicator {
+  right: auto;
+  left: 0.5rem;
+}
+
+.sidebar-footer {
+  padding: 1rem 1.5rem 0;
+  border-top: 1px solid var(--surface-border);
+  margin-top: auto;
+}
+
+.branch-sidebar * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
+
+
+
+
+_____________________________
+*****************************
+_____________________________
+
+src\latest\model\branch\layouts\BranchHeader.vue
+
+<template>
+  <header class="branch-header">
+    <Menubar :model="menuItems">
+      <template #start>
+        <div class="header-start">
+          <Button
+            icon="pi pi-bars"
+            @click="$emit('toggle-sidebar')"
+            text
+            rounded
+          />
+          <div class="branch-info">
+            <div class="branch-details">
+              <span class="branch-name">{{ branch.name }}</span>
+              <span class="branch-page">{{ currentPageTitle }}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template #end>
+        <div class="header-end">
+          <Button
+            icon="pi pi-arrow-left"
+            :label="$t('common.back')"
+            class="p-button-text"
+            @click="$emit('go-back')"
+          />
+          <Button
+            icon="pi pi-pencil"
+            :label="$t('common.edit')"
+            class="p-button-outlined"
+            @click="$emit('edit-branch')"
+          />
+        </div>
+      </template>
+    </Menubar>
+  </header>
+</template>
+
+<script>
+import Menubar from "primevue/menubar";
+import Button from "primevue/button";
+
+export default {
+  name: "BranchHeader",
+  components: {
+    Menubar,
+    Button,
+  },
+  props: {
+    branch: {
+      type: Object,
+      required: true,
+    },
+    currentPage: {
+      type: String,
+      default: "company-branch-show",
+    },
+  },
+  emits: ["toggle-sidebar", "go-back", "edit-branch"],
+  data() {
+    return {
+      menuItems: [],
+    };
+  },
+  computed: {
+    currentPageTitle() {
+      const titles = {
+        "company-branch-show":
+          this.$t("branches.branchDetails") || "Branch Details",
+      };
+      return (
+        titles[this.currentPage] ||
+        this.$t("branches.branchDetails") ||
+        "Branch Details"
+      );
+    },
+  },
+};
+</script>
+
+<style scoped>
+.branch-header {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 800;
+  height: 70px;
+}
+
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.branch-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branch-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.branch-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.branch-page {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  line-height: 1.2;
+}
+
+.header-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:deep(.p-menubar) {
+  border: none;
+  border-radius: 0;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  height: 70px;
+}
+
+@media (max-width: 768px) {
+  .branch-details {
+    display: none;
+  }
+
+  .header-end .p-button-text {
+    display: none;
+  }
+}
+</style>
+
+
+_____________________________
+*****************************
+_____________________________
+
+src\latest\model\branch\parts\details\BranchDetails.vue
+
+
+<template>
+  <div class="branch-show-wrapper" :class="layoutClasses">
+    <div class="branch-layout-container">
+      <main
+        class="branch-main-content"
+        :class="{ 'sidebar-collapsed': sidebarCollapsed }"
+      >
+        <div class="branch-show-page">
+          <Button
+            :label="$t('branches.openPos')"
+            icon="pi pi-shopping-cart"
+            @click="openPosModal"
+            class="p-button-success mb-3"
+            v-if="hasPosAccess"
+          />
+          <!-- Loading State -->
+          <div
+            v-if="loading"
+            class="flex justify-content-center align-items-center py-6"
+          >
+            <ProgressSpinner />
+            <p class="ml-3">{{ $t("common.loading") }}</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="error" class="error-state">
+            <Message severity="error" class="mb-3">
+              {{ error }}
+            </Message>
+            <Button
+              :label="$t('common.retry')"
+              icon="pi pi-refresh"
+              @click="fetchBranch"
+            />
+          </div>
+
+          <!-- Branch Content -->
+          <div v-else-if="branch.id" class="branch-content">
+            <!-- Company Hero Banner -->
+            <section
+              class="company-hero"
+              v-if="company && (company.cover || company.logo)"
+            >
+              <div
+                class="company-hero-bg"
+                :style="
+                  company?.cover?.file_path
+                    ? {
+                        backgroundImage:
+                          'url(' + cleanFilePath(company.cover.file_path) + ')',
+                      }
+                    : {}
+                "
+              ></div>
+              <div class="company-hero-overlay"></div>
+              <div class="company-hero-content">
+                <img
+                  v-if="company?.logo?.file_path"
+                  :src="cleanFilePath(company.logo.file_path)"
+                  alt="Company Logo"
+                  class="company-logo"
+                />
+                <div class="company-titles">
+                  <h3 class="company-name mb-1">{{ company?.name }}</h3>
+                  <div
+                    v-if="company?.name_ar"
+                    class="text-sm text-color-secondary"
+                  >
+                    {{ company.name_ar }}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Branch Title follows table pattern -->
+            <h2 class="mb-1">{{ branch.name }}</h2>
+            <div
+              v-if="branch.name_ar"
+              class="text-sm text-color-secondary mb-3"
+            >
+              {{ branch.name_ar }}
+            </div>
+
+            <Divider />
+            <div class="grid">
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("branches.companyId") || "Company ID" }}:</strong>
+                {{ branch.company_id }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("branches.phone") || "Phone" }}:</strong>
+                {{ branch.phone || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("branches.address") || "Address" }}:</strong>
+                {{ branch.address || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong
+                  >{{ $t("branches.addressAr") || "Address (Arabic)" }}:</strong
+                >
+                {{ branch.address_ar || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("common.createdAt") || "Created At" }}:</strong>
+                {{ formatDate(branch.created_at) }}
+              </div>
+            </div>
+
+            <!-- Company Info Summary -->
+            <Divider />
+            <div class="grid company-info-grid">
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("companies.phone") || "Phone" }}:</strong>
+                {{ company?.phone || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("companies.email") || "Email" }}:</strong>
+                {{ company?.email || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("companies.address") || "Address" }}:</strong>
+                {{ company?.address || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("companies.country") || "Country" }}:</strong>
+                {{ company?.country?.name || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong
+                  >{{ $t("companies.governorate") || "Governorate" }}:</strong
+                >
+                {{ company?.governorate?.name || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("companies.city") || "City" }}:</strong>
+                {{ company?.city?.name || "-" }}
+              </div>
+              <div class="col-12 md:col-6">
+                <strong>{{ $t("companies.currency") || "Currency" }}:</strong>
+                {{ company?.currency?.name || "-" }}
+              </div>
+            </div>
+            <div class="mt-3">
+              <Button
+                :label="$t('common.edit') || 'Edit'"
+                icon="pi pi-pencil"
+                class="p-button-sm"
+                @click="editBranch"
+              />
+              <Button
+                :label="$t('common.back') || 'Back'"
+                icon="pi pi-arrow-left"
+                class="p-button-text p-button-sm ml-2"
+                @click="goBackToBranches"
+              />
+            </div>
+          </div>
+
+          <!-- Nested routes if needed -->
+          <RouterView :branch="branch" :branch_id="branch_id" />
+        </div>
+      </main>
+    </div>
+
+    <!-- Edit Branch Modal -->
+    <BranchEditModal
+      ref="branchEditModal"
+      :branch="branch"
+      @branch-updated="handleBranchUpdated"
+    />
+
+    <PosModal ref="posModal" :company-id="company_id" :branch-id="branch_id" />
+    <Toast />
+  </div>
+</template>
+
+<script>
+import { RouterView } from "vue-router";
+import general_request from "../../../../views/layouts/constants/general_request";
+
+import Button from "primevue/button";
+import ProgressSpinner from "primevue/progressspinner";
+import Message from "primevue/message";
+import Toast from "primevue/toast";
+import Divider from "primevue/divider";
+import PosModal from "../pos/PosModal.vue";
+
+export default {
+  name: "BranchDetails",
+  components: {
+    RouterView,
+    Button,
+    ProgressSpinner,
+    Message,
+    Toast,
+    Divider,
+    PosModal,
+  },
+  props: {
+    branch_id: {
+      type: String,
+      required: false, // will fallback to route param
+    },
+    company_id: {
+      type: String,
+      required: false,
+    },
+  },
+  data() {
+    return {
+      branch: {},
+      company: {},
+      loading: false,
+      error: "",
+      sidebarCollapsed: false,
+      isMobile: false,
+      currentLanguage: localStorage.getItem("language") || "en",
+      hasPosAccess: true, // Set to true to always show, false to hide
+    };
+  },
+  computed: {
+    currentDirection() {
+      return this.currentLanguage === "ar" ? "rtl" : "ltr";
+    },
+    layoutClasses() {
+      return {
+        "branch-ltr": this.currentDirection === "ltr",
+        "branch-rtl": this.currentDirection === "rtl",
+        "mobile-view": this.isMobile,
+      };
+    },
+  },
+  mounted() {
+    this.fetchBranch();
+    this.checkMobile();
+    this.setupLanguageListener();
+    window.addEventListener("resize", this.checkMobile);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.checkMobile);
+    if (this.languageUnwatch) {
+      this.languageUnwatch();
+    }
+  },
+  methods: {
+    async fetchBranch() {
+      this.loading = true;
+      this.error = "";
+
+      try {
+        const branchId = this.branch_id || this.$route.params.branch_id;
+        if (!branchId) {
+          throw new Error("Branch ID is missing");
+        }
+
+        const url = `${general_request.BASE_URL}/admin/company/branch/${branchId}`;
+        const response = await this.$http.get(url, {
+          headers: general_request.headers,
+        });
+
+        if (response.data && response.data.data) {
+          this.branch = response.data.data;
+          this.company = response.data.data.company || {};
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } catch (error) {
+        this.error =
+          error.response?.data?.message ||
+          error.message ||
+          this.$t("errors.failedToLoadBranch") ||
+          "Failed to load branch";
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    cleanFilePath(path) {
+      if (!path) return "";
+      try {
+        // Some API values include backticks/spaces; strip them
+        return String(path)
+          .replace(/[`'\"]/g, "")
+          .trim();
+      } catch (e) {
+        return path;
+      }
+    },
+
+    formatDate(value) {
+      if (!value) return "-";
+      try {
+        const d = new Date(value);
+        return d.toLocaleString();
+      } catch (e) {
+        return value;
+      }
+    },
+
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    },
+
+    goBackToBranches() {
+      const companyId = this.company_id || this.$route.params.company_id;
+      if (companyId) {
+        this.$router.push(`/company/${companyId}/branches`);
+      } else {
+        this.$router.push(`/company/branches`);
+      }
+    },
+
+    editBranch() {
+      this.$refs.branchEditModal &&
+        this.$refs.branchEditModal.openModal &&
+        this.$refs.branchEditModal.openModal();
+    },
+
+    handleBranchUpdated(updatedBranch) {
+      this.branch = { ...this.branch, ...updatedBranch };
+      this.showToast(
+        "success",
+        this.$t("common.success") || "Success",
+        this.$t("branches.branchUpdated") || "Branch updated"
+      );
+      this.fetchBranch();
+    },
+
+    checkMobile() {
+      this.isMobile = window.innerWidth <= 768;
+      if (this.isMobile) {
+        this.sidebarCollapsed = true;
+      }
+    },
+
+    setupLanguageListener() {
+      this.languageUnwatch = this.$watch("$i18n.locale", (newLocale) => {
+        this.currentLanguage = newLocale;
+      });
+    },
+
+    showToast(severity, summary, detail) {
+      if (this.$toast) {
+        this.$toast.add({ severity, summary, detail, life: 3000 });
+      }
+    },
+    openPosModal() {
+      if (this.$refs.posModal) {
+        this.$refs.posModal.openModal();
+      }
+    },
+  },
+};
+</script>
+
+<style scoped>
+.branch-show-wrapper {
+  min-height: 100vh;
+  background: var(--surface-ground);
+  position: relative;
+}
+
+.branch-layout-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.branch-main-content {
+  min-height: calc(100vh - 70px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  background: var(--surface-ground);
+  position: relative;
+  z-index: 1;
+}
+
+.branch-main-content.sidebar-collapsed {
+  margin-left: 70px;
+}
+
+.branch-rtl .branch-main-content {
+  margin-left: 0;
+}
+
+.branch-rtl .branch-main-content.sidebar-collapsed {
+  margin-right: 70px;
+}
+
+.branch-show-page {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.branch-sidebar-overlay {
+  position: absolute;
+  top: 70px;
+  left: 0;
+  width: 100%;
+  height: calc(100vh - 70px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 699;
+  backdrop-filter: blur(2px);
+}
+
+.error-state {
+  text-align: center;
+  padding: 2rem;
+}
+
+.branch-content {
+  animation: fadeIn 0.3s ease;
+}
+
+/* Company Hero styles */
+.company-hero {
+  position: relative;
+  height: 180px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.company-hero-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.85);
+}
+
+.company-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.15));
+}
+
+.company-hero-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  z-index: 2;
+}
+
+.company-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.company-titles .company-name {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.company-info-grid {
+  background: var(--surface-card);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .branch-layout-container {
+    overflow: visible;
+  }
+
+  .branch-main-content {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100%;
+    margin-top: 70px;
+  }
+
+  .branch-sidebar-overlay {
+    top: 70px;
+    z-index: 899;
+  }
+}
+</style>
+
+
+
+_____________________________
+*****************************
+_____________________________
+
+
+

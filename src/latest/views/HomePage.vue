@@ -1,9 +1,7 @@
 <template>
-  <div
-    class="layout-wrapper"
-    :class="[currentDirection, currentTheme, { 'mobile-view': isMobile }]"
-  >
-    <MVVMMainHeader
+  <div class="app-layout" :class="layoutClasses">
+    <!-- Header -->
+    <AppHeader
       @toggle-sidebar="toggleSidebar"
       @language-changed="onLanguageChanged"
       @theme-changed="onThemeChanged"
@@ -11,54 +9,50 @@
       :sidebar-collapsed="sidebarCollapsed"
     />
 
-    <!-- Enhanced Mobile Overlay -->
+    <!-- Mobile Overlay -->
     <div
       v-if="isMobile && !sidebarCollapsed"
-      class="sidebar-overlay"
+      class="mobile-overlay"
       @click="toggleSidebar"
-      @touchmove.prevent
     ></div>
 
-    <div
-      class="layout-container"
-      :class="{ 'sidebar-open': isMobile && !sidebarCollapsed }"
-    >
-      <MVVMSidebar
+    <div class="layout-container">
+      <!-- Sidebar -->
+      <AppSidebar
         :collapsed="sidebarCollapsed"
         :position="currentDirection"
         :is-mobile="isMobile"
         @toggle="toggleSidebar"
       />
 
-      <main
-        class="main-content"
-        :class="{
-          'content-expanded': sidebarCollapsed && !isMobile,
-          'mobile-content': isMobile,
-          'sidebar-open': isMobile && !sidebarCollapsed,
-        }"
-      >
-        <RouterView :company="company" :company_id="company_id" />
-        <MVVMFooter />
+      <!-- Main Content -->
+      <main class="main-content" :class="contentClasses">
+        <div class="content-wrapper">
+          <RouterView />
+        </div>
       </main>
     </div>
+
+    <Toast />
+    <ConfirmDialog />
   </div>
 </template>
 
 <script>
 import { RouterView } from "vue-router";
-import MVVMMainHeader from "./layouts/MVVMMainHeader.vue";
-import MVVMSidebar from "./layouts/MVVMSidebar.vue";
-import MVVMContent from "./layouts/MVVMContent.vue";
-import MVVMFooter from "./layouts/MVVMFooter.vue";
+import AppHeader from "./layouts/MVVMMainHeader.vue";
+import AppSidebar from "./layouts/MVVMSidebar.vue";
+import Toast from "primevue/toast";
+import ConfirmDialog from "primevue/confirmdialog";
 
 export default {
+  name: "HomePage",
   components: {
     RouterView,
-    MVVMMainHeader,
-    MVVMSidebar,
-    MVVMContent,
-    MVVMFooter,
+    AppHeader,
+    AppSidebar,
+    Toast,
+    ConfirmDialog,
   },
   data() {
     return {
@@ -67,8 +61,24 @@ export default {
         localStorage.getItem("language") === "ar" ? "rtl" : "ltr",
       currentTheme: localStorage.getItem("theme") || "light",
       isMobile: false,
-      windowWidth: 0,
+      resizeTimeout: null,
     };
+  },
+  computed: {
+    layoutClasses() {
+      return {
+        "layout-ltr": this.currentDirection === "ltr",
+        "layout-rtl": this.currentDirection === "rtl",
+        "mobile-layout": this.isMobile,
+      };
+    },
+    contentClasses() {
+      return {
+        "content-expanded": this.sidebarCollapsed && !this.isMobile,
+        "mobile-content": this.isMobile,
+        "sidebar-open": this.isMobile && !this.sidebarCollapsed,
+      };
+    },
   },
   methods: {
     toggleSidebar() {
@@ -78,44 +88,35 @@ export default {
       if (this.isMobile) {
         if (!this.sidebarCollapsed) {
           document.body.style.overflow = "hidden";
-          document.body.style.position = "fixed";
-          document.body.style.width = "100%";
         } else {
           document.body.style.overflow = "";
-          document.body.style.position = "";
-          document.body.style.width = "";
         }
       }
     },
 
     onLanguageChanged(language) {
       this.currentDirection = language.dir;
+      document.documentElement.dir = language.dir;
+      document.documentElement.lang = language.code;
+
+      // Update i18n locale
+      this.$i18n.locale = language.code;
     },
 
     onThemeChanged(theme) {
       this.currentTheme = theme;
+      document.documentElement.classList.remove("light-mode", "dark-mode");
+      document.documentElement.classList.add(theme + "-mode");
     },
 
     checkMobile() {
       const width = window.innerWidth;
-      const previousMobileState = this.isMobile;
+      this.isMobile = width <= 768;
 
-      // Check for mobile (including tablets in portrait)
-      this.isMobile = width <= 992; // Changed from 768 to 992 for better tablet support
-
-      // Auto-close sidebar on mobile
-      if (this.isMobile && !this.sidebarCollapsed) {
+      // Auto-collapse sidebar on mobile
+      if (this.isMobile) {
         this.sidebarCollapsed = true;
       }
-
-      // Reset body styles if switching from mobile to desktop
-      if (previousMobileState && !this.isMobile) {
-        document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.width = "";
-      }
-
-      this.windowWidth = width;
     },
 
     handleResize() {
@@ -125,91 +126,99 @@ export default {
       }, 100);
     },
   },
-
   mounted() {
     this.checkMobile();
     window.addEventListener("resize", this.handleResize);
-    window.addEventListener("orientationchange", this.handleResize);
 
-    // Initialize theme
+    // Set initial theme
     const savedTheme = localStorage.getItem("theme") || "light";
     document.documentElement.classList.add(savedTheme + "-mode");
-  },
 
+    // Set initial language direction
+    const savedLang = localStorage.getItem("language") || "en";
+    document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = savedLang;
+  },
   beforeUnmount() {
     window.removeEventListener("resize", this.handleResize);
-    window.removeEventListener("orientationchange", this.handleResize);
-
-    // Clean up body styles
     document.body.style.overflow = "";
-    document.body.style.position = "";
-    document.body.style.width = "";
   },
 };
 </script>
 
 <style scoped>
-.layout-wrapper {
+/* Base Layout */
+.app-layout {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
   background: var(--surface-ground);
-  transition: all 0.3s ease;
 }
 
 .layout-container {
   display: flex;
-  flex: 1;
   min-height: calc(100vh - 64px);
   position: relative;
-  transition: all 0.3s ease;
 }
 
+/* Main Content */
 .main-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 1.25rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 100%;
   background: var(--surface-ground);
-  overflow-x: hidden;
+  min-height: 100%;
 }
 
-/* Desktop - LTR (Sidebar on left) */
-.layout-wrapper.ltr:not(.mobile-view) .main-content {
+/* Desktop - LTR */
+.layout-ltr:not(.mobile-layout) .main-content {
   margin-left: 280px;
   width: calc(100% - 280px);
 }
 
-.layout-wrapper.ltr:not(.mobile-view) .main-content.content-expanded {
+.layout-ltr:not(.mobile-layout) .main-content.content-expanded {
   margin-left: 70px;
   width: calc(100% - 70px);
 }
 
-/* Desktop - RTL (Sidebar on right) */
-.layout-wrapper.rtl:not(.mobile-view) .main-content {
+/* Desktop - RTL */
+.layout-rtl:not(.mobile-layout) .main-content {
   margin-right: 280px;
   width: calc(100% - 280px);
 }
 
-.layout-wrapper.rtl:not(.mobile-view) .main-content.content-expanded {
+.layout-rtl:not(.mobile-layout) .main-content.content-expanded {
   margin-right: 70px;
   width: calc(100% - 70px);
 }
 
-/* Mobile & Tablet Styles (up to 992px) */
-@media (max-width: 992px) {
-  .layout-wrapper.mobile-view {
+/* Content Wrapper */
+.content-wrapper {
+  padding: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  min-height: calc(100vh - 64px - 3rem); /* Viewport - header - padding */
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 99;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Mobile & Tablet Styles */
+@media (max-width: 768px) {
+  .mobile-layout {
     overflow-x: hidden;
   }
 
-  .layout-container {
-    position: relative;
-  }
-
   .main-content {
-    padding: 1rem;
+    padding: 0;
     margin-left: 0 !important;
     margin-right: 0 !important;
     width: 100% !important;
@@ -217,45 +226,27 @@ export default {
   }
 
   /* When sidebar is open, shift content */
-  .layout-container.sidebar-open .main-content {
+  .sidebar-open .main-content {
     transform: translateX(280px);
   }
 
-  .layout-wrapper.rtl .layout-container.sidebar-open .main-content {
+  .layout-rtl .sidebar-open .main-content {
     transform: translateX(-280px);
   }
 
-  /* Sidebar Overlay */
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 899;
-    animation: fadeIn 0.2s ease;
-  }
-
-  .layout-wrapper.rtl .sidebar-overlay {
-    left: unset;
-    right: 0;
+  .content-wrapper {
+    padding: 1rem;
+    min-height: calc(100vh - 56px - 2rem); /* Mobile header - padding */
   }
 }
 
-/* Small Mobile (up to 576px) */
-@media (max-width: 576px) {
-  .main-content {
+/* Small Mobile */
+@media (max-width: 480px) {
+  .content-wrapper {
     padding: 0.75rem;
   }
-
-  .layout-container.sidebar-open .main-content {
-    transform: translateX(280px);
-  }
 }
 
-/* Animation for overlay */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -265,10 +256,20 @@ export default {
   }
 }
 
-/* Prevent horizontal scroll on mobile */
-@media (max-width: 992px) {
-  body {
-    overflow-x: hidden;
+/* Print Styles */
+@media print {
+  .app-header,
+  .app-sidebar {
+    display: none !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .content-wrapper {
+    padding: 0;
   }
 }
 </style>

@@ -25,6 +25,13 @@
   --p-surface-border: var(--surface-border);
   --p-text-color: var(--text-color);
   --p-text-color-secondary: var(--text-color-secondary);
+
+  --surface-ground: var(--color-gray-50);
+  --surface-card: var(--color-white);
+  --surface-border: var(--color-gray-200);
+  --surface-hover: var(--color-gray-100);
+  --text-color: var(--color-gray-900);
+  --text-color-secondary: var(--color-gray-600);
 }
 
 // تحسينات عامة للـ PrimeVue components
@@ -81,6 +88,21 @@
       background: var(--color-gray-500);
     }
   }
+
+  --surface-ground: #0f172a;
+  --surface-card: #1e293b;
+  --surface-border: #475569;
+  --surface-hover: #334155;
+  --text-color: #f1f5f9;
+  --text-color-secondary: #cbd5e1;
+
+  /* PrimeVue specific */
+  --p-surface-ground: var(--surface-ground);
+  --p-surface-card: var(--surface-card);
+  --p-surface-border: var(--surface-border);
+  --p-surface-hover: var(--surface-hover);
+  --p-text-color: var(--text-color);
+  --p-text-color-secondary: var(--text-color-secondary);
 }
 
 // ==================== SELECTION STYLES ====================
