@@ -1,198 +1,205 @@
 <template>
-  <div class="contact-table p-3">
-    <div class="mb-3 flex justify-content-between align-items-center">
-      <h2 class="m-0">{{ $t("contacts.title") }}</h2>
-      <Button
-        :label="$t('contacts.addContact')"
-        icon="pi pi-plus"
-        @click="openCreateModal"
-        class="p-button-primary"
-      />
-    </div>
-
-    <div class="flex gap-2 mb-4">
-      <div class="search-container">
-        <InputText
-          v-model="query_string"
-          :placeholder="$t('contacts.search')"
-          @input="handleSearchInput"
-          class="search-input w-20rem"
-        />
-        <i class="pi pi-search search-icon" />
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("contacts.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('contacts.addContact')"
+            icon="pi pi-plus"
+            @click="openCreateModal"
+            class="p-button-primary"
+          />
+        </div>
       </div>
 
-      <Select
-        v-model="per_page"
-        :options="perPageOptions"
-        option-label="label"
-        option-value="value"
-        :placeholder="$t('contacts.show')"
-        @change="handlePerPageChange"
-        class="w-10rem"
-      />
-    </div>
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+      >
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('contacts.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
+          />
+          <i class="pi pi-search search-icon" />
+        </div>
+        <Select
+          v-model="per_page"
+          :options="perPageOptions"
+          option-label="label"
+          option-value="value"
+          :placeholder="$t('contacts.show')"
+          @change="handlePerPageChange"
+          class="w-10rem"
+        />
+      </div>
 
-    <DataTable
-      :value="tableItems"
-      :paginator="true"
-      :rows="per_page"
-      :totalRecords="meta.total"
-      :rowsPerPageOptions="[5, 10, 25, 50]"
-      :loading="loading"
-      
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
-      class="p-datatable-sm table-scroll-container"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="{first} to {last} of {totalRecords}"
-      @page="handlePageChange"
-    >
-      <Column field="id" :header="$t('contacts.id')" style="min-width: 70px">
-        <template #body="slotProps"
-          ><span class="font-mono text-sm">{{
-            slotProps.index + 1
-          }}</span></template
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
+      >
+        <Column field="id" :header="$t('contacts.id')" style="min-width: 70px">
+          <template #body="slotProps"
+            ><span class="font-mono text-sm">{{
+              slotProps.index + 1
+            }}</span></template
+          >
+        </Column>
+
+        <Column
+          field="name"
+          :header="$t('contacts.name')"
+          style="min-width: 200px"
         >
-      </Column>
-
-      <Column
-        field="name"
-        :header="$t('contacts.name')"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">
-          <div>
-            <div class="font-medium">{{ slotProps.data.name }}</div>
-            <div class="text-sm text-color-secondary">
-              {{ slotProps.data.email }}
+          <template #body="slotProps">
+            <div>
+              <div class="font-medium">{{ slotProps.data.name }}</div>
+              <div class="text-sm text-color-secondary">
+                {{ slotProps.data.email }}
+              </div>
             </div>
-          </div>
-        </template>
-      </Column>
+          </template>
+        </Column>
 
-      <Column
-        field="phone"
-        :header="$t('contacts.phone')"
-        style="min-width: 150px"
+        <Column
+          field="phone"
+          :header="$t('contacts.phone')"
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">{{
+            slotProps.data.phone || "-"
+          }}</template>
+        </Column>
+
+        <Column
+          field="address"
+          :header="$t('contacts.address')"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">{{
+            slotProps.data.address || "-"
+          }}</template>
+        </Column>
+
+        <Column
+          field="created_at"
+          :header="$t('contacts.createdAt')"
+          style="min-width: 130px"
+        >
+          <template #body="slotProps">{{
+            formatDate(slotProps.data.created_at)
+          }}</template>
+        </Column>
+
+        <Column
+          :header="$t('contacts.actions')"
+          :exportable="false"
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-phone"
+                class="p-button-text p-button-sm"
+                @click.prevent="openPhonesModal(slotProps.data)"
+                v-tooltip.top="$t('contacts.phones')"
+              />
+              <Button
+                icon="pi pi-map-marker"
+                class="p-button-text p-button-sm"
+                @click.prevent="openAddressesModal(slotProps.data)"
+                v-tooltip.top="$t('contacts.addresses')"
+              />
+              <Button
+                icon="pi pi-envelope"
+                class="p-button-text p-button-sm"
+                @click.prevent="openEmailsModal(slotProps.data)"
+                v-tooltip.top="$t('contacts.emails')"
+              />
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="editContact(slotProps.data)"
+                v-tooltip.top="$t('contacts.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteContact(slotProps.data)"
+                v-tooltip.top="$t('contacts.delete')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+
+      <div
+        v-if="!loading && tableItems.length === 0"
+        class="empty-state text-center py-6"
       >
-        <template #body="slotProps">{{ slotProps.data.phone || "-" }}</template>
-      </Column>
+        <i class="pi pi-address-book text-6xl text-color-secondary mb-3"></i>
+        <h3 class="text-color-secondary">{{ $t("contacts.noContacts") }}</h3>
+        <p class="text-color-secondary">
+          {{ $t("contacts.createFirstContact") }}
+        </p>
+        <Button
+          :label="$t('contacts.addContact')"
+          icon="pi pi-plus"
+          @click="openCreateModal"
+          class="p-button-primary mt-3"
+        />
+      </div>
 
-      <Column
-        field="address"
-        :header="$t('contacts.address')"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">{{
-          slotProps.data.address || "-"
-        }}</template>
-      </Column>
-
-      <Column
-        field="created_at"
-        :header="$t('contacts.createdAt')"
-        style="min-width: 130px"
-      >
-        <template #body="slotProps">{{
-          formatDate(slotProps.data.created_at)
-        }}</template>
-      </Column>
-
-      <Column
-        :header="$t('contacts.actions')"
-        :exportable="false"
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-phone"
-              class="p-button-text p-button-sm"
-              @click.prevent="openPhonesModal(slotProps.data)"
-              v-tooltip.top="$t('contacts.phones')"
-            />
-            <Button
-              icon="pi pi-map-marker"
-              class="p-button-text p-button-sm"
-              @click.prevent="openAddressesModal(slotProps.data)"
-              v-tooltip.top="$t('contacts.addresses')"
-            />
-            <Button
-              icon="pi pi-envelope"
-              class="p-button-text p-button-sm"
-              @click.prevent="openEmailsModal(slotProps.data)"
-              v-tooltip.top="$t('contacts.emails')"
-            />
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-primary"
-              @click="editContact(slotProps.data)"
-              v-tooltip.top="$t('contacts.edit')"
-            />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              @click="deleteContact(slotProps.data)"
-              v-tooltip.top="$t('contacts.delete')"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
-
-    <div
-      v-if="!loading && tableItems.length === 0"
-      class="empty-state text-center py-6"
-    >
-      <i class="pi pi-address-book text-6xl text-color-secondary mb-3"></i>
-      <h3 class="text-color-secondary">{{ $t("contacts.noContacts") }}</h3>
-      <p class="text-color-secondary">
-        {{ $t("contacts.createFirstContact") }}
-      </p>
-      <Button
-        :label="$t('contacts.addContact')"
-        icon="pi pi-plus"
-        @click="openCreateModal"
-        class="p-button-primary mt-3"
+      <ContactCreateModal
+        ref="createModal"
+        :company_id="companyId"
+        @contact-created="handleContactCreated"
       />
+      <ContactEditModal
+        ref="editModal"
+        :contact="selectedItem"
+        :company_id="companyId"
+        @contact-updated="handleContactUpdated"
+      />
+      <!-- Per-resource modal wrappers (open inline without using routes) -->
+      <ContactPhonesTableModal
+        v-if="phonesContactId"
+        :company_id="companyId"
+        :contact_id="phonesContactId"
+        @closed="phonesContactId = null"
+      />
+      <ContactAddressesTableModal
+        v-if="addressesContactId"
+        :company_id="companyId"
+        :contact_id="addressesContactId"
+        @closed="addressesContactId = null"
+      />
+      <ContactEmailsTableModal
+        v-if="emailsContactId"
+        :company_id="companyId"
+        :contact_id="emailsContactId"
+        @closed="emailsContactId = null"
+      />
+      <!-- Related resource modals are now located in their own folders; navigation uses routes -->
+      <ConfirmDialog />
+      <Toast />
     </div>
-
-    <ContactCreateModal
-      ref="createModal"
-      :company_id="companyId"
-      @contact-created="handleContactCreated"
-    />
-    <ContactEditModal
-      ref="editModal"
-      :contact="selectedItem"
-      :company_id="companyId"
-      @contact-updated="handleContactUpdated"
-    />
-    <!-- Per-resource modal wrappers (open inline without using routes) -->
-    <ContactPhonesTableModal
-      v-if="phonesContactId"
-      :company_id="companyId"
-      :contact_id="phonesContactId"
-      @closed="phonesContactId = null"
-    />
-    <ContactAddressesTableModal
-      v-if="addressesContactId"
-      :company_id="companyId"
-      :contact_id="addressesContactId"
-      @closed="addressesContactId = null"
-    />
-    <ContactEmailsTableModal
-      v-if="emailsContactId"
-      :company_id="companyId"
-      :contact_id="emailsContactId"
-      @closed="emailsContactId = null"
-    />
-    <!-- Related resource modals are now located in their own folders; navigation uses routes -->
-    <ConfirmDialog />
-    <Toast />
   </div>
 </template>
 

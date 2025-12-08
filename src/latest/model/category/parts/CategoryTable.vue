@@ -1,150 +1,164 @@
 <template>
-  <div class="p3">
-    <div class="mb-3">
-      <h2 class="m-0">{{ $t("categories.title") }}</h2>
-    </div>
-    <div class="mb-4">
-      <Button
-        :label="$t('categories.addCategory')"
-        icon="pi pi-plus"
-        @click="createCategory"
-        class="p-button-primary"
-      />
-    </div>
-
-    <div class="flex gap-2 mb-4">
-      <div class="search-container">
-        <InputText
-          v-model="query_string"
-          :placeholder="$t('categories.search')"
-          @input="handleSearchInput"
-          class="search-input w-20rem"
-        />
-        <i class="pi pi-search search-icon" />
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("categories.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('categories.addCategory')"
+            icon="pi pi-plus"
+            @click="createCategory"
+            class="p-button-primary"
+          />
+        </div>
       </div>
 
-      <Select
-        v-model="per_page"
-        :options="perPageOptions"
-        optionLabel="label"
-        optionValue="value"
-        :placeholder="$t('categories.show')"
-        @change="getData(propSearchUrl)"
-        class="w-10rem"
-      />
-    </div>
-
-    <DataTable
-      :value="tableItems"
-      :paginator="true"
-      :rows="per_page"
-      :totalRecords="meta.total"
-      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-      :loading="loading"
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
-      class="p-datatable-sm table-scroll-container"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="{first} to {last} of {totalRecords}"
-      @page="handlePageChange"
-    >
-      <Column field="id" :header="$t('categories.id')" style="min-width: 100px">
-        <template #body="slotProps">
-          <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
-        </template>
-      </Column>
-
-      <Column
-        field="file"
-        :header="$t('categories.image')"
-        style="min-width: 80px"
+      <!-- Filters -->
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
       >
-        <template #body="slotProps">
-          <img
-            v-if="slotProps.data.file"
-            :src="slotProps.data.file.file_path"
-            :alt="slotProps.data.name"
-            class="img-40 object-cover rounded"
+        <!-- Search -->
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('categories.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
           />
-          <span v-else>-</span>
-        </template>
-      </Column>
+          <i class="pi pi-search search-icon" />
+        </div>
 
-      <Column
-        field="name"
-        :header="$t('categories.name')"
-        sortable
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          <span class="font-medium">{{ slotProps.data.name }}</span>
-        </template>
-      </Column>
+        <!-- Per page select -->
+        <div class="flex items-center gap-2">
+          <Select
+            v-model="per_page"
+            :options="perPageOptions"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="$t('categories.show')"
+            @change="getData(propSearchUrl)"
+            class="w-10rem"
+          />
+        </div>
+      </div>
 
-      <Column
-        field="name_ar"
-        :header="$t('categories.nameAr')"
-        sortable
-        style="min-width: 150px"
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
       >
-        <template #body="slotProps">
-          <span class="font-medium">{{ slotProps.data.name_ar }}</span>
-        </template>
-      </Column>
+        <Column
+          field="id"
+          :header="$t('categories.id')"
+          style="min-width: 100px"
+        >
+          <template #body="slotProps">
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
 
-      <Column
-        field="created_at"
-        :header="$t('categories.createdAt')"
-        sortable
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          {{ formatDate(slotProps.data.created_at) }}
-        </template>
-      </Column>
-
-      <Column
-        :header="$t('categories.actions')"
-        :exportable="false"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-primary"
-              @click="editCategoryModal(slotProps.data)"
-              v-tooltip.top="$t('categories.edit')"
+        <Column
+          field="file"
+          :header="$t('categories.image')"
+          style="min-width: 80px"
+        >
+          <template #body="slotProps">
+            <img
+              v-if="slotProps.data.file"
+              :src="slotProps.data.file.file_path"
+              :alt="slotProps.data.name"
+              class="img-40 object-cover rounded"
             />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('categories.delete')"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+            <span v-else>-</span>
+          </template>
+        </Column>
 
-    <CategoryEditModal
-      ref="categoryEditModal"
-      :category="selectedItem"
-      :company_id="effectiveCompanyId"
-      @category-updated="handleCategoryUpdated"
-    />
+        <Column
+          field="name"
+          :header="$t('categories.name')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.name }}</span>
+          </template>
+        </Column>
 
-    <CategoryCreateModal
-      ref="categoryCreateModal"
-      :company_id="effectiveCompanyId"
-      @category-created="handleCategoryCreated"
-    />
+        <Column
+          field="name_ar"
+          :header="$t('categories.nameAr')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.name_ar }}</span>
+          </template>
+        </Column>
 
-    <Toast />
-    <ConfirmDialog />
+        <Column
+          field="created_at"
+          :header="$t('categories.createdAt')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <Column
+          :header="$t('categories.actions')"
+          :exportable="false"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="editCategoryModal(slotProps.data)"
+                v-tooltip.top="$t('categories.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteRow(slotProps.data)"
+                v-tooltip.top="$t('categories.delete')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+
+      <CategoryEditModal
+        ref="categoryEditModal"
+        :category="selectedItem"
+        :company_id="effectiveCompanyId"
+        @category-updated="handleCategoryUpdated"
+      />
+
+      <CategoryCreateModal
+        ref="categoryCreateModal"
+        :company_id="effectiveCompanyId"
+        @category-created="handleCategoryCreated"
+      />
+
+      <Toast />
+      <ConfirmDialog />
+    </div>
   </div>
 </template>
 
@@ -261,5 +275,4 @@ export default {
 };
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

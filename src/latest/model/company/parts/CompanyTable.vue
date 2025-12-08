@@ -1,199 +1,212 @@
 <template>
-  <div class="p-3">
-    <div class="mb-3">
-      <h2 class="m-0">{{ $t("companies.title") }}</h2>
-    </div>
-
-    <div class="mb-4">
-      <Button
-        :label="$t('companies.addCompany')"
-        icon="pi pi-plus"
-        @click="createCompany"
-        class="p-button-primary"
-      />
-    </div>
-
-    <div class="flex gap-2 mb-4">
-      <div class="search-container">
-        <InputText
-          v-model="query_string"
-          :placeholder="$t('companies.search')"
-          @input="handleSearchInput"
-          class="search-input w-20rem"
-        />
-        <i class="pi pi-search search-icon" />
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("companies.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('companies.addCompany')"
+            icon="pi pi-plus"
+            @click="createCompany"
+            class="p-button-primary"
+          />
+        </div>
       </div>
 
-      <Select
-        v-model="per_page"
-        :options="perPageOptions"
-        optionLabel="label"
-        optionValue="value"
-        :placeholder="$t('companies.show')"
-        @change="getData(propSearchUrl)"
-        class="w-10rem"
-      />
-    </div>
-
-    <!-- Data Table -->
-    <DataTable
-      :value="tableItems"
-      :paginator="true"
-      :rows="per_page"
-      :totalRecords="meta.total"
-      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-      :loading="loading"
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
-      class="p-datatable-sm table-scroll-container"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="{first} to {last} of {totalRecords}"
-      @page="handlePageChange"
-    >
-      <!-- ID Column -->
-      <Column field="id" :header="$t('companies.id')" style="min-width: 100px">
-        <template #body="slotProps">
-          <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
-        </template>
-      </Column>
-
-      <!-- Logo Column -->
-      <Column
-        field="logo"
-        :header="$t('companies.logo')"
-        style="min-width: 80px"
+      <!-- Filters -->
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
       >
-        <template #body="slotProps">
-          <img
-            v-if="slotProps.data.logo"
-            :src="slotProps.data.logo.file_path"
-            :alt="slotProps.data.name"
-            class="img-40 object-cover rounded"
+        <!-- Search -->
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('companies.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
           />
-          <span v-else>-</span>
-        </template>
-      </Column>
+          <i class="pi pi-search search-icon" />
+        </div>
 
-      <!-- Name Column -->
-      <Column
-        field="name"
-        :header="$t('companies.name')"
-        sortable
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          <span class="font-medium">{{ slotProps.data.name }}</span>
-        </template>
-      </Column>
+        <!-- Per page select -->
+        <div class="flex items-center gap-2">
+          <Select
+            v-model="per_page"
+            :options="perPageOptions"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="$t('companies.show')"
+            @change="getData(propSearchUrl)"
+            class="w-10rem"
+          />
+        </div>
+      </div>
 
-      <!-- Phone Column -->
-      <Column
-        field="phone"
-        :header="$t('companies.phone')"
-        style="min-width: 130px"
+      <!-- Data Table -->
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
       >
-        <template #body="slotProps">
-          <span>{{ slotProps.data.phone }}</span>
-        </template>
-      </Column>
+        <!-- ID Column -->
+        <Column
+          field="id"
+          :header="$t('companies.id')"
+          style="min-width: 100px"
+        >
+          <template #body="slotProps">
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
 
-      <!-- Email Column -->
-      <Column
-        field="email"
-        :header="$t('companies.email')"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">
-          <span>{{ slotProps.data.email }}</span>
-        </template>
-      </Column>
-
-      <!-- Client Column -->
-      <Column
-        field="client"
-        :header="$t('companies.client')"
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          <span>{{ slotProps.data.client?.name || "-" }}</span>
-        </template>
-      </Column>
-
-      <!-- Country Column -->
-      <Column
-        field="country"
-        :header="$t('companies.country')"
-        style="min-width: 120px"
-      >
-        <template #body="slotProps">
-          <span>{{ slotProps.data.country?.name || "-" }}</span>
-        </template>
-      </Column>
-
-      <!-- Currency Column -->
-      <Column
-        field="currency"
-        :header="$t('companies.currency')"
-        style="min-width: 120px"
-      >
-        <template #body="slotProps">
-          <span>{{ slotProps.data.currency?.name || "-" }}</span>
-        </template>
-      </Column>
-
-      <!-- Actions Column -->
-      <Column
-        :header="$t('companies.actions')"
-        :exportable="false"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-primary"
-              @click="editCompanyModal(slotProps.data)"
-              v-tooltip.top="$t('companies.edit')"
+        <!-- Logo Column -->
+        <Column
+          field="logo"
+          :header="$t('companies.logo')"
+          style="min-width: 80px"
+        >
+          <template #body="slotProps">
+            <img
+              v-if="slotProps.data.logo"
+              :src="slotProps.data.logo.file_path"
+              :alt="slotProps.data.name"
+              class="img-40 object-cover rounded"
             />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('companies.delete')"
-            />
-            <Button
-              icon="pi pi-folder"
-              class="p-button-text p-button-sm p-button-info"
-              @click="viewCategories(slotProps.data)"
-              v-tooltip.top="$t('companies.viewCategories')"
-            />
-            <Button
-              icon="pi pi-eye"
-              class="p-button-text p-button-sm p-button-info"
-              @click="viewCompany(slotProps.data)"
-              v-tooltip.top="$t('companies.viewCompany')"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+            <span v-else>-</span>
+          </template>
+        </Column>
 
-    <CompanyEditModal
-      ref="companyEditModal"
-      :company="selectedItem"
-      @company-updated="handleCompanyUpdated"
-    />
+        <!-- Name Column -->
+        <Column
+          field="name"
+          :header="$t('companies.name')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.name }}</span>
+          </template>
+        </Column>
 
-    <CompanyCreateModal
-      ref="companyCreateModal"
-      @company-created="handleCompanyCreated"
-    />
+        <!-- Phone Column -->
+        <Column
+          field="phone"
+          :header="$t('companies.phone')"
+          style="min-width: 130px"
+        >
+          <template #body="slotProps">
+            <span>{{ slotProps.data.phone }}</span>
+          </template>
+        </Column>
 
-    <Toast />
-    <ConfirmDialog />
+        <!-- Email Column -->
+        <Column
+          field="email"
+          :header="$t('companies.email')"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <span>{{ slotProps.data.email }}</span>
+          </template>
+        </Column>
+
+        <!-- Client Column -->
+        <Column
+          field="client"
+          :header="$t('companies.client')"
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <span>{{ slotProps.data.client?.name || "-" }}</span>
+          </template>
+        </Column>
+
+        <!-- Country Column -->
+        <Column
+          field="country"
+          :header="$t('companies.country')"
+          style="min-width: 120px"
+        >
+          <template #body="slotProps">
+            <span>{{ slotProps.data.country?.name || "-" }}</span>
+          </template>
+        </Column>
+
+        <!-- Currency Column -->
+        <Column
+          field="currency"
+          :header="$t('companies.currency')"
+          style="min-width: 120px"
+        >
+          <template #body="slotProps">
+            <span>{{ slotProps.data.currency?.name || "-" }}</span>
+          </template>
+        </Column>
+
+        <!-- Actions Column -->
+        <Column
+          :header="$t('companies.actions')"
+          :exportable="false"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="editCompanyModal(slotProps.data)"
+                v-tooltip.top="$t('companies.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteRow(slotProps.data)"
+                v-tooltip.top="$t('companies.delete')"
+              />
+              <Button
+                icon="pi pi-folder"
+                class="p-button-text p-button-sm p-button-info"
+                @click="viewCategories(slotProps.data)"
+                v-tooltip.top="$t('companies.viewCategories')"
+              />
+              <Button
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm p-button-info"
+                @click="viewCompany(slotProps.data)"
+                v-tooltip.top="$t('companies.viewCompany')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+
+      <CompanyEditModal
+        ref="companyEditModal"
+        :company="selectedItem"
+        @company-updated="handleCompanyUpdated"
+      />
+
+      <CompanyCreateModal
+        ref="companyCreateModal"
+        @company-created="handleCompanyCreated"
+      />
+
+      <Toast />
+      <ConfirmDialog />
+    </div>
   </div>
 </template>
 

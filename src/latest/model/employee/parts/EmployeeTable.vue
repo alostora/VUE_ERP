@@ -1,195 +1,200 @@
 <template>
-  <div class="p-3">
-    <div class="mb-3">
-      <h2 class="m-0">{{ $t("employees.title") }}</h2>
-    </div>
-    <div class="mb-4 flex gap-2">
-      <Button
-        :label="$t('employees.backToBranch')"
-        icon="pi pi-arrow-left"
-        class="p-button-text"
-        @click="goBackToBranch"
-      />
-      <Button
-        :label="$t('employees.addEmployee')"
-        icon="pi pi-plus"
-        @click="createEmployee"
-        class="p-button-primary"
-      />
-    </div>
-
-    <div class="flex gap-2 mb-4">
-      <div class="search-container">
-        <InputText
-          v-model="query_string"
-          :placeholder="$t('employees.search')"
-          @input="handleSearchInput"
-          class="search-input w-20rem"
-        />
-        <i class="pi pi-search search-icon" />
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("employees.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('employees.backToBranch')"
+            icon="pi pi-arrow-left"
+            class="p-button-text"
+            @click="goBackToBranch"
+          />
+          <Button
+            :label="$t('employees.addEmployee')"
+            icon="pi pi-plus"
+            @click="createEmployee"
+            class="p-button-primary"
+          />
+        </div>
       </div>
 
-      <Select
-        v-model="per_page"
-        :options="perPageOptions"
-        optionLabel="label"
-        optionValue="value"
-        :placeholder="$t('employees.show')"
-        @change="getData(propSearchUrl)"
-        class="w-10rem"
-      />
-    </div>
-
-    <!-- Data Table -->
-    <DataTable
-      :value="tableItems"
-      :paginator="true"
-      :rows="per_page"
-      :totalRecords="meta.total"
-      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-      :loading="loading"
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
-      class="p-datatable-sm table-scroll-container"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="{first} to {last} of {totalRecords}"
-      @page="handlePageChange"
-    >
-      <!-- ID Column -->
-      <Column field="id" :header="$t('employees.id')" style="min-width: 80px">
-        <template #body="slotProps">
-          <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
-        </template>
-      </Column>
-
-      <!-- Name Column -->
-      <Column
-        field="name"
-        :header="$t('employees.name')"
-        sortable
-        style="min-width: 150px"
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
       >
-        <template #body="slotProps">
-          <div class="font-medium">{{ slotProps.data.name }}</div>
-        </template>
-      </Column>
-
-      <!-- Email Column -->
-      <Column
-        field="email"
-        :header="$t('employees.email')"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">
-          <div class="flex align-items-center">
-            <i class="pi pi-envelope mr-2 text-color-secondary"></i>
-            {{ slotProps.data.email }}
-          </div>
-        </template>
-      </Column>
-
-      <!-- Phone Column -->
-      <Column
-        field="phone"
-        :header="$t('employees.phone')"
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          <div class="flex align-items-center">
-            <i class="pi pi-phone mr-2 text-color-secondary"></i>
-            {{ slotProps.data.phone || "-" }}
-          </div>
-        </template>
-      </Column>
-
-      <!-- Account Type Column -->
-      <Column :header="$t('employees.accountType')" style="min-width: 150px">
-        <template #body="slotProps">
-          <Tag
-            v-if="slotProps.data.account_type"
-            :value="slotProps.data.account_type.name"
-            severity="info"
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('employees.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
           />
-          <span v-else>-</span>
-        </template>
-      </Column>
+          <i class="pi pi-search search-icon" />
+        </div>
 
-      <!-- Created At Column -->
-      <Column
-        field="created_at"
-        :header="$t('employees.createdAt')"
-        sortable
-        style="min-width: 150px"
+        <Select
+          v-model="per_page"
+          :options="perPageOptions"
+          optionLabel="label"
+          optionValue="value"
+          :placeholder="$t('employees.show')"
+          @change="getData(propSearchUrl)"
+          class="w-10rem"
+        />
+      </div>
+
+      <!-- Data Table -->
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
       >
-        <template #body="slotProps">
-          {{ formatDate(slotProps.data.created_at) }}
-        </template>
-      </Column>
+        <!-- ID Column -->
+        <Column field="id" :header="$t('employees.id')" style="min-width: 80px">
+          <template #body="slotProps">
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
 
-      <!-- Actions Column -->
-      <Column
-        :header="$t('employees.actions')"
-        :exportable="false"
-        style="min-width: 180px"
-      >
-        <template #body="slotProps">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-primary"
-              @click="editEmployeeModal(slotProps.data)"
-              v-tooltip.top="$t('employees.edit')"
-            />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('employees.delete')"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+        <!-- Name Column -->
+        <Column
+          field="name"
+          :header="$t('employees.name')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <div class="font-medium">{{ slotProps.data.name }}</div>
+          </template>
+        </Column>
 
-    <!-- Empty State -->
-    <div v-if="!loading && tableItems.length === 0" class="text-center py-6">
-      <i class="pi pi-users text-6xl text-color-secondary mb-3"></i>
-      <h3 class="text-color-secondary">
-        {{ $t("employees.noEmployees") }}
-      </h3>
-      <p class="text-color-secondary">
-        {{ $t("employees.createFirstEmployee") }}
-      </p>
-      <Button
-        :label="$t('employees.addEmployee')"
-        icon="pi pi-plus"
-        @click="createEmployee"
-        class="p-button-primary mt-3"
+        <!-- Email Column -->
+        <Column
+          field="email"
+          :header="$t('employees.email')"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div class="flex align-items-center">
+              <i class="pi pi-envelope mr-2 text-color-secondary"></i>
+              {{ slotProps.data.email }}
+            </div>
+          </template>
+        </Column>
+
+        <!-- Phone Column -->
+        <Column
+          field="phone"
+          :header="$t('employees.phone')"
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <div class="flex align-items-center">
+              <i class="pi pi-phone mr-2 text-color-secondary"></i>
+              {{ slotProps.data.phone || "-" }}
+            </div>
+          </template>
+        </Column>
+
+        <!-- Account Type Column -->
+        <Column :header="$t('employees.accountType')" style="min-width: 150px">
+          <template #body="slotProps">
+            <Tag
+              v-if="slotProps.data.account_type"
+              :value="slotProps.data.account_type.name"
+              severity="info"
+            />
+            <span v-else>-</span>
+          </template>
+        </Column>
+
+        <!-- Created At Column -->
+        <Column
+          field="created_at"
+          :header="$t('employees.createdAt')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <!-- Actions Column -->
+        <Column
+          :header="$t('employees.actions')"
+          :exportable="false"
+          style="min-width: 180px"
+        >
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="editEmployeeModal(slotProps.data)"
+                v-tooltip.top="$t('employees.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteRow(slotProps.data)"
+                v-tooltip.top="$t('employees.delete')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+
+      <!-- Empty State -->
+      <div v-if="!loading && tableItems.length === 0" class="text-center py-6">
+        <i class="pi pi-users text-6xl text-color-secondary mb-3"></i>
+        <h3 class="text-color-secondary">
+          {{ $t("employees.noEmployees") }}
+        </h3>
+        <p class="text-color-secondary">
+          {{ $t("employees.createFirstEmployee") }}
+        </p>
+        <Button
+          :label="$t('employees.addEmployee')"
+          icon="pi pi-plus"
+          @click="createEmployee"
+          class="p-button-primary mt-3"
+        />
+      </div>
+
+      <!-- Create Employee Modal -->
+      <EmployeeCreateModal
+        ref="employeeCreateModal"
+        :company_id="effectiveCompanyId"
+        :branch_id="effectiveBranchId"
+        @employee-created="handleEmployeeCreated"
       />
+
+      <!-- Edit Employee Modal -->
+      <EmployeeEditModal
+        ref="employeeEditModal"
+        :employee="selectedItem"
+        :company_id="effectiveCompanyId"
+        :branch_id="effectiveBranchId"
+        @employee-updated="handleEmployeeUpdated"
+      />
+
+      <Toast />
+      <ConfirmDialog />
     </div>
-
-    <!-- Create Employee Modal -->
-    <EmployeeCreateModal
-      ref="employeeCreateModal"
-      :company_id="effectiveCompanyId"
-      :branch_id="effectiveBranchId"
-      @employee-created="handleEmployeeCreated"
-    />
-
-    <!-- Edit Employee Modal -->
-    <EmployeeEditModal
-      ref="employeeEditModal"
-      :employee="selectedItem"
-      :company_id="effectiveCompanyId"
-      :branch_id="effectiveBranchId"
-      @employee-updated="handleEmployeeUpdated"
-    />
-
-    <Toast />
-    <ConfirmDialog />
   </div>
 </template>
 

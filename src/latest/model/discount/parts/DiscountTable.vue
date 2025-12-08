@@ -1,268 +1,265 @@
 <!-- src/latest/model/discount/parts/DiscountTable.vue -->
 <template>
-  <div class="p-3">
-    <!-- Header Section -->
-    <div class="mb-3">
-      <h2 class="m-0">{{ $t("discounts.title") }}</h2>
-    </div>
-
-    <!-- Action Bar -->
-    <div class="mb-4">
-      <Button
-        :label="$t('discounts.addDiscount')"
-        icon="pi pi-plus"
-        @click="createDiscount"
-        class="p-button-primary"
-      />
-    </div>
-
-    <!-- Filters Section -->
-    <div class="flex gap-2 mb-4">
-      <!-- Search -->
-      <div class="search-container">
-        <InputText
-          v-model="query_string"
-          :placeholder="$t('discounts.search')"
-          @input="handleSearchInput"
-          class="search-input w-20rem"
-        />
-        <i class="pi pi-search search-icon" />
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("discounts.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('discounts.addDiscount')"
+            icon="pi pi-plus"
+            @click="createDiscount"
+            class="p-button-primary"
+          />
+        </div>
       </div>
 
-      <!-- Type Filter -->
-      <Select
-        v-model="selectedType"
-        :options="discountTypes"
-        option-label="name"
-        option-value="id"
-        :placeholder="$t('discounts.selectType')"
-        :loading="loadingTypes"
-        :disabled="loadingTypes"
-        @change="onTypeChange"
-        class="w-15rem"
-        show-clear
-      />
-
-      <!-- Date Range -->
-      <div class="flex gap-2 align-items-center">
-        <Calendar
-          v-model="dateFrom"
-          :placeholder="$t('discounts.dateFrom')"
-          dateFormat="yy-mm-dd"
-          class="w-12rem"
-          show-icon
-        />
-        <Calendar
-          v-model="dateTo"
-          :placeholder="$t('discounts.dateTo')"
-          dateFormat="yy-mm-dd"
-          class="w-12rem"
-          show-icon
-        />
-        <Button
-          v-if="dateFrom || dateTo"
-          icon="pi pi-times"
-          class="p-button-text p-button-secondary"
-          @click="clearDateFilter"
-          v-tooltip="'Clear date filter'"
-        />
-      </div>
-
-      <!-- Per Page -->
-      <Select
-        v-model="per_page"
-        :options="perPageOptions"
-        option-label="label"
-        option-value="value"
-        :placeholder="$t('discounts.show')"
-        @change="handlePerPageChange"
-        class="w-10rem"
-      />
-    </div>
-
-    <!-- Data Table -->
-    <DataTable
-      :value="tableItems"
-      :paginator="true"
-      :rows="per_page"
-      :totalRecords="meta.total"
-      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-      :loading="loading"
-      
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
-      class="p-datatable-sm table-scroll-container"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="{first} to {last} of {totalRecords}"
-      @page="handlePageChange"
-    >
-      <!-- ID -->
-      <Column field="id" :header="$t('discounts.id')" style="min-width: 70px">
-        <template #body="slotProps">
-          <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
-        </template>
-      </Column>
-
-      <!-- Name -->
-      <Column
-        field="name"
-        :header="$t('discounts.name')"
-        :sortable="true"
-        style="min-width: 150px"
+      <!-- Filters Section -->
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
       >
-        <template #body="slotProps">
-          <div>
-            <div class="font-medium">{{ slotProps.data.name }}</div>
-            <div class="text-sm text-color-secondary">
-              {{ slotProps.data.name_ar }}
+        <!-- Search -->
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('discounts.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
+          />
+          <i class="pi pi-search search-icon" />
+        </div>
+        <!-- Type Filter -->
+        <Select
+          v-model="selectedType"
+          :options="discountTypes"
+          option-label="name"
+          option-value="id"
+          :placeholder="$t('discounts.selectType')"
+          :loading="loadingTypes"
+          :disabled="loadingTypes"
+          @change="onTypeChange"
+          class="w-15rem"
+          show-clear
+        />
+
+        <!-- Date Range -->
+        <div class="search-container flex-1 w-full">
+          <Calendar
+            v-model="dateFrom"
+            :placeholder="$t('discounts.dateFrom')"
+            dateFormat="yy-mm-dd"
+            class="w-12rem"
+            show-icon
+          />
+          <Calendar
+            v-model="dateTo"
+            :placeholder="$t('discounts.dateTo')"
+            dateFormat="yy-mm-dd"
+            class="w-12rem"
+            show-icon
+          />
+          <Button
+            v-if="dateFrom || dateTo"
+            icon="pi pi-times"
+            class="p-button-text p-button-secondary"
+            @click="clearDateFilter"
+            v-tooltip="'Clear date filter'"
+          />
+        </div>
+
+        <!-- Per Page -->
+        <Select
+          v-model="per_page"
+          :options="perPageOptions"
+          option-label="label"
+          option-value="value"
+          :placeholder="$t('discounts.show')"
+          @change="handlePerPageChange"
+          class="w-10rem"
+        />
+      </div>
+
+      <!-- Data Table -->
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
+      >
+        <!-- ID -->
+        <Column field="id" :header="$t('discounts.id')" style="min-width: 70px">
+          <template #body="slotProps">
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
+
+        <!-- Name -->
+        <Column
+          field="name"
+          :header="$t('discounts.name')"
+          :sortable="true"
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <div>
+              <div class="font-medium">{{ slotProps.data.name }}</div>
+              <div class="text-sm text-color-secondary">
+                {{ slotProps.data.name_ar }}
+              </div>
             </div>
-          </div>
-        </template>
-      </Column>
+          </template>
+        </Column>
 
-      <!-- Type -->
-      <Column
-        field="type"
-        :header="$t('discounts.type')"
-        style="min-width: 100px"
-      >
-        <template #body="slotProps">
-          <Tag
-            :value="slotProps.data.type.name"
-            :severity="getTypeSeverity(slotProps.data.type.prefix)"
-          />
-        </template>
-      </Column>
-
-      <!-- Value -->
-      <Column
-        field="value"
-        :header="$t('discounts.value')"
-        :sortable="true"
-        style="min-width: 100px"
-      >
-        <template #body="slotProps">
-          <div class="text-right font-bold">
-            {{ formatValue(slotProps.data) }}
-          </div>
-        </template>
-      </Column>
-
-      <!-- Date Range -->
-      <Column :header="$t('discounts.dateRange')" style="min-width: 180px">
-        <template #body="slotProps">
-          <div class="text-sm">
-            <div>{{ formatDate(slotProps.data.date_from) }}</div>
-            <div class="text-color-secondary">to</div>
-            <div>{{ formatDate(slotProps.data.date_to) }}</div>
-          </div>
-        </template>
-      </Column>
-
-      <!-- Created At -->
-      <Column
-        field="created_at"
-        :header="$t('discounts.createdAt')"
-        :sortable="true"
-        style="min-width: 130px"
-      >
-        <template #body="slotProps">
-          {{ formatDate(slotProps.data.created_at) }}
-        </template>
-      </Column>
-
-      <!-- Actions -->
-      <Column
-        :header="$t('discounts.actions')"
-        :exportable="false"
-        style="min-width: 120px"
-      >
-        <template #body="slotProps">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-primary"
-              @click="editDiscountModal(slotProps.data)"
-              v-tooltip.top="$t('discounts.edit')"
+        <!-- Type -->
+        <Column
+          field="type"
+          :header="$t('discounts.type')"
+          style="min-width: 100px"
+        >
+          <template #body="slotProps">
+            <Tag
+              :value="slotProps.data.type.name"
+              :severity="getTypeSeverity(slotProps.data.type.prefix)"
             />
+          </template>
+        </Column>
+
+        <!-- Value -->
+        <Column
+          field="value"
+          :header="$t('discounts.value')"
+          :sortable="true"
+          style="min-width: 100px"
+        >
+          <template #body="slotProps">
+            <div class="text-right font-bold">
+              {{ formatValue(slotProps.data) }}
+            </div>
+          </template>
+        </Column>
+
+        <!-- Date Range -->
+        <Column :header="$t('discounts.dateRange')" style="min-width: 180px">
+          <template #body="slotProps">
+            <div class="text-sm">
+              <div>{{ formatDate(slotProps.data.date_from) }}</div>
+              <div class="text-color-secondary">to</div>
+              <div>{{ formatDate(slotProps.data.date_to) }}</div>
+            </div>
+          </template>
+        </Column>
+
+        <!-- Created At -->
+        <Column
+          field="created_at"
+          :header="$t('discounts.createdAt')"
+          :sortable="true"
+          style="min-width: 130px"
+        >
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <!-- Actions -->
+        <Column
+          :header="$t('discounts.actions')"
+          :exportable="false"
+          style="min-width: 120px"
+        >
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="editDiscountModal(slotProps.data)"
+                v-tooltip.top="$t('discounts.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteRow(slotProps.data)"
+                v-tooltip.top="$t('discounts.delete')"
+              />
+            </div>
+            <!-- View Related Branches Button -->
             <Button
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('discounts.delete')"
+              icon="pi pi-sitemap"
+              class="p-button-text p-button-sm p-button-azure"
+              @click="openBranchesModal(slotProps.data)"
+              v-tooltip.top="$t('discounts.viewBranches')"
             />
-          </div>
-          <!-- View Related Branches Button -->
-          <Button
-            icon="pi pi-sitemap"
-            class="p-button-text p-button-sm p-button-azure"
-            @click="openBranchesModal(slotProps.data)"
-            v-tooltip.top="$t('discounts.viewBranches')"
-          />
 
-          <!-- View Related Products Button -->
-          <Button
-            icon="pi pi-shopping-bag"
-            class="p-button-text p-button-sm p-button-info"
-            @click="openFinalProductsModal(slotProps.data)"
-            v-tooltip.top="$t('discounts.viewRelatedProducts')"
-          />
-        </template>
-      </Column>
-    </DataTable>
+            <!-- View Related Products Button -->
+            <Button
+              icon="pi pi-shopping-bag"
+              class="p-button-text p-button-sm p-button-info"
+              @click="openFinalProductsModal(slotProps.data)"
+              v-tooltip.top="$t('discounts.viewRelatedProducts')"
+            />
+          </template>
+        </Column>
+      </DataTable>
 
-    <!-- Empty State -->
-    <div
-      v-if="!loading && tableItems.length === 0"
-      class="text-center py-6"
-    >
-      <i class="pi pi-percentage text-6xl text-color-secondary mb-3"></i>
-      <h3 class="text-color-secondary">{{ $t("discounts.noDiscounts") }}</h3>
-      <p class="text-color-secondary">
-        {{ $t("discounts.createFirstDiscount") }}
-      </p>
-      <Button
-        :label="$t('discounts.addDiscount')"
-        icon="pi pi-plus"
-        @click="createDiscount"
-        class="p-button-primary mt-3"
+      <!-- Empty State -->
+      <div v-if="!loading && tableItems.length === 0" class="text-center py-6">
+        <i class="pi pi-percentage text-6xl text-color-secondary mb-3"></i>
+        <h3 class="text-color-secondary">{{ $t("discounts.noDiscounts") }}</h3>
+        <p class="text-color-secondary">
+          {{ $t("discounts.createFirstDiscount") }}
+        </p>
+        <Button
+          :label="$t('discounts.addDiscount')"
+          icon="pi pi-plus"
+          @click="createDiscount"
+          class="p-button-primary mt-3"
+        />
+      </div>
+
+      <!-- Modals -->
+      <DiscountCreateModal
+        ref="discountCreateModal"
+        :company_id="effectiveCompanyId"
+        @discount-created="handleDiscountCreated"
       />
+
+      <DiscountEditModal
+        ref="discountEditModal"
+        :discount="selectedItem"
+        :company_id="effectiveCompanyId"
+        @discount-updated="handleDiscountUpdated"
+      />
+
+      <!-- Add Final Products Modal -->
+      <DiscountFinalProductsTableModal
+        ref="finalProductsModal"
+        :company_id="effectiveCompanyId"
+        :discount_id="selectedDiscountForProducts"
+        :discount_name="selectedDiscountName"
+      />
+
+      <DiscountBranchesTableModal
+        ref="branchesModal"
+        :company_id="effectiveCompanyId"
+        :discount_id="selectedDiscountForBranches"
+        :discount_name="selectedDiscountNameForBranches"
+      />
+
+      <Toast />
+      <ConfirmDialog />
     </div>
-
-    <!-- Modals -->
-    <DiscountCreateModal
-      ref="discountCreateModal"
-      :company_id="effectiveCompanyId"
-      @discount-created="handleDiscountCreated"
-    />
-
-    <DiscountEditModal
-      ref="discountEditModal"
-      :discount="selectedItem"
-      :company_id="effectiveCompanyId"
-      @discount-updated="handleDiscountUpdated"
-    />
-
-    <!-- Add Final Products Modal -->
-    <DiscountFinalProductsTableModal
-      ref="finalProductsModal"
-      :company_id="effectiveCompanyId"
-      :discount_id="selectedDiscountForProducts"
-      :discount_name="selectedDiscountName"
-    />
-
-    <DiscountBranchesTableModal
-      ref="branchesModal"
-      :company_id="effectiveCompanyId"
-      :discount_id="selectedDiscountForBranches"
-      :discount_name="selectedDiscountNameForBranches"
-    />
-
-    <Toast />
-    <ConfirmDialog />
   </div>
 </template>
 
@@ -496,7 +493,10 @@ export default {
       this.selectedDiscountForBranches = discount.id;
       this.selectedDiscountNameForBranches = discount.name;
       this.$nextTick(() => {
-        if (this.$refs.branchesModal && typeof this.$refs.branchesModal.openModal === 'function') {
+        if (
+          this.$refs.branchesModal &&
+          typeof this.$refs.branchesModal.openModal === "function"
+        ) {
           this.$refs.branchesModal.openModal();
         }
       });
@@ -505,5 +505,4 @@ export default {
 };
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
