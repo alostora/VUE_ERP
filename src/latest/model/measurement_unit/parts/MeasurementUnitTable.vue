@@ -1,137 +1,145 @@
 <template>
-  <div class="p-3">
-    <div class="mb-3">
-      <h2 class="m-0">{{ $t("measurementUnits.title") }}</h2>
-    </div>
-    <div class="mb-4">
-      <Button
-        :label="$t('measurementUnits.addMeasurementUnit')"
-        icon="pi pi-plus"
-        @click="createMeasurementUnit"
-        class="p-button-primary"
-      />
-    </div>
-
-    <div class="flex gap-2 mb-4">
-      <div class="search-container">
-        <InputText
-          v-model="query_string"
-          :placeholder="$t('measurementUnits.search')"
-          @input="handleSearchInput"
-          class="search-input w-20rem"
-        />
-        <i class="pi pi-search search-icon" />
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("measurementUnits.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('measurementUnits.addMeasurementUnit')"
+            icon="pi pi-plus"
+            @click="createMeasurementUnit"
+            class="p-button-primary"
+          />
+        </div>
       </div>
 
-      <Select
-        v-model="per_page"
-        :options="perPageOptions"
-        optionLabel="label"
-        optionValue="value"
-        :placeholder="$t('measurementUnits.show')"
-        @change="getData(propSearchUrl)"
-        class="w-10rem"
+      <div
+        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+      >
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('measurementUnits.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
+          />
+          <i class="pi pi-search search-icon" />
+        </div>
+
+        <!-- Per page select -->
+        <div class="flex items-center gap-2">
+          <Select
+            v-model="per_page"
+            :options="perPageOptions"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="$t('measurementUnits.show')"
+            @change="getData(propSearchUrl)"
+            class="w-10rem"
+          />
+        </div>
+      </div>
+
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
+      >
+        <Column
+          field="id"
+          :header="$t('measurementUnits.id')"
+          style="min-width: 100px"
+        >
+          <template #body="slotProps">
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="name"
+          :header="$t('measurementUnits.name')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.name }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="equals"
+          :header="$t('measurementUnits.equals')"
+          style="min-width: 120px"
+        >
+          <template #body="slotProps">
+            <span>{{ slotProps.data.equals || "-" }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="created_at"
+          :header="$t('measurementUnits.createdAt')"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <Column
+          :header="$t('measurementUnits.actions')"
+          :exportable="false"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="editMeasurementUnitModal(slotProps.data)"
+                v-tooltip.top="$t('measurementUnits.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteRow(slotProps.data)"
+                v-tooltip.top="$t('measurementUnits.delete')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+
+      <MeasurementUnitEditModal
+        ref="measurementUnitEditModal"
+        :measurement-unit="selectedItem"
+        :company_id="effectiveCompanyId"
+        @measurement-unit-updated="handleMeasurementUnitUpdated"
       />
+
+      <MeasurementUnitCreateModal
+        ref="measurementUnitCreateModal"
+        :company_id="effectiveCompanyId"
+        @measurement-unit-created="handleMeasurementUnitCreated"
+      />
+
+      <Toast />
+      <ConfirmDialog />
     </div>
-
-    <DataTable
-      :value="tableItems"
-      :paginator="true"
-      :rows="per_page"
-      :totalRecords="meta.total"
-      :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-      :loading="loading"
-      :lazy="true"
-      resizableColumns
-      columnResizeMode="fit"
-      showGridlines
-      tableStyle="min-width: 50rem"
-      class="p-datatable-sm table-scroll-container"
-      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-      currentPageReportTemplate="{first} to {last} of {totalRecords}"
-      @page="handlePageChange"
-    >
-      <Column
-        field="id"
-        :header="$t('measurementUnits.id')"
-        style="min-width: 100px"
-      >
-        <template #body="slotProps">
-          <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
-        </template>
-      </Column>
-
-      <Column
-        field="name"
-        :header="$t('measurementUnits.name')"
-        sortable
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          <span class="font-medium">{{ slotProps.data.name }}</span>
-        </template>
-      </Column>
-
-      <Column
-        field="equals"
-        :header="$t('measurementUnits.equals')"
-        style="min-width: 120px"
-      >
-        <template #body="slotProps">
-          <span>{{ slotProps.data.equals || "-" }}</span>
-        </template>
-      </Column>
-
-      <Column
-        field="created_at"
-        :header="$t('measurementUnits.createdAt')"
-        sortable
-        style="min-width: 150px"
-      >
-        <template #body="slotProps">
-          {{ formatDate(slotProps.data.created_at) }}
-        </template>
-      </Column>
-
-      <Column
-        :header="$t('measurementUnits.actions')"
-        :exportable="false"
-        style="min-width: 200px"
-      >
-        <template #body="slotProps">
-          <div class="flex gap-1">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-text p-button-sm p-button-primary"
-              @click="editMeasurementUnitModal(slotProps.data)"
-              v-tooltip.top="$t('measurementUnits.edit')"
-            />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              @click="deleteRow(slotProps.data)"
-              v-tooltip.top="$t('measurementUnits.delete')"
-            />
-          </div>
-        </template>
-      </Column>
-    </DataTable>
-
-    <MeasurementUnitEditModal
-      ref="measurementUnitEditModal"
-      :measurement-unit="selectedItem"
-      :company_id="effectiveCompanyId"
-      @measurement-unit-updated="handleMeasurementUnitUpdated"
-    />
-
-    <MeasurementUnitCreateModal
-      ref="measurementUnitCreateModal"
-      :company_id="effectiveCompanyId"
-      @measurement-unit-created="handleMeasurementUnitCreated"
-    />
-
-    <Toast />
-    <ConfirmDialog />
   </div>
 </template>
 

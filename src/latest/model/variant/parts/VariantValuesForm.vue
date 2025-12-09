@@ -1,285 +1,291 @@
 <template>
-  <div class="variant-values-form">
-    <Message v-if="error" severity="error" class="mb-3">
-      {{ error }}
-    </Message>
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="p-3">
+        <Message v-if="error" severity="error" class="mb-3">
+          {{ error }}
+        </Message>
 
-    <div class="mb-4">
-      <Button
-        :label="$t('variants.addVariantValues')"
-        icon="pi pi-plus-circle"
-        @click="showMultipleValuesForm = true"
-        class="p-button-outlined p-button-sm"
-      />
-    </div>
+        <div class="mb-4"></div>
 
-    <!-- Single Value Form -->
-    <div v-if="!showMultipleValuesForm" class="single-value-form mb-4">
-      <h5 class="mb-3">{{ $t("variants.addVariantValue") }}</h5>
-      <form @submit.prevent="submitSingleValue" class="grid">
-        <div class="col-12 md:col-5 field">
-          <InputText
-            v-model="singleFormData.value"
-            :class="{ 'p-invalid': errors.value }"
-            class="w-full"
-            :placeholder="$t('variants.valuePlaceholder')"
-          />
-          <small v-if="errors.value" class="p-error">{{ errors.value }}</small>
+        <!-- Single Value Form -->
+        <div v-if="!showMultipleValuesForm" class="single-value-form mb-4">
+          <h5 class="mb-3">{{ $t("variants.addVariantValue") }}</h5>
+          <form @submit.prevent="submitSingleValue" class="grid">
+            <div class="col-12 md:col-5 field">
+              <InputText
+                v-model="singleFormData.value"
+                :class="{ 'p-invalid': errors.value }"
+                class="w-full"
+                :placeholder="$t('variants.valuePlaceholder')"
+              />
+              <small v-if="errors.value" class="p-error">{{
+                errors.value
+              }}</small>
+            </div>
+            <div class="col-12 md:col-5 field">
+              <InputText
+                v-model="singleFormData.value_ar"
+                :class="{ 'p-invalid': errors.value_ar }"
+                class="w-full"
+                :placeholder="$t('variants.valueArPlaceholder')"
+              />
+              <small v-if="errors.value_ar" class="p-error">{{
+                errors.value_ar
+              }}</small>
+            </div>
+            <div class="col-12 md:col-2">
+              <Button
+                type="submit"
+                :label="$t('common.add')"
+                :loading="loading"
+                class="p-button-primary w-full"
+              />
+            </div>
+          </form>
         </div>
-        <div class="col-12 md:col-5 field">
-          <InputText
-            v-model="singleFormData.value_ar"
-            :class="{ 'p-invalid': errors.value_ar }"
-            class="w-full"
-            :placeholder="$t('variants.valueArPlaceholder')"
-          />
-          <small v-if="errors.value_ar" class="p-error">{{
-            errors.value_ar
-          }}</small>
-        </div>
-        <div class="col-12 md:col-2">
-          <Button
-            type="submit"
-            :label="$t('common.add')"
-            :loading="loading"
-            class="p-button-primary w-full"
-          />
-        </div>
-      </form>
-    </div>
 
-    <!-- Multiple Values Form -->
-    <div v-else class="multiple-values-form mb-4">
-      <div class="flex justify-content-between align-items-center mb-3">
-        <h5 class="m-0">{{ $t("variants.addVariantValues") }}</h5>
-        <Button
-          :label="$t('variants.addNewValue')"
-          icon="pi pi-plus"
-          @click="addValue"
-          class="p-button-outlined p-button-sm"
-        />
+        <!-- Multiple Values Form -->
+        <div v-else class="multiple-values-form mb-4">
+          <div class="flex justify-content-between align-items-center mb-3">
+            <h5 class="m-0">{{ $t("variants.addVariantValues") }}</h5>
+            <Button
+              :label="$t('variants.addNewValue')"
+              icon="pi pi-plus"
+              @click="addValue"
+              class="p-button-outlined p-button-sm"
+            />
+          </div>
+
+          <form @submit.prevent="submitMultipleValues">
+            <div
+              v-for="(value, index) in multipleFormData.values"
+              :key="index"
+              class="value-item grid mb-2"
+            >
+              <div class="col-12 md:col-5">
+                <InputText
+                  v-model="value.value"
+                  :class="{ 'p-invalid': hasValueError(index, 'value') }"
+                  class="w-full"
+                  :placeholder="$t('variants.valuePlaceholder')"
+                />
+                <small v-if="hasValueError(index, 'value')" class="p-error">
+                  {{ getValueError(index, "value") }}
+                </small>
+              </div>
+              <div class="col-12 md:col-5">
+                <InputText
+                  v-model="value.value_ar"
+                  :class="{ 'p-invalid': hasValueError(index, 'value_ar') }"
+                  class="w-full"
+                  :placeholder="$t('variants.valueArPlaceholder')"
+                />
+                <small v-if="hasValueError(index, 'value_ar')" class="p-error">
+                  {{ getValueError(index, "value_ar") }}
+                </small>
+              </div>
+              <div class="col-12 md:col-2">
+                <Button
+                  v-if="multipleFormData.values.length > 1"
+                  icon="pi pi-times"
+                  @click="removeValue(index)"
+                  class="p-button-text p-button-danger w-full"
+                  v-tooltip="$t('variants.removeValue')"
+                />
+              </div>
+            </div>
+
+            <div class="flex justify-content-end gap-2 mt-3">
+              <Button
+                type="button"
+                :label="$t('common.cancel')"
+                @click="showMultipleValuesForm = false"
+                class="p-button-text"
+                :disabled="loading"
+              />
+              <Button
+                type="submit"
+                :label="$t('common.create')"
+                :loading="loading"
+                class="p-button-primary"
+              />
+            </div>
+          </form>
+        </div>
       </div>
 
-      <form @submit.prevent="submitMultipleValues">
+      <!-- Values Table -->
+      <div class="values-table-section">
         <div
-          v-for="(value, index) in multipleFormData.values"
-          :key="index"
-          class="value-item grid mb-2"
+          class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
         >
-          <div class="col-12 md:col-5">
+          <div class="search-container flex-1 w-full">
             <InputText
-              v-model="value.value"
-              :class="{ 'p-invalid': hasValueError(index, 'value') }"
-              class="w-full"
-              :placeholder="$t('variants.valuePlaceholder')"
+              v-model="query_string"
+              :placeholder="$t('variants.searchValues')"
+              @input="handleSearchInput"
+              class="search-input w-20rem"
             />
-            <small v-if="hasValueError(index, 'value')" class="p-error">
-              {{ getValueError(index, "value") }}
-            </small>
+            <i class="pi pi-search search-icon" />
           </div>
-          <div class="col-12 md:col-5">
-            <InputText
-              v-model="value.value_ar"
-              :class="{ 'p-invalid': hasValueError(index, 'value_ar') }"
-              class="w-full"
-              :placeholder="$t('variants.valueArPlaceholder')"
-            />
-            <small v-if="hasValueError(index, 'value_ar')" class="p-error">
-              {{ getValueError(index, "value_ar") }}
-            </small>
-          </div>
-          <div class="col-12 md:col-2">
-            <Button
-              v-if="multipleFormData.values.length > 1"
-              icon="pi pi-times"
-              @click="removeValue(index)"
-              class="p-button-text p-button-danger w-full"
-              v-tooltip="$t('variants.removeValue')"
-            />
-          </div>
-        </div>
 
-        <div class="flex justify-content-end gap-2 mt-3">
-          <Button
-            type="button"
-            :label="$t('common.cancel')"
-            @click="showMultipleValuesForm = false"
-            class="p-button-text"
-            :disabled="loading"
-          />
-          <Button
-            type="submit"
-            :label="$t('common.create')"
-            :loading="loading"
-            class="p-button-primary"
+          <Select
+            v-model="per_page"
+            :options="perPageOptions"
+            optionLabel="label"
+            optionValue="value"
+            :placeholder="$t('variants.show')"
+            @change="getData"
+            class="w-10rem"
           />
         </div>
-      </form>
-    </div>
 
-    <!-- Values Table -->
-    <div class="values-table-section">
-      <div class="flex gap-2 mb-4">
-        <div class="search-container">
-          <InputText
-            v-model="query_string"
-            :placeholder="$t('variants.searchValues')"
-            @input="handleSearchInput"
-            class="search-input w-20rem"
-          />
-          <i class="pi pi-search search-icon" />
-        </div>
+        <DataTable
+          :value="tableItems"
+          :paginator="true"
+          :rows="per_page"
+          :totalRecords="meta.total"
+          :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+          :loading="loading"
+          :lazy="true"
+          resizableColumns
+          columnResizeMode="fit"
+          showGridlines
+          tableStyle="min-width: 50rem"
+          class="table-content"
+          :class="{ 'responsive-table': true }"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+          currentPageReportTemplate="{first} to {last} of {totalRecords}"
+          @page="handlePageChange"
+        >
+          <Column
+            field="id"
+            :header="$t('variants.id')"
+            style="min-width: 100px"
+          >
+            <template #body="slotProps">
+              <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+            </template>
+          </Column>
 
-        <Select
-          v-model="per_page"
-          :options="perPageOptions"
-          optionLabel="label"
-          optionValue="value"
-          :placeholder="$t('variants.show')"
-          @change="getData"
-          class="w-10rem"
-        />
+          <Column
+            field="value"
+            :header="$t('variants.value')"
+            sortable
+            style="min-width: 150px"
+          >
+            <template #body="slotProps">
+              <span class="font-medium">{{ slotProps.data.value }}</span>
+            </template>
+          </Column>
+
+          <Column
+            field="value_ar"
+            :header="$t('variants.value_ar')"
+            sortable
+            style="min-width: 150px"
+          >
+            <template #body="slotProps">
+              <span>{{ slotProps.data.value_ar }}</span>
+            </template>
+          </Column>
+
+          <Column
+            field="created_at"
+            :header="$t('variants.createdAt')"
+            sortable
+            style="min-width: 150px"
+          >
+            <template #body="slotProps">
+              {{ formatDate(slotProps.data.created_at) }}
+            </template>
+          </Column>
+
+          <Column
+            :header="$t('variants.actions')"
+            :exportable="false"
+            style="min-width: 150px"
+          >
+            <template #body="slotProps">
+              <div class="flex gap-1">
+                <Button
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm p-button-primary"
+                  @click="editValueModal(slotProps.data)"
+                  v-tooltip.top="$t('variants.editVariantValue')"
+                />
+                <Button
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger"
+                  @click="deleteValue(slotProps.data)"
+                  v-tooltip.top="$t('variants.delete')"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
       </div>
 
-      <DataTable
-        :value="tableItems"
-        :paginator="true"
-        :rows="per_page"
-        :totalRecords="meta.total"
-        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
-        :loading="loading"
-        :lazy="true"
-        resizableColumns
-        columnResizeMode="fit"
-        showGridlines
-        tableStyle="min-width: 50rem"
-        class="p-datatable-sm table-scroll-container"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        currentPageReportTemplate="{first} to {last} of {totalRecords}"
-        @page="handlePageChange"
+      <!-- Edit Value Modal -->
+      <Dialog
+        v-model:visible="showEditModal"
+        :header="$t('variants.editVariantValue')"
+        :modal="true"
+        :style="{ width: '50vw' }"
+        :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
       >
-        <Column field="id" :header="$t('variants.id')" style="min-width: 100px">
-          <template #body="slotProps">
-            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
-          </template>
-        </Column>
-
-        <Column
-          field="value"
-          :header="$t('variants.value')"
-          sortable
-          style="min-width: 150px"
-        >
-          <template #body="slotProps">
-            <span class="font-medium">{{ slotProps.data.value }}</span>
-          </template>
-        </Column>
-
-        <Column
-          field="value_ar"
-          :header="$t('variants.value_ar')"
-          sortable
-          style="min-width: 150px"
-        >
-          <template #body="slotProps">
-            <span>{{ slotProps.data.value_ar }}</span>
-          </template>
-        </Column>
-
-        <Column
-          field="created_at"
-          :header="$t('variants.createdAt')"
-          sortable
-          style="min-width: 150px"
-        >
-          <template #body="slotProps">
-            {{ formatDate(slotProps.data.created_at) }}
-          </template>
-        </Column>
-
-        <Column
-          :header="$t('variants.actions')"
-          :exportable="false"
-          style="min-width: 150px"
-        >
-          <template #body="slotProps">
-            <div class="flex gap-1">
+        <div class="edit-value-form">
+          <form @submit.prevent="submitEditValue">
+            <div class="grid">
+              <div class="col-12 md:col-6 field">
+                <label class="font-bold block mb-2"
+                  >{{ $t("variants.value") }} *</label
+                >
+                <InputText
+                  v-model="editFormData.value"
+                  :class="{ 'p-invalid': editErrors.value }"
+                  class="w-full"
+                />
+                <small v-if="editErrors.value" class="p-error">{{
+                  editErrors.value
+                }}</small>
+              </div>
+              <div class="col-12 md:col-6 field">
+                <label class="font-bold block mb-2"
+                  >{{ $t("variants.value_ar") }} *</label
+                >
+                <InputText
+                  v-model="editFormData.value_ar"
+                  :class="{ 'p-invalid': editErrors.value_ar }"
+                  class="w-full"
+                />
+                <small v-if="editErrors.value_ar" class="p-error">{{
+                  editErrors.value_ar
+                }}</small>
+              </div>
+            </div>
+            <div class="flex justify-content-end gap-2 mt-3">
               <Button
-                icon="pi pi-pencil"
-                class="p-button-text p-button-sm p-button-primary"
-                @click="editValueModal(slotProps.data)"
-                v-tooltip.top="$t('variants.editVariantValue')"
+                type="button"
+                :label="$t('common.cancel')"
+                @click="showEditModal = false"
+                class="p-button-text"
               />
               <Button
-                icon="pi pi-trash"
-                class="p-button-text p-button-sm p-button-danger"
-                @click="deleteValue(slotProps.data)"
-                v-tooltip.top="$t('variants.delete')"
+                type="submit"
+                :label="$t('common.update')"
+                :loading="editLoading"
+                class="p-button-primary"
               />
             </div>
-          </template>
-        </Column>
-      </DataTable>
+          </form>
+        </div>
+      </Dialog>
+
+      <Toast />
+      <ConfirmDialog />
     </div>
-
-    <!-- Edit Value Modal -->
-    <Dialog
-      v-model:visible="showEditModal"
-      :header="$t('variants.editVariantValue')"
-      :modal="true"
-      :style="{ width: '50vw' }"
-      :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
-    >
-      <div class="edit-value-form">
-        <form @submit.prevent="submitEditValue">
-          <div class="grid">
-            <div class="col-12 md:col-6 field">
-              <label class="font-bold block mb-2"
-                >{{ $t("variants.value") }} *</label
-              >
-              <InputText
-                v-model="editFormData.value"
-                :class="{ 'p-invalid': editErrors.value }"
-                class="w-full"
-              />
-              <small v-if="editErrors.value" class="p-error">{{
-                editErrors.value
-              }}</small>
-            </div>
-            <div class="col-12 md:col-6 field">
-              <label class="font-bold block mb-2"
-                >{{ $t("variants.value_ar") }} *</label
-              >
-              <InputText
-                v-model="editFormData.value_ar"
-                :class="{ 'p-invalid': editErrors.value_ar }"
-                class="w-full"
-              />
-              <small v-if="editErrors.value_ar" class="p-error">{{
-                editErrors.value_ar
-              }}</small>
-            </div>
-          </div>
-          <div class="flex justify-content-end gap-2 mt-3">
-            <Button
-              type="button"
-              :label="$t('common.cancel')"
-              @click="showEditModal = false"
-              class="p-button-text"
-            />
-            <Button
-              type="submit"
-              :label="$t('common.update')"
-              :loading="editLoading"
-              class="p-button-primary"
-            />
-          </div>
-        </form>
-      </div>
-    </Dialog>
-
-    <Toast />
-    <ConfirmDialog />
   </div>
 </template>
 

@@ -1,25 +1,113 @@
 <template>
-  <div
-    class="final-product-variants-table"
-    :class="{ 'embedded-mode': embedded }"
-  >
-    <!-- Page Header - Conditionally show based on embedded mode -->
-    <div class="page-header mb-4" v-if="!embedded">
-      <div class="flex justify-content-between align-items-center">
-        <div>
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">
+          <div>
+            <h3 class="m-0 text-primary">
+              {{ finalProduct?.name || "Loading..." }}
+            </h3>
+            <p class="m-0 text-color-secondary mt-1">
+              {{ $t("final_product_variants.assignedVariants") }}
+            </p>
+          </div>
+        </h1>
+        <div class="table-actions">
           <Button
-            icon="pi pi-arrow-left"
-            class="p-button-text mb-2"
-            @click="goBack"
-            :label="$t('final_product_variants.backToProducts')"
+            :label="$t('final_product_variants.addVariants')"
+            icon="pi pi-plus"
+            @click="openCreateModal"
+            class="p-button-primary p-button-sm"
           />
-          <h2 class="m-0">
-            {{ $t("final_product_variants.title") }} -
-            <span class="text-primary">{{
-              finalProduct?.name || "Loading..."
-            }}</span>
-          </h2>
         </div>
+      </div>
+
+      <!-- Variants Table -->
+
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
+      >
+        <!-- Variant Type Column -->
+        <Column
+          :header="$t('final_product_variants.variantType')"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div class="flex align-items-center gap-2">
+              <span>{{ slotProps.data.variant.name }}</span>
+              <small class="text-color-secondary">
+                ({{ slotProps.data.variant.name_ar }})
+              </small>
+            </div>
+          </template>
+        </Column>
+
+        <!-- Variant Value Column -->
+        <Column
+          :header="$t('final_product_variants.variantValue')"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div class="flex align-items-center gap-2">
+              <span>{{ slotProps.data.variant_value.value }}</span>
+              <small class="text-color-secondary">
+                ({{ slotProps.data.variant_value.value_ar }})
+              </small>
+            </div>
+          </template>
+        </Column>
+
+        <!-- Created At Column -->
+        <Column field="created_at" header="Created At" style="min-width: 150px">
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <!-- Actions Column -->
+        <Column
+          :header="$t('final_product_variants.actions')"
+          style="min-width: 100px"
+        >
+          <template #body="slotProps">
+            <Button
+              icon="pi pi-trash"
+              class="p-button-danger p-button-text p-button-sm"
+              @click="deleteVariant(slotProps.data)"
+              v-tooltip.top="$t('final_product_variants.deleteVariant')"
+            />
+          </template>
+        </Column>
+      </DataTable>
+
+      <!-- Empty State -->
+      <div
+        v-if="!loading && tableItems.length === 0"
+        class="empty-state text-center py-6"
+        :class="{ 'embedded-empty': embedded }"
+      >
+        <i class="pi pi-palette text-6xl text-color-secondary mb-3"></i>
+        <h3 class="text-color-secondary">
+          {{ $t("final_product_variants.noVariants") }}
+        </h3>
+        <p class="text-color-secondary mb-4">
+          {{ $t("final_product_variants.addFirstVariant") }}
+        </p>
         <Button
           :label="$t('final_product_variants.addVariants')"
           icon="pi pi-plus"
@@ -27,133 +115,17 @@
           class="p-button-primary"
         />
       </div>
+
+      <!-- Create Modal -->
+      <FinalProductVariantCreateModal
+        ref="createModal"
+        :final_product_id="effectiveFinalProductId"
+        :company_id="effectiveCompanyId"
+        @variants-added="handleVariantsAdded"
+      />
+
+      <Toast />
     </div>
-
-    <!-- Modal Header - Show when embedded -->
-    <div class="modal-header mb-4" v-if="embedded">
-      <div class="flex justify-content-between align-items-center">
-        <div>
-          <h3 class="m-0 text-primary">
-            {{ finalProduct?.name || "Loading..." }}
-          </h3>
-          <p class="m-0 text-color-secondary mt-1">
-            {{ $t("final_product_variants.assignedVariants") }}
-          </p>
-        </div>
-        <Button
-          :label="$t('final_product_variants.addVariants')"
-          icon="pi pi-plus"
-          @click="openCreateModal"
-          class="p-button-primary p-button-sm"
-        />
-      </div>
-    </div>
-
-    <!-- Variants Table -->
-    <Card :class="{ 'embedded-card': embedded }">
-      <template #content>
-        <DataTable
-          :value="tableItems"
-          :loading="loading"
-          :paginator="true"
-          :rows="per_page"
-          :totalRecords="meta.total"
-          :rowsPerPageOptions="[5, 10, 25, 50]"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="{first} to {last} of {totalRecords}"
-          @page="handlePageChange"
-          class="p-datatable-sm table-scroll-container"
-          :class="{ 'embedded-table': embedded }"
-        >
-          <!-- Variant Type Column -->
-          <Column
-            :header="$t('final_product_variants.variantType')"
-            style="min-width: 200px"
-          >
-            <template #body="slotProps">
-              <div class="flex align-items-center gap-2">
-                <span>{{ slotProps.data.variant.name }}</span>
-                <small class="text-color-secondary">
-                  ({{ slotProps.data.variant.name_ar }})
-                </small>
-              </div>
-            </template>
-          </Column>
-
-          <!-- Variant Value Column -->
-          <Column
-            :header="$t('final_product_variants.variantValue')"
-            style="min-width: 200px"
-          >
-            <template #body="slotProps">
-              <div class="flex align-items-center gap-2">
-                <span>{{ slotProps.data.variant_value.value }}</span>
-                <small class="text-color-secondary">
-                  ({{ slotProps.data.variant_value.value_ar }})
-                </small>
-              </div>
-            </template>
-          </Column>
-
-          <!-- Created At Column -->
-          <Column
-            field="created_at"
-            header="Created At"
-            style="min-width: 150px"
-          >
-            <template #body="slotProps">
-              {{ formatDate(slotProps.data.created_at) }}
-            </template>
-          </Column>
-
-          <!-- Actions Column -->
-          <Column
-            :header="$t('final_product_variants.actions')"
-            style="min-width: 100px"
-          >
-            <template #body="slotProps">
-              <Button
-                icon="pi pi-trash"
-                class="p-button-danger p-button-text p-button-sm"
-                @click="deleteVariant(slotProps.data)"
-                v-tooltip.top="$t('final_product_variants.deleteVariant')"
-              />
-            </template>
-          </Column>
-        </DataTable>
-
-        <!-- Empty State -->
-        <div
-          v-if="!loading && tableItems.length === 0"
-          class="empty-state text-center py-6"
-          :class="{ 'embedded-empty': embedded }"
-        >
-          <i class="pi pi-palette text-6xl text-color-secondary mb-3"></i>
-          <h3 class="text-color-secondary">
-            {{ $t("final_product_variants.noVariants") }}
-          </h3>
-          <p class="text-color-secondary mb-4">
-            {{ $t("final_product_variants.addFirstVariant") }}
-          </p>
-          <Button
-            :label="$t('final_product_variants.addVariants')"
-            icon="pi pi-plus"
-            @click="openCreateModal"
-            class="p-button-primary"
-          />
-        </div>
-      </template>
-    </Card>
-
-    <!-- Create Modal -->
-    <FinalProductVariantCreateModal
-      ref="createModal"
-      :final_product_id="effectiveFinalProductId"
-      :company_id="effectiveCompanyId"
-      @variants-added="handleVariantsAdded"
-    />
-
-    <Toast />
   </div>
 </template>
 
@@ -235,13 +207,11 @@ export default {
     },
   },
   mounted() {
-
     // Ensure we have the IDs
     this.effectiveCompanyId = this.company_id;
     this.effectiveFinalProductId = this.final_product_id;
 
     if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
-      
       return;
     }
 
@@ -270,7 +240,6 @@ export default {
     },
 
     openCreateModal() {
-
       if (!this.effectiveCompanyId || !this.effectiveFinalProductId) {
         this.showToast(
           "error",
