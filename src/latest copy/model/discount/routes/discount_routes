@@ -1,0 +1,12 @@
+import DiscountTable from "../parts/DiscountTable.vue";
+
+const discount_routes = [
+     {
+          path: "/company/:company_id/discounts",
+          name: "company-discounts",
+          component: DiscountTable,
+          props: true,
+     }
+];
+
+export default discount_routes;

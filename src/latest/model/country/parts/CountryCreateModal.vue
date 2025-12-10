@@ -9,7 +9,7 @@
   >
     <!-- Country Create Form -->
     <CountryCreateForm
-      @country-created="handleCountryCreated"
+      @created="handleCreated"
       @cancel="closeModal"
     />
 
@@ -49,8 +49,8 @@ export default {
       this.loading = false;
     },
 
-    handleCountryCreated(newCountry) {
-      this.$emit("country-created", newCountry);
+    handleCreated(newItem) {
+      this.$emit("created", newItem);
       this.closeModal();
     },
 

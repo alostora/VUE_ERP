@@ -57,11 +57,7 @@
         @page="handlePageChange"
       >
         <!-- ID Column -->
-        <Column
-          field="id"
-          :header="$t('countries.id')"
-          style="min-width: 100px"
-        >
+        <Column field="id" :header="$t('countries.id')" class="col-identifier">
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
@@ -72,7 +68,7 @@
           field="name"
           :header="$t('countries.name')"
           sortable
-          style="min-width: 150px"
+          class="col-name"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name }}</span>
@@ -84,7 +80,7 @@
           field="name_ar"
           :header="$t('countries.name_ar')"
           sortable
-          style="min-width: 150px"
+          class="col-name"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name_ar }}</span>
@@ -96,7 +92,7 @@
           field="phone_code"
           :header="$t('countries.phone_code')"
           sortable
-          style="min-width: 120px"
+          class="col-phone"
         >
           <template #body="slotProps">
             <span>{{ slotProps.data.phone_code }}</span>
@@ -108,40 +104,25 @@
           field="prefix"
           :header="$t('countries.prefix')"
           sortable
-          style="min-width: 120px"
+          class="col-name"
         >
           <template #body="slotProps">
             <span>{{ slotProps.data.prefix }}</span>
           </template>
         </Column>
 
-        <!-- Flag Column -->
-        <Column
-          field="flag"
-          :header="$t('countries.flag')"
-          style="min-width: 100px"
-        >
-          <template #body="slotProps">
-            <img
-              v-if="slotProps.data.flag"
-              :src="slotProps.data.flag"
-              :alt="slotProps.data.name"
-              class="img-40 object-cover rounded"
-            />
-            <span v-else>-</span>
-          </template>
-        </Column>
-
         <!-- Governorates Column -->
-        <Column :header="$t('countries.governorates')" style="min-width: 150px">
+        <Column :header="$t('countries.governorates')" class="col-actions">
           <template #body="slotProps">
-            <Button
-              :label="$t('countries.viewGovernorates')"
-              icon="pi pi-list"
-              class="p-button-text p-button-sm p-button-info"
-              @click="viewGovernorates(slotProps.data)"
-              v-tooltip.top="$t('countries.viewGovernoratesTooltip')"
-            />
+            <div class="table-actions-cell">
+              <Button
+                :label="$t('countries.viewGovernorates')"
+                icon="pi pi-list"
+                class="p-button-text p-button-sm p-button-info"
+                @click="viewGovernorates(slotProps.data)"
+                v-tooltip.top="$t('countries.viewGovernoratesTooltip')"
+              />
+            </div>
           </template>
         </Column>
 
@@ -149,10 +130,10 @@
         <Column
           :header="$t('countries.actions')"
           :exportable="false"
-          style="min-width: 200px"
+          class="col-actions"
         >
           <template #body="slotProps">
-            <div class="flex gap-1">
+            <div class="table-actions-cell">
               <Button
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
@@ -173,13 +154,10 @@
       <CountryEditModal
         ref="countryEditModal"
         :country="selectedItem"
-        @country-updated="handleCountryUpdated"
+        @updated="handleUpdated"
       />
 
-      <CountryCreateModal
-        ref="countryCreateModal"
-        @country-created="handleCountryCreated"
-      />
+      <CountryCreateModal ref="countryCreateModal" @created="handleCreated" />
 
       <Toast />
       <ConfirmDialog />
@@ -256,8 +234,8 @@ export default {
     /**
      * Handle country created event
      */
-    handleCountryCreated(newCountry) {
-      this.handleItemCreated(newCountry);
+    handleCreated(newItem) {
+      this.handleItemCreated(newItem);
     },
 
     /**
@@ -273,8 +251,8 @@ export default {
     /**
      * Handle country updated event
      */
-    handleCountryUpdated(updatedCountry) {
-      this.handleItemUpdated(updatedCountry);
+    handleUpdated(updatedItem) {
+      this.handleItemUpdated(updatedItem);
     },
 
     /**

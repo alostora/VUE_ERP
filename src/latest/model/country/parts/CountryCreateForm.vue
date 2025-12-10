@@ -108,6 +108,12 @@
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
+
+// Import composables
+import { useTable } from "../../../views/layouts/constants/composables/useTable";
+import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
+
+// Import utilities
 import general_request from "../../../views/layouts/constants/general_request";
 
 export default {
@@ -117,9 +123,11 @@ export default {
     Button,
     Message,
   },
+
+  mixins: [useTable(), useCrud()],
+
   data() {
     return {
-      loading: false,
       error: "",
       formData: {
         name: "",
@@ -158,72 +166,8 @@ export default {
       this.loading = true;
       this.error = "";
 
-      try {
-        const url = `${general_request.BASE_URL}/admin/country`;
-
-        const response = await this.$http.post(url, this.formData, {
-          headers: general_request.headers,
-        });
-
-        this.$emit("country-created", response.data.data);
-
-        this.showToast(
-          "success",
-          this.$t("countries.success"),
-          this.$t("countries.countryCreated")
-        );
-      } catch (error) {
-        this.handleSaveError(error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    handleSaveError(error) {
-      this.errors = {};
-      this.error = "";
-
-      if (error.response?.data) {
-        const responseData = error.response.data;
-
-        if (responseData.status_code === 422 && responseData.errors) {
-          this.errors = this.formatFieldErrors(responseData.errors);
-          const firstError = Object.values(this.errors)[0];
-          if (firstError) {
-            this.error = firstError;
-          }
-        } else if (responseData.message) {
-          this.error = responseData.message;
-        } else {
-          this.error = this.$t("countries.createError");
-        }
-      } else {
-        this.error = this.$t("countries.networkError");
-      }
-    },
-
-    formatFieldErrors(errorsObject) {
-      const formattedErrors = {};
-      Object.keys(errorsObject).forEach((field) => {
-        const fieldErrors = errorsObject[field];
-        if (Array.isArray(fieldErrors)) {
-          formattedErrors[field] = fieldErrors[0];
-        } else if (typeof fieldErrors === "string") {
-          formattedErrors[field] = fieldErrors;
-        }
-      });
-      return formattedErrors;
-    },
-
-    showToast(severity, summary, detail) {
-      if (this.$toast) {
-        this.$toast.add({
-          severity: severity,
-          summary: summary,
-          detail: detail,
-          life: 3000,
-        });
-      }
+      const url = `${general_request.BASE_URL}/admin/country`;
+      await this.createItem(this.formData, url);
     },
   },
 };

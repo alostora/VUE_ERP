@@ -4,16 +4,17 @@ export function useCrud() {
      return {
           data() {
                return {
+                    loading: null,
                     selectedItem: null,
                     formData: {},
                     formErrors: {},
-                    formLoading: false
                }
           },
 
           methods: {
                async createItem(data, url, successMessage = null, errorMessage = null) {
-                    this.formLoading = true;
+                    console.log(url);
+                    this.loading = true;
                     try {
                          const response = await this.$http.post(url, data, {
                               headers: general_request.headers,
@@ -32,14 +33,14 @@ export function useCrud() {
                          this.handleCrudError(error, errorMessage || "Failed to create item");
                          throw error;
                     } finally {
-                         this.formLoading = false;
+                         this.loading = false;
                     }
                },
 
                async updateItem(id, data, url, successMessage = null, errorMessage = null) {
-                    this.formLoading = true;
+                    this.loading = true;
                     try {
-                         const response = await this.$http.put(`${url}/${id}`, data, {
+                         const response = await this.$http.patch(`${url}/${id}`, data, {
                               headers: general_request.headers,
                          });
 
@@ -56,12 +57,12 @@ export function useCrud() {
                          this.handleCrudError(error, errorMessage || "Failed to update item");
                          throw error;
                     } finally {
-                         this.formLoading = false;
+                         this.loading = false;
                     }
                },
 
                async patchItem(id, data, url, successMessage = null, errorMessage = null) {
-                    this.formLoading = true;
+                    this.loading = true;
                     try {
                          const response = await this.$http.patch(`${url}/${id}`, data, {
                               headers: general_request.headers,
@@ -79,7 +80,7 @@ export function useCrud() {
                          this.handleCrudError(error, errorMessage || "Failed to update item");
                          throw error;
                     } finally {
-                         this.formLoading = false;
+                         this.loading = false;
                     }
                },
 

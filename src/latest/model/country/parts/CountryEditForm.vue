@@ -86,7 +86,7 @@
         />
         <Button
           type="submit"
-          :label="submitButtonText"
+          :label="$t('common.update')"
           :loading="loading"
           class="p-button-primary"
         />
@@ -99,6 +99,11 @@
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
+
+// Import composables
+import { useTable } from "../../../views/layouts/constants/composables/useTable";
+import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
+
 // Import utilities
 import general_request from "../../../views/layouts/constants/general_request";
 
@@ -117,7 +122,6 @@ export default {
   },
   data() {
     return {
-      loading: false,
       error: "",
       formData: {
         id: "",
@@ -130,16 +134,10 @@ export default {
       errors: {},
     };
   },
-  computed: {
-    submitButtonText() {
-      return this.formData.id
-        ? this.$t("common.update")
-        : this.$t("common.create");
-    },
-    isEditMode() {
-      return !!this.formData.id;
-    },
-  },
+
+  mixins: [useTable(), useCrud()],
+
+  computed: {},
   watch: {
     country: {
       immediate: true,
@@ -201,79 +199,11 @@ export default {
         return;
       }
 
+      this.error = "";
       this.loading = true;
-      this.error = "";
 
-      try {
-        const url = this.isEditMode
-          ? `${general_request.BASE_URL}/admin/country/${this.formData.id}`
-          : `${general_request.BASE_URL}/admin/country`;
-
-        const method = this.isEditMode ? "patch" : "post";
-
-        const response = await this.$http[method](url, this.formData, {
-          headers: general_request.headers,
-        });
-
-        this.$emit("country-updated", response.data.data);
-
-        this.showToast(
-          "success",
-          this.$t("countries.success"),
-          this.$t("countries.countryUpdated")
-        );
-      } catch (error) {
-        this.handleSaveError(error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    handleSaveError(error) {
-      this.errors = {};
-      this.error = "";
-
-      if (error.response?.data) {
-        const responseData = error.response.data;
-
-        if (responseData.status_code === 422 && responseData.errors) {
-          this.errors = this.formatFieldErrors(responseData.errors);
-          const firstError = Object.values(this.errors)[0];
-          if (firstError) {
-            this.error = firstError;
-          }
-        } else if (responseData.message) {
-          this.error = responseData.message;
-        } else {
-          this.error = this.$t("countries.updateError");
-        }
-      } else {
-        this.error = this.$t("countries.networkError");
-      }
-    },
-
-    formatFieldErrors(errorsObject) {
-      const formattedErrors = {};
-      Object.keys(errorsObject).forEach((field) => {
-        const fieldErrors = errorsObject[field];
-        if (Array.isArray(fieldErrors)) {
-          formattedErrors[field] = fieldErrors[0];
-        } else if (typeof fieldErrors === "string") {
-          formattedErrors[field] = fieldErrors;
-        }
-      });
-      return formattedErrors;
-    },
-
-    showToast(severity, summary, detail) {
-      if (this.$toast) {
-        this.$toast.add({
-          severity: severity,
-          summary: summary,
-          detail: detail,
-          life: 3000,
-        });
-      }
+      const url = `${general_request.BASE_URL}/admin/country`;
+      await this.updateItem(this.formData.id, this.formData, url);
     },
   },
 };

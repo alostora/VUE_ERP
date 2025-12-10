@@ -9,7 +9,7 @@
     <!-- Country Edit Form -->
     <CountryEditForm
       :country="country"
-      @country-updated="handleCountryUpdated"
+      @updated="handleUpdated"
       @cancel="closeModal"
     />
 
@@ -62,13 +62,9 @@ export default {
       this.$emit("modal-closed");
     },
 
-    handleCountryUpdated(updatedCountry) {
-      this.$emit("country-updated", updatedCountry);
+    handleUpdated(updatedItem) {
+      this.$emit("updated", updatedItem);
       this.closeModal();
-    },
-
-    setLoading(state) {
-      this.loading = state;
     },
   },
 };

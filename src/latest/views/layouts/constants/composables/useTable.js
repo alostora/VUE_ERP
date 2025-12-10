@@ -5,7 +5,6 @@ export function useTable() {
           data() {
                return {
                     tableItems: [],
-                    loading: false,
                     meta: { total: 0, current_page: 1 },
                     links: {},
                     per_page: 10,
@@ -71,19 +70,33 @@ export function useTable() {
 
                // CRUD Handlers - These will be called by useCrud
                handleItemCreated(newItem) {
+
                     this.tableItems.unshift(newItem);
+
                     if (this.meta && this.meta.total !== undefined) {
                          this.meta.total++;
                     }
-                    this.showToast("success", "Success", "Item created successfully");
+
+                    this.$emit("created", newItem);
                },
 
                handleItemUpdated(updatedItem) {
                     const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
                     if (index !== -1) {
-                         this.$set(this.tableItems, index, updatedItem);
+                         console.log("xxxxxxxxxxxxxxx1111");
+                         if (typeof this.$set === 'function') {
+                              console.log("xxxxxxxxxxxxxxxxxxxx2222");
+                              console.log('Using this.$set');
+                              this.$set(this.tableItems, index, updatedItem);
+                         } else {
+
+                              console.log("xxxxxxxxxxxxxxxxx3333");
+                              console.log('$set not available, using splice');
+                              this.tableItems.splice(index, 1, updatedItem);
+                         }
                     }
-                    this.showToast("success", "Success", "Item updated successfully");
+                    console.log("xxxxxxxxxxxxxxxxxxx4444");
+                    this.$emit("updated", updatedItem);
                },
 
                handleItemDeleted(itemId) {
