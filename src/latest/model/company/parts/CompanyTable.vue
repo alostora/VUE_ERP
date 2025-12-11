@@ -222,7 +222,6 @@ import Tooltip from "primevue/tooltip";
 
 import CompanyCreateModal from "./CompanyCreateModal.vue";
 import CompanyEditModal from "./CompanyEditModal.vue";
-import ScrollableTable from "@/components/ScrollableTable.vue";
 
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
@@ -241,7 +240,6 @@ export default {
     Select,
     Toast,
     ConfirmDialog,
-    ScrollableTable,
   },
 
   directives: {

@@ -179,7 +179,6 @@ import UserCreateModal from "./UserCreateModal.vue";
 import UserEditModal from "./UserEditModal.vue";
 
 // Import composables
-// From: src/latest/model/country/parts/CountryTable.vue
 // Import composables
 import { useTable } from "../../../views/layouts/constants/composables/useTable";
 import { useCrud } from "../../../views/layouts/constants/composables/useCrud";

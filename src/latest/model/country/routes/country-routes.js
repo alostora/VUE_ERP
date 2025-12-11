@@ -1,10 +1,10 @@
-import CountryTable from "../parts/CountryTable.vue";
+import Table from "../parts/Table.vue";
 
 const country_routes = [
   {
     path: "/countries/",
     name: "countries",
-    component: CountryTable,
+    component: Table,
     props: true,
   }
 ];

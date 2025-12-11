@@ -1,4 +1,4 @@
-import general_request from "../general_request";
+import general_request from "./general_request";
 
 export function useCrud() {
      return {
