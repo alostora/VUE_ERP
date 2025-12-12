@@ -59,7 +59,7 @@ const messages = {
      en: {
           ...enCommon,
           ...enAuth,
-          ...enValidation,
+          validation: enValidation, 
           errors: enErrors,
           users: enUsers,
           countries: enCountries,
@@ -85,7 +85,7 @@ const messages = {
      ar: {
           ...arCommon,
           ...arAuth,
-          ...arValidation,
+          validation: arValidation, 
           errors: arErrors,
           users: arUsers,
           countries: arCountries,

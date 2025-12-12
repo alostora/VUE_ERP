@@ -83,19 +83,13 @@ export function useTable() {
                handleItemUpdated(updatedItem) {
                     const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
                     if (index !== -1) {
-                         console.log("xxxxxxxxxxxxxxx1111");
                          if (typeof this.$set === 'function') {
-                              console.log("xxxxxxxxxxxxxxxxxxxx2222");
-                              console.log('Using this.$set');
                               this.$set(this.tableItems, index, updatedItem);
                          } else {
 
-                              console.log("xxxxxxxxxxxxxxxxx3333");
-                              console.log('$set not available, using splice');
                               this.tableItems.splice(index, 1, updatedItem);
                          }
                     }
-                    console.log("xxxxxxxxxxxxxxxxxxx4444");
                     this.$emit("updated", updatedItem);
                },
 
@@ -150,16 +144,6 @@ export function useTable() {
                     } catch (error) {
                          return dateString;
                     }
-               },
-
-               openModal() {
-                    this.visible = true;
-               },
-
-               closeModal() {
-                    this.visible = false;
-                    this.loading = false;
-                    this.resetForm();
                },
           }
      }

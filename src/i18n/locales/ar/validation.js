@@ -1,4 +1,5 @@
 export default {
+     // User validations
      nameRequired: "الاسم مطلوب",
      emailRequired: "البريد الإلكتروني مطلوب",
      emailInvalid: "يرجى إدخال بريد إلكتروني صحيح",
@@ -8,24 +9,9 @@ export default {
      confirmPasswordRequired: "يرجى تأكيد كلمة المرور",
      passwordsDoNotMatch: "كلمات المرور غير متطابقة",
 
-
-
-     nameRequired: 'الاسم مطلوب',
+     // Country validations
      name_arRequired: 'الاسم العربي مطلوب',
      phone_codeRequired: 'رمز الهاتف مطلوب',
-     emailRequired: 'البريد الإلكتروني مطلوب',
-     emailInvalid: 'البريد الإلكتروني غير صالح',
-     accountTypeRequired: 'نوع الحساب مطلوب',
-
-     // User validations
-     passwordRequired: 'كلمة المرور مطلوبة',
-     passwordMinLength: 'كلمة المرور يجب أن تكون على الأقل 6 أحرف',
-     passwordConfirm: 'تأكيد كلمة المرور مطلوب',
-     passwordMismatch: 'كلمتا المرور غير متطابقتين',
-     phoneRequired: 'رقم الهاتف مطلوب',
-     phoneInvalid: 'رقم الهاتف غير صالح',
-
-     // Country validations
      prefixRequired: 'البادئة مطلوبة',
      flagInvalid: 'رابط العلم غير صالح',
 
@@ -53,12 +39,12 @@ export default {
      systemUrlRequired: 'رابط النظام مطلوب',
      systemTypeRequired: 'نوع النظام مطلوب',
 
+     // Location validations
      countryRequired: "الدولة مطلوبة",
-
      governorateRequired: "المحافظة مطلوبة",
-     nameRequired: "الاسم مطلوب",
+     cityRequired: "المدينة مطلوبة",
 
-
-     nameArRequired: "الاسم العربي مطلوب",
-
+     // Other
+     phoneRequired: 'رقم الهاتف مطلوب',
+     phoneInvalid: 'رقم الهاتف غير صالح',
 }

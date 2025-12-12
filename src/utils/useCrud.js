@@ -4,8 +4,11 @@ export function useCrud() {
      return {
           data() {
                return {
-                    loading: null,
+                    visible: false,
+                    loading: false,
                     selectedItem: null,
+                    error: "",
+                    errors: {},
                     formData: {},
                     formErrors: {},
                }
@@ -13,7 +16,6 @@ export function useCrud() {
 
           methods: {
                async createItem(data, url, successMessage = null, errorMessage = null) {
-                    console.log(url);
                     this.loading = true;
                     try {
                          const response = await this.$http.post(url, data, {
@@ -173,7 +175,6 @@ export function useCrud() {
                },
 
                handleCrudError(error, defaultMessage) {
-                    console.error('CRUD Error:', error);
 
                     if (error.response?.status === 422 && error.response.data.errors) {
                          this.formErrors = error.response.data.errors;
@@ -226,6 +227,18 @@ export function useCrud() {
                     this.formData = {};
                     this.formErrors = {};
                     this.selectedItem = null;
+               },
+
+               openModal() {
+                    this.visible = true;
+               },
+
+               closeModal() {
+                    this.visible = false;
+                    this.loading = false;
+                    this.formErrors = {};
+                    this.errors = {};
+                    this.resetForm();
                },
           }
      }

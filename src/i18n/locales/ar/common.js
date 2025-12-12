@@ -56,6 +56,18 @@ export default {
           no: "لا",
           creating: "انشاء...",
           updating: "تحديث...",
+          
+          // MISSING KEYS - ADD THESE:
+          search: "بحث",
+          switchToLight: "التغيير إلى الوضع الفاتح",
+          switchToDark: "التغيير إلى الوضع الداكن",
+          profile: "الملف الشخصي",
+          settings: "الإعدادات",
+          logout: "تسجيل الخروج",
+          delete: "حذف",
+          confirmDelete: "تأكيد الحذف",
+          areYouSure: "هل أنت متأكد؟",
+          thisActionCannotBeUndone: "هذا الإجراء لا يمكن التراجع عنه",
      },
      footer: {
           copyright: 'حقوق النشر',

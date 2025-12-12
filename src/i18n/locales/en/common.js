@@ -52,6 +52,18 @@ export default {
           no: "No",
           creating: "Creating...",
           updating: "Updating...",
+
+          // MISSING KEYS - ADD THESE:
+          search: "Search",
+          switchToLight: "Switch to Light Mode",
+          switchToDark: "Switch to Dark Mode",
+          profile: "Profile",
+          settings: "Settings",
+          logout: "Logout",
+          delete: "Delete",
+          confirmDelete: "Confirm Delete",
+          areYouSure: "Are you sure?",
+          thisActionCannotBeUndone: "This action cannot be undone",
      },
      footer: {
           copyright: 'Copyright',
