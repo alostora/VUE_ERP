@@ -1,6 +1,6 @@
 import Table from "../parts/Table.vue";
 
-const user_routes = [
+const routes = [
   {
     // path: "/users/:propSearchUrl/:propMainUrl",
     path: "/users/",
@@ -10,4 +10,4 @@ const user_routes = [
   }
 ];
 
-export default user_routes;
+export default routes;

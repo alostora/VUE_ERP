@@ -1,6 +1,6 @@
 import Table from "../parts/Table.vue";
 
-const country_routes = [
+const routes = [
   {
     path: "/countries/",
     name: "countries",
@@ -9,4 +9,4 @@ const country_routes = [
   }
 ];
 
-export default country_routes;
+export default routes;

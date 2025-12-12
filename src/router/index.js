@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 
 import HomePage from "../latest/views/HomePage.vue";
 import LoginPage from "../latest/views/LoginPage.vue";
-import user_routes from "@/views/user/routes/user-routes";
-import country_routes from "@/views/country/routes/country-routes";
+import user_routes from "@/views/user/routes/routes";
+import country_routes from "@/views/country/routes/routes";
 import governorate_routes from "../latest/model/governorate/routes/governorate-routes";
 import city_routes from "../latest/model/city/routes/city-routes";
 import company_routes from "../latest/model/company/routes/company-routes";
