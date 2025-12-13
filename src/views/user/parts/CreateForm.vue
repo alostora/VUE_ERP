@@ -13,7 +13,32 @@
       </Message>
 
       <form @submit.prevent="submitForm">
-        <!-- Name Field -->
+        <div class="field mb-3">
+          <label for="accountType" class="font-bold block mb-2">
+            {{ $t("users.accountType") }} *
+          </label>
+          <Select
+            id="accountType"
+            v-model="selectedAccountType"
+            @update:modelValue="onAccountTypeChange"
+            :options="accountTypes"
+            optionLabel="name"
+            optionValue="id"
+            :class="{ 'p-invalid': errors.user_account_type_id }"
+            :placeholder="
+              loadingItems
+                ? $t('users.loadingAccountTypes')
+                : $t('users.selectAccountType')
+            "
+            class="w-full"
+            :loading="loadingItems"
+            :disabled="loadingItems"
+          />
+          <small v-if="errors.user_account_type_id" class="p-error">
+            {{ errors.user_account_type_id }}
+          </small>
+        </div>
+
         <div class="field mb-3">
           <label for="name" class="font-bold block mb-2">
             {{ $t("users.name") }} *
@@ -28,7 +53,6 @@
           <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
         </div>
 
-        <!-- Email Field -->
         <div class="field mb-3">
           <label for="email" class="font-bold block mb-2">
             {{ $t("users.email") }} *
@@ -43,7 +67,6 @@
           <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
         </div>
 
-        <!-- Phone Field -->
         <div class="field mb-3">
           <label for="phone" class="font-bold block mb-2">
             {{ $t("users.phone") }}
@@ -58,34 +81,6 @@
           <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
         </div>
 
-        <!-- Account Type Select -->
-        <div class="field mb-3">
-          <label for="accountType" class="font-bold block mb-2">
-            {{ $t("users.accountType") }} *
-          </label>
-          <Select
-            id="accountType"
-            v-model="selectedAccountType"
-            @update:modelValue="onAccountTypeChange"
-            :options="accountTypes"
-            optionLabel="name"
-            optionValue="id"
-            :class="{ 'p-invalid': errors.user_account_type_id }"
-            :placeholder="
-              loadingAccountTypes
-                ? $t('users.loadingAccountTypes')
-                : $t('users.selectAccountType')
-            "
-            class="w-full"
-            :loading="loadingAccountTypes"
-            :disabled="loadingAccountTypes"
-          />
-          <small v-if="errors.user_account_type_id" class="p-error">
-            {{ errors.user_account_type_id }}
-          </small>
-        </div>
-
-        <!-- Password Field -->
         <div class="field mb-3">
           <label for="password" class="font-bold block mb-2">
             {{ $t("users.password") }} *
@@ -105,7 +100,6 @@
           }}</small>
         </div>
 
-        <!-- Password Confirmation Field -->
         <div class="field mb-3">
           <label for="password_confirmation" class="font-bold block mb-2">
             {{ $t("users.confirmPassword") }} *
@@ -124,7 +118,6 @@
           </small>
         </div>
 
-        <!-- Address Field -->
         <div class="field mb-4">
           <label for="address" class="font-bold block mb-2">
             {{ $t("users.address") }}
@@ -138,7 +131,6 @@
           />
         </div>
 
-        <!-- Action Buttons -->
         <div class="flex justify-content-end gap-2">
           <Button
             type="button"
@@ -159,7 +151,7 @@
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("users.creatingUser") }}</p>
+      <p class="mt-2">{{ $t("common.creating") }}</p>
     </div>
   </Dialog>
 </template>
@@ -170,10 +162,11 @@ import ProgressSpinner from "primevue/progressspinner";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
+import Select from "primevue/select";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
-import general_request from "@/utils/general_request";
+import moduleUrl from "@/constants/moduleUrl";
 import useSelectionItems from "@/utils/useSelectionItems";
 import validationRequest from "../validation/validationRequest";
 
@@ -185,12 +178,14 @@ export default {
     InputText,
     Button,
     Message,
+    Select,
   },
 
   mixins: [useTable(), useCrud(), validationRequest, useSelectionItems],
 
   data() {
     return {
+      propMainUrl: moduleUrl.URLS.USER.propMainUrl,
       selectedAccountType: null,
       formData: {
         name: "",
@@ -216,7 +211,7 @@ export default {
       this.loading = true;
       this.error = "";
 
-      const url = `${general_request.BASE_URL}/admin/user`;
+      const url = this.propMainUrl;
       await this.createItem(this.formData, url);
 
       this.closeModal();

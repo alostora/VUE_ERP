@@ -1,6 +1,6 @@
 <template>
   <Dialog
-    :header="$t('countries.createCountry')"
+    :header="$t('governorates.createGovernorate')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
@@ -13,81 +13,84 @@
       </Message>
 
       <form @submit.prevent="submitForm">
+        <!-- Country Selection (Required) -->
+        <div class="field mb-3">
+          <label for="country" class="font-bold block mb-2">
+            {{ $t("governorates.country") }} *
+          </label>
+          <Select
+            id="country"
+            v-model="selectedCountry"
+            @update:modelValue="onCountryChange"
+            :options="countries"
+            optionLabel="name"
+            optionValue="id"
+            :class="{ 'p-invalid': errors.country_id }"
+            :placeholder="
+              loadingItems
+                ? $t('governorates.loadingCountries')
+                : $t('governorates.selectCountry')
+            "
+            class="w-full"
+            :loading="loadingItems"
+            :disabled="loadingItems"
+            :showClear="false"
+          />
+          <small v-if="errors.country_id" class="p-error">
+            {{ errors.country_id }}
+          </small>
+        </div>
+
+        <!-- Name Field -->
         <div class="field mb-3">
           <label for="name" class="font-bold block mb-2">
-            {{ $t("countries.name") }} *
+            {{ $t("governorates.name") }} *
           </label>
           <InputText
             id="name"
             v-model="formData.name"
             :class="{ 'p-invalid': errors.name }"
             class="w-full"
-            :placeholder="$t('countries.namePlaceholder')"
+            :placeholder="$t('governorates.namePlaceholder')"
           />
           <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
         </div>
 
+        <!-- Arabic Name Field -->
         <div class="field mb-3">
           <label for="name_ar" class="font-bold block mb-2">
-            {{ $t("countries.name_ar") }} *
+            {{ $t("governorates.name_ar") }} *
           </label>
           <InputText
             id="name_ar"
             v-model="formData.name_ar"
             :class="{ 'p-invalid': errors.name_ar }"
             class="w-full"
-            :placeholder="$t('countries.name_arPlaceholder')"
+            :placeholder="$t('governorates.nameArPlaceholder')"
           />
           <small v-if="errors.name_ar" class="p-error">{{
             errors.name_ar
           }}</small>
         </div>
 
-        <div class="field mb-3">
-          <label for="phone_code" class="font-bold block mb-2">
-            {{ $t("countries.phone_code") }} *
-          </label>
-          <InputText
-            id="phone_code"
-            v-model="formData.phone_code"
-            :class="{ 'p-invalid': errors.phone_code }"
-            class="w-full"
-            :placeholder="$t('countries.phone_codePlaceholder')"
-          />
-          <small v-if="errors.phone_code" class="p-error">{{
-            errors.phone_code
-          }}</small>
-        </div>
-
-        <div class="field mb-3">
+        <!-- Prefix Field -->
+        <div class="field mb-4">
           <label for="prefix" class="font-bold block mb-2">
-            {{ $t("countries.prefix") }}
+            {{ $t("governorates.prefix") }}
           </label>
           <InputText
             id="prefix"
             v-model="formData.prefix"
             :class="{ 'p-invalid': errors.prefix }"
             class="w-full"
-            :placeholder="$t('countries.prefixPlaceholder')"
+            :placeholder="$t('governorates.prefixPlaceholder')"
           />
           <small v-if="errors.prefix" class="p-error">{{
             errors.prefix
           }}</small>
         </div>
 
-        <div class="field mb-4">
-          <label for="flag" class="font-bold block mb-2">
-            {{ $t("countries.flag") }}
-          </label>
-          <InputText
-            id="flag"
-            v-model="formData.flag"
-            class="w-full"
-            :placeholder="$t('countries.flagPlaceholder')"
-          />
-          <small class="p-text-secondary">{{ $t("countries.flagHelp") }}</small>
-        </div>
-
+        <!-- Action Buttons -->
         <div class="flex justify-content-end gap-2">
           <Button
             type="button"
@@ -108,7 +111,7 @@
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("countries.creatingCountry") }}</p>
+      <p class="mt-2">{{ $t('common.creating') }}</p>
     </div>
   </Dialog>
 </template>
@@ -119,11 +122,13 @@ import ProgressSpinner from "primevue/progressspinner";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
+import Select from "primevue/select";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
+import moduleUrl from "@/constants/moduleUrl";
+import useSelectionItems from "@/utils/useSelectionItems";
 import validationRequest from "../validation/validationRequest";
-import general_request from "@/utils/general_request";
 
 export default {
   name: "CreateForm",
@@ -133,20 +138,26 @@ export default {
     InputText,
     Button,
     Message,
+    Select,
   },
 
-  mixins: [useTable(), useCrud(), validationRequest],
+  mixins: [useTable(), useCrud(), validationRequest, useSelectionItems],
 
   data() {
     return {
+      propMainUrl: moduleUrl.URLS.GOVERNORATE.propMainUrl,
+      selectedCountry: null,
       formData: {
+        country_id: "",
         name: "",
         name_ar: "",
-        phone_code: "",
         prefix: "",
-        flag: "",
       },
     };
+  },
+
+  mounted() {
+    this.loadCountries();
   },
   methods: {
     async submitForm() {
@@ -157,10 +168,14 @@ export default {
       this.loading = true;
       this.error = "";
 
-      const url = `${general_request.BASE_URL}/admin/country`;
+      const url = this.propMainUrl;
       await this.createItem(this.formData, url);
 
       this.closeModal();
+    },
+    onCountryChange(value) {
+      this.selectedCountry = value;
+      this.formData.country_id = value;
     },
   },
 };

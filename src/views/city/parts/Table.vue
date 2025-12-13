@@ -2,10 +2,10 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
-        <h1 class="table-title">{{ $t("users.title") }}</h1>
+        <h1 class="table-title">{{ $t("cities.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('users.addUser')"
+            :label="$t('cities.addCity')"
             icon="pi pi-plus"
             @click="openCreateModel"
             class="p-button-primary"
@@ -19,7 +19,7 @@
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
-            :placeholder="$t('users.search')"
+            :placeholder="$t('cities.search')"
             @input="handleSearchInput"
             class="search-input w-20rem"
           />
@@ -31,7 +31,7 @@
           :options="perPageOptions"
           optionLabel="label"
           optionValue="value"
-          :placeholder="$t('users.show')"
+          :placeholder="$t('cities.show')"
           @change="getData(propSearchUrl)"
           class="w-10rem"
         />
@@ -55,70 +55,58 @@
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <!-- كل الأعمدة بنفس الطريقة -->
-        <!-- ID Column -->
-        <Column field="id" :header="$t('users.id')" class="col-identifier">
+        <Column field="id" :header="$t('cities.id')" style="min-width: 100px">
           <template #body="slotProps">
-            {{ slotProps.index + 1 }}
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
         </Column>
 
-        <!-- Name Column -->
         <Column
           field="name"
-          :header="$t('users.name')"
+          :header="$t('cities.name')"
           sortable
-          class="col-name"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name }}</span>
           </template>
         </Column>
 
-        <!-- Email Column -->
         <Column
-          field="email"
-          :header="$t('users.email')"
+          field="name_ar"
+          :header="$t('cities.name_ar')"
           sortable
-          class="col-email"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
-            <span>{{ slotProps.data.email }}</span>
+            <span>{{ slotProps.data.name_ar }}</span>
           </template>
         </Column>
 
-        <!-- Created At Column -->
         <Column
-          field="created_at"
-          :header="$t('users.createdAt')"
-          sortable
-          class="col-date hide-on-mobile"
+          v-if="!country_id"
+          field="country"
+          :header="$t('cities.country')"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
-            {{ formatDate(slotProps.data.created_at) }}
+            <span>{{ slotProps.data.country?.name || "-" }}</span>
           </template>
         </Column>
 
-        <!-- Status Column -->
         <Column
-          field="account_type"
-          :header="$t('users.accountType')"
-          class="col-status"
+          v-if="!governorate_id"
+          field="governorate"
+          :header="$t('cities.governorate')"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
-            <span class="status-badge status-active">
-              {{
-                $i18n.locale === "ar"
-                  ? slotProps.data.account_type?.name_ar
-                  : slotProps.data.account_type?.name
-              }}
-            </span>
+            <span>{{ slotProps.data.governorate?.name || "-" }}</span>
           </template>
         </Column>
 
-        <!-- Actions Column -->
         <Column
-          :header="$t('countries.actions')"
+          :header="$t('cities.actions')"
           :exportable="false"
           class="col-actions"
         >
@@ -128,13 +116,13 @@
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
                 @click="openUpdateModel(slotProps.data)"
-                v-tooltip.top="$t('countries.edit')"
+                v-tooltip.top="$t('cities.edit')"
               />
               <Button
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
                 @click="deleteRow(slotProps.data)"
-                v-tooltip.top="$t('countries.delete')"
+                v-tooltip.top="$t('cities.delete')"
               />
             </div>
           </template>
@@ -171,11 +159,23 @@ import UpdateForm from "./UpdateForm.vue";
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
 import moduleUrl from "@/constants/moduleUrl";
+import customFunctions from "../custom_functions/customFunctions";
 
 export default {
   name: "Table",
 
-  mixins: [useTable(), useCrud()],
+  mixins: [useTable(), useCrud(), customFunctions],
+
+  props: {
+    country_id: {
+      type: String,
+      default: null,
+    },
+  },
+
+  directives: {
+    tooltip: Tooltip,
+  },
 
   components: {
     CreateForm,
@@ -189,21 +189,19 @@ export default {
     Toast,
     ConfirmDialog,
   },
-
-  directives: {
-    tooltip: Tooltip,
-  },
-
   computed: {
     propSearchUrl() {
-      let url = `${moduleUrl.URLS.USER.propSearchUrl}?paginate=true`;
+      let url = `${moduleUrl.URLS.CITY.propSearchUrl}?paginate=true`;
+      if (this.country_id) {
+        url += `&country_id=${this.country_id}`;
+      }
       return url;
     },
   },
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.USER.propMainUrl,
+      propMainUrl: moduleUrl.URLS.CITY.propMainUrl,
     };
   },
 

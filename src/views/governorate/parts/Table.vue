@@ -2,10 +2,10 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
-        <h1 class="table-title">{{ $t("countries.title") }}</h1>
+        <h1 class="table-title">{{ $t("governorates.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('countries.addCountry')"
+            :label="$t('governorates.addGovernorate')"
             icon="pi pi-plus"
             @click="openCreateModel"
             class="p-button-primary"
@@ -19,7 +19,7 @@
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
-            :placeholder="$t('countries.search')"
+            :placeholder="$t('governorates.search')"
             @input="handleSearchInput"
             class="search-input w-20rem"
           />
@@ -31,7 +31,7 @@
           :options="perPageOptions"
           optionLabel="label"
           optionValue="value"
-          :placeholder="$t('countries.show')"
+          :placeholder="$t('governorates.show')"
           @change="getData(propSearchUrl)"
           class="w-10rem"
         />
@@ -55,7 +55,11 @@
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <Column field="id" :header="$t('countries.id')" class="col-identifier">
+        <Column
+          field="id"
+          :header="$t('governorates.id')"
+          style="min-width: 100px"
+        >
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
@@ -63,9 +67,9 @@
 
         <Column
           field="name"
-          :header="$t('countries.name')"
+          :header="$t('governorates.name')"
           sortable
-          class="col-name"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name }}</span>
@@ -74,53 +78,52 @@
 
         <Column
           field="name_ar"
-          :header="$t('countries.name_ar')"
+          :header="$t('governorates.name_ar')"
           sortable
-          class="col-name"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
-            <span class="font-medium">{{ slotProps.data.name_ar }}</span>
-          </template>
-        </Column>
-
-        <Column
-          field="phone_code"
-          :header="$t('countries.phone_code')"
-          sortable
-          class="col-phone"
-        >
-          <template #body="slotProps">
-            <span>{{ slotProps.data.phone_code }}</span>
+            <span>{{ slotProps.data.name_ar }}</span>
           </template>
         </Column>
 
         <Column
           field="prefix"
-          :header="$t('countries.prefix')"
-          sortable
-          class="col-name"
+          :header="$t('governorates.prefix')"
+          style="min-width: 120px"
         >
           <template #body="slotProps">
-            <span>{{ slotProps.data.prefix }}</span>
+            <span class="font-mono">{{ slotProps.data.prefix || "-" }}</span>
           </template>
         </Column>
 
-        <Column :header="$t('countries.governorates')" class="col-actions">
+        <!-- Show country column only when showing all governorates -->
+        <Column
+          v-if="!country_id"
+          field="country"
+          :header="$t('governorates.country')"
+          style="min-width: 150px"
+        >
           <template #body="slotProps">
-            <div class="table-actions-cell">
-              <Button
-                :label="$t('countries.viewGovernorates')"
-                icon="pi pi-list"
-                class="p-button-text p-button-sm p-button-info"
-                @click="viewGovernorates(slotProps.data)"
-                v-tooltip.top="$t('countries.viewGovernoratesTooltip')"
-              />
-            </div>
+            <span>{{ slotProps.data.country?.name || "-" }}</span>
+          </template>
+        </Column>
+
+        <!-- Cities Column -->
+        <Column :header="$t('governorates.cities')" style="min-width: 150px">
+          <template #body="slotProps">
+            <Button
+              :label="$t('governorates.viewCities')"
+              icon="pi pi-building"
+              class="p-button-text p-button-sm p-button-info"
+              @click="viewCities(slotProps.data)"
+              v-tooltip.top="$t('governorates.viewCitiesTooltip')"
+            />
           </template>
         </Column>
 
         <Column
-          :header="$t('countries.actions')"
+          :header="$t('governorates.actions')"
           :exportable="false"
           class="col-actions"
         >
@@ -130,13 +133,13 @@
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
                 @click="openUpdateModel(slotProps.data)"
-                v-tooltip.top="$t('countries.edit')"
+                v-tooltip.top="$t('governorates.edit')"
               />
               <Button
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
                 @click="deleteRow(slotProps.data)"
-                v-tooltip.top="$t('countries.delete')"
+                v-tooltip.top="$t('governorates.delete')"
               />
             </div>
           </template>
@@ -172,13 +175,24 @@ import UpdateForm from "./UpdateForm.vue";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
-import general_request from "@/utils/general_request";
+import moduleUrl from "@/constants/moduleUrl";
 import customFunctions from "../custom_functions/customFunctions";
 
 export default {
   name: "Table",
 
   mixins: [useTable(), useCrud(), customFunctions],
+
+  props: {
+    country_id: {
+      type: String,
+      default: null,
+    },
+  },
+
+  directives: {
+    tooltip: Tooltip,
+  },
 
   components: {
     CreateForm,
@@ -192,16 +206,19 @@ export default {
     Toast,
     ConfirmDialog,
   },
-
-  directives: {
-    tooltip: Tooltip,
+  computed: {
+    propSearchUrl() {
+      let url = `${moduleUrl.URLS.GOVERNORATE.propSearchUrl}?paginate=true`;
+      if (this.country_id) {
+        url += `&country_id=${this.country_id}`;
+      }
+      return url;
+    },
   },
 
   data() {
     return {
-      propSearchUrl:
-        general_request.BASE_URL + "/admin/countries/search?paginate=true",
-      propMainUrl: general_request.BASE_URL + "/admin/country",
+      propMainUrl: moduleUrl.URLS.GOVERNORATE.propMainUrl,
     };
   },
 
@@ -233,8 +250,8 @@ export default {
       this.deleteItem(
         item,
         this.propMainUrl,
-        this.$t("countries.countryDeleted"),
-        this.$t("countries.deleteError")
+        this.$t("common.itemDeleted"),
+        this.$t("common.failedToDeleteItem")
       );
     },
   },

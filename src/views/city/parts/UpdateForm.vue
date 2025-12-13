@@ -1,6 +1,6 @@
 <template>
   <Dialog
-    :header="this.$t('countries.editCountry')"
+    :header="this.$t('cities.editCity')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
@@ -13,28 +13,8 @@
 
       <form @submit.prevent="submitForm">
         <div class="field mb-3">
-          <label for="accountType" class="font-bold block mb-2">
-            {{ $t("users.accountType") }} *
-          </label>
-          <Select
-            id="accountType"
-            v-model="selectedAccountType"
-            @update:modelValue="onAccountTypeChange"
-            :options="accountTypes"
-            optionLabel="name"
-            optionValue="id"
-            :class="{ 'p-invalid': errors.user_account_type_id }"
-            :placeholder="$t('users.selectAccountType')"
-            class="w-full"
-          />
-          <small v-if="errors.user_account_type_id" class="p-error">
-            {{ errors.user_account_type_id }}
-          </small>
-        </div>
-
-        <div class="field mb-3">
           <label for="name" class="font-bold block mb-2">
-            {{ $t("users.name") }} *
+            {{ $t("cities.name") }} *
           </label>
           <InputText
             id="name"
@@ -46,58 +26,18 @@
         </div>
 
         <div class="field mb-3">
-          <label for="email" class="font-bold block mb-2">
-            {{ $t("users.email") }} *
+          <label for="name_ar" class="font-bold block mb-2">
+            {{ $t("cities.name_ar") }} *
           </label>
           <InputText
-            id="email"
-            v-model="formData.email"
-            :class="{ 'p-invalid': errors.email }"
+            id="name_ar"
+            v-model="formData.name_ar"
+            :class="{ 'p-invalid': errors.name_ar }"
             class="w-full"
           />
-          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="phone" class="font-bold block mb-2">
-            {{ $t("users.phone") }}
-          </label>
-          <InputText
-            id="phone"
-            v-model="formData.phone"
-            :class="{ 'p-invalid': errors.phone }"
-            class="w-full"
-          />
-          <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="password" class="font-bold block mb-2">
-            {{ $t("users.password") }}
-          </label>
-          <Password
-            id="password"
-            v-model="formData.password"
-            :feedback="false"
-            :class="{ 'p-invalid': errors.password }"
-            class="w-full"
-            :placeholder="$t('users.passwordPlaceholder')"
-          />
-          <small v-if="errors.password" class="p-error">{{
-            errors.password
+          <small v-if="errors.name_ar" class="p-error">{{
+            errors.name_ar
           }}</small>
-        </div>
-
-        <div class="field mb-4">
-          <label for="address" class="font-bold block mb-2">
-            {{ $t("users.address") }}
-          </label>
-          <Textarea
-            id="address"
-            v-model="formData.address"
-            rows="3"
-            class="w-full"
-          />
         </div>
 
         <div class="flex justify-content-end gap-2">
@@ -131,7 +71,6 @@ import ProgressSpinner from "primevue/progressspinner";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
-import Select from "primevue/select";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
@@ -147,7 +86,6 @@ export default {
     InputText,
     Button,
     Message,
-    Select,
   },
 
   mixins: [useTable(), useCrud(), validationRequest, useSelectionItems],
@@ -160,17 +98,12 @@ export default {
   },
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.USER.propMainUrl,
-      accountTypes: [],
-      selectedAccountType: null,
+      propMainUrl: moduleUrl.URLS.CITY.propMainUrl,
+      countries: [],
       formData: {
         id: "",
         name: "",
-        email: "",
-        phone: "",
-        password: "",
-        address: "",
-        user_account_type_id: "",
+        name_ar: "",
       },
     };
   },
@@ -190,7 +123,7 @@ export default {
   },
 
   mounted() {
-    this.loadAccountTypes();
+    this.loadCountries();
   },
 
   methods: {
@@ -198,14 +131,9 @@ export default {
       this.formData = {
         id: selectedItem.id || "",
         name: selectedItem.name || "",
-        email: selectedItem.email || "",
-        phone: selectedItem.phone || "",
-        password: "", // Never pre-fill password
-        address: selectedItem.address || "",
-        user_account_type_id: selectedItem.account_type?.id || "",
+        name_ar: selectedItem.name_ar || "",
+        prefix: selectedItem.prefix || "",
       };
-
-      this.selectedAccountType = selectedItem.account_type?.id || null;
     },
 
     async submitForm() {
@@ -220,11 +148,6 @@ export default {
       await this.updateItem(this.formData.id, this.formData, url);
 
       this.closeModal();
-    },
-
-    onAccountTypeChange(value) {
-      this.selectedAccountType = value;
-      this.formData.user_account_type_id = value;
     },
   },
 };

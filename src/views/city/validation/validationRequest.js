@@ -4,9 +4,12 @@ export default {
           validateCreateForm() {
                this.errors = {};
 
-
                if (!this.formData.country_id) {
                     this.errors.country_id = this.$t("validation.countryRequired");
+               }
+
+               if (!this.formData.governorate_id) {
+                    this.errors.governorate_id = this.$t("validation.governorateRequired");
                }
 
                if (!this.formData.name?.trim()) {
@@ -15,10 +18,6 @@ export default {
 
                if (!this.formData.name_ar?.trim()) {
                     this.errors.name_ar = this.$t("validation.nameArRequired");
-               }
-
-               if (!this.formData.prefix?.trim()) {
-                    this.errors.prefix = this.$t("validation.prefixRequired");
                }
 
                return Object.keys(this.errors).length === 0;
@@ -33,10 +32,6 @@ export default {
 
                if (!this.formData.name_ar?.trim()) {
                     this.errors.name_ar = this.$t("validation.nameArRequired");
-               }
-
-               if (!this.formData.prefix?.trim()) {
-                    this.errors.prefix = this.$t("validation.prefixRequired");
                }
 
                return Object.keys(this.errors).length === 0;

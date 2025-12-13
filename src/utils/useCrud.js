@@ -29,10 +29,10 @@ export function useCrud() {
                               this.handleItemCreated(newItem);
                          }
 
-                         this.showToast("success", "Success", successMessage || "Item created successfully");
+                         this.showToast("success", "Success", successMessage || this.$t("common.itemCreated"));
                          return newItem;
                     } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || "Failed to create item");
+                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToCreateItem"));
                          throw error;
                     } finally {
                          this.loading = false;
@@ -53,10 +53,10 @@ export function useCrud() {
                               this.handleItemUpdated(updatedItem);
                          }
 
-                         this.showToast("success", "Success", successMessage || "Item updated successfully");
+                         this.showToast("success", "Success", successMessage || this.$t("common.itemUpdatedSuccessfully"));
                          return updatedItem;
                     } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || "Failed to update item");
+                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUpdateItem"));
                          throw error;
                     } finally {
                          this.loading = false;
@@ -76,10 +76,10 @@ export function useCrud() {
                               this.handleItemUpdated(updatedItem);
                          }
 
-                         this.showToast("success", "Success", successMessage || "Item updated successfully");
+                         this.showToast("success", "Success", successMessage || this.$t("common.itemUpdatedSuccessfully"));
                          return updatedItem;
                     } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || "Failed to update item");
+                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUpdateItem"));
                          throw error;
                     } finally {
                          this.loading = false;
@@ -106,17 +106,17 @@ export function useCrud() {
                                              this.handleItemDeleted(item.id);
                                         }
 
-                                        this.showToast("success", "Success", successMessage || "Item deleted successfully");
+                                        this.showToast("success", "Success", successMessage || this.$t("common.itemDeletedSuccessfully"));
                                         resolve(true);
                                    } catch (error) {
-                                        this.handleCrudError(error, error.response.data.message || "Failed to delete item");
+                                        this.handleCrudError(error, error.response.data.message || this.$t("common.failedToDeleteItem"));
                                         resolve(false);
                                    } finally {
                                         this.loading = false;
                                    }
                               },
                               reject: () => {
-                                   this.showToast("info", "Cancelled", "Deletion cancelled");
+                                   this.showToast("info", "Cancelled", this.$t("common.deletionCancelled"));
                                    resolve(false);
                               }
                          });
@@ -156,18 +156,18 @@ export function useCrud() {
 
                                    if (successCount > 0) {
                                         this.showToast("success", "Success",
-                                             successMessage || `${successCount} items deleted successfully`);
+                                             successMessage || `${successCount} ` + this.$t("common.itemDeletedSuccessfully"));
                                    }
 
                                    if (failCount > 0) {
                                         this.showToast("warn", "Partial Success",
-                                             `${successCount} deleted, ${failCount} failed`);
+                                             `${successCount} deleted, ${failCount} ` + this.$t("common.failedToDeleteItem"));
                                    }
 
                                    resolve({ successCount, failCount });
                               },
                               reject: () => {
-                                   this.showToast("info", "Cancelled", "Bulk deletion cancelled");
+                                   this.showToast("info", "Cancelled", this.$t("common.deletionCancelled"));
                                    resolve({ successCount: 0, failCount: 0 });
                               }
                          });

@@ -108,7 +108,7 @@
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("countries.creatingCountry") }}</p>
+      <p class="mt-2">{{ $t("common.creating") }}</p>
     </div>
   </Dialog>
 </template>
@@ -122,8 +122,8 @@ import Message from "primevue/message";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
+import moduleUrl from "@/constants/moduleUrl";
 import validationRequest from "../validation/validationRequest";
-import general_request from "@/utils/general_request";
 
 export default {
   name: "CreateForm",
@@ -139,6 +139,7 @@ export default {
 
   data() {
     return {
+      propMainUrl: moduleUrl.URLS.COUNTRY.propMainUrl,
       formData: {
         name: "",
         name_ar: "",
@@ -157,7 +158,7 @@ export default {
       this.loading = true;
       this.error = "";
 
-      const url = `${general_request.BASE_URL}/admin/country`;
+      const url = this.propMainUrl;
       await this.createItem(this.formData, url);
 
       this.closeModal();

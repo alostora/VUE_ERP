@@ -1,10 +1,11 @@
 <template>
   <Dialog
-    :header="this.$t('governorates.editGovernorate')"
+    :header="$t('cities.createGovernorate')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
+    @hide="closeModal"
   >
     <div class="form">
       <Message v-if="error" severity="error" class="mb-3">
@@ -13,45 +14,86 @@
 
       <form @submit.prevent="submitForm">
         <div class="field mb-3">
+          <label for="country" class="font-bold block mb-2">
+            {{ $t("cities.country") }} *
+          </label>
+          <Select
+            id="country"
+            v-model="selectedCountry"
+            @update:modelValue="onCountryChange"
+            :options="countries"
+            optionLabel="name"
+            optionValue="id"
+            :class="{ 'p-invalid': errors.country_id }"
+            :placeholder="
+              loadingItems
+                ? $t('cities.loadingCountries')
+                : $t('cities.selectCountry')
+            "
+            class="w-full"
+            :loading="loadingItems"
+            :disabled="loadingItems"
+            :showClear="false"
+          />
+          <small v-if="errors.country_id" class="p-error">
+            {{ errors.country_id }}
+          </small>
+        </div>
+
+        <div class="field mb-3">
+          <label for="country" class="font-bold block mb-2">
+            {{ $t("cities.governorate") }} *
+          </label>
+          <Select
+            id="governorate"
+            v-model="selectedGovernorate"
+            @update:modelValue="onGovernorateChange"
+            :options="governorates"
+            optionLabel="name"
+            optionValue="id"
+            :class="{ 'p-invalid': errors.governorate_id }"
+            :placeholder="
+              loadingItems
+                ? $t('cities.loadingGovernorates')
+                : $t('cities.selectGovernorate')
+            "
+            class="w-full"
+            :loading="loadingItems"
+            :disabled="loadingItems || !selectedCountry"
+            :showClear="false"
+          />
+          <small v-if="errors.governorate_id" class="p-error">
+            {{ errors.governorate_id }}
+          </small>
+        </div>
+
+        <div class="field mb-3">
           <label for="name" class="font-bold block mb-2">
-            {{ $t("governorates.name") }} *
+            {{ $t("cities.name") }} *
           </label>
           <InputText
             id="name"
             v-model="formData.name"
             :class="{ 'p-invalid': errors.name }"
             class="w-full"
+            :placeholder="$t('cities.namePlaceholder')"
           />
           <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
         </div>
 
         <div class="field mb-3">
           <label for="name_ar" class="font-bold block mb-2">
-            {{ $t("governorates.name_ar") }} *
+            {{ $t("cities.name_ar") }} *
           </label>
           <InputText
             id="name_ar"
             v-model="formData.name_ar"
             :class="{ 'p-invalid': errors.name_ar }"
             class="w-full"
+            :placeholder="$t('cities.nameArPlaceholder')"
           />
           <small v-if="errors.name_ar" class="p-error">{{
             errors.name_ar
-          }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="prefix" class="font-bold block mb-2">
-            {{ $t("governorates.prefix") }} *
-          </label>
-          <InputText
-            id="prefix"
-            v-model="formData.prefix"
-            :class="{ 'p-invalid': errors.prefix }"
-            class="w-full"
-          />
-          <small v-if="errors.prefix" class="p-error">{{
-            errors.prefix
           }}</small>
         </div>
 
@@ -63,10 +105,9 @@
             class="p-button-text"
             :disabled="loading"
           />
-
           <Button
             type="submit"
-            :label="$t('common.update')"
+            :label="$t('common.create')"
             :loading="loading"
             class="p-button-primary"
           />
@@ -76,6 +117,7 @@
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
+      <p class="mt-2">{{ $t("common.creating") }}</p>
     </div>
   </Dialog>
 </template>
@@ -86,6 +128,7 @@ import ProgressSpinner from "primevue/progressspinner";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Message from "primevue/message";
+import Select from "primevue/select";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
@@ -94,29 +137,26 @@ import useSelectionItems from "@/utils/useSelectionItems";
 import validationRequest from "../validation/validationRequest";
 
 export default {
-  name: "UpdateForm",
+  name: "CreateForm",
   components: {
     Dialog,
     ProgressSpinner,
     InputText,
     Button,
     Message,
+    Select,
   },
 
   mixins: [useTable(), useCrud(), validationRequest, useSelectionItems],
 
-  props: {
-    selected_item: {
-      type: Object,
-      default: () => ({}),
-    },
-  },
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.GOVERNORATE.propMainUrl,
-      countries: [],
+      propMainUrl: moduleUrl.URLS.CITY.propMainUrl,
+      selectedCountry: null,
+      selectedGovernorate: null,
       formData: {
-        id: "",
+        country_id: "",
+        governorate_id: "",
         name: "",
         name_ar: "",
         prefix: "",
@@ -124,36 +164,12 @@ export default {
     };
   },
 
-  watch: {
-    selected_item: {
-      immediate: true,
-      deep: true,
-      handler(selectedItem) {
-        if (selectedItem && selectedItem.id) {
-          this.populateForm(selectedItem);
-        } else {
-          this.resetForm();
-        }
-      },
-    },
-  },
-
   mounted() {
     this.loadCountries();
   },
-
   methods: {
-    populateForm(selectedItem) {
-      this.formData = {
-        id: selectedItem.id || "",
-        name: selectedItem.name || "",
-        name_ar: selectedItem.name_ar || "",
-        prefix: selectedItem.prefix || "",
-      };
-    },
-
     async submitForm() {
-      if (!this.validateUpdateForm()) {
+      if (!this.validateCreateForm()) {
         return;
       }
 
@@ -161,9 +177,20 @@ export default {
       this.error = "";
 
       const url = this.propMainUrl;
-      await this.updateItem(this.formData.id, this.formData, url);
+      await this.createItem(this.formData, url);
 
       this.closeModal();
+    },
+
+    onCountryChange(value) {
+      this.selectedCountry = value;
+      this.formData.country_id = value;
+      this.loadGovernorates(value);
+    },
+
+    onGovernorateChange(value) {
+      this.selectedGovernorate = value;
+      this.formData.governorate_id = value;
     },
   },
 };
@@ -178,14 +205,6 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-:deep(.p-password) {
-  width: 100%;
-}
-
-:deep(.p-password input) {
-  width: 100%;
-}
-
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -194,6 +213,7 @@ export default {
   height: 100%;
   background: rgba(255, 255, 255, 0.8);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 1000;

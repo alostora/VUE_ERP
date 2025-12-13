@@ -52,6 +52,13 @@ export default {
           no: "No",
           creating: "Creating...",
           updating: "Updating...",
+          itemCreated: "Item Created Successfully",
+          itemUpdated: "Item Updated Successfully",
+          itemDeleted: "Item Deleted Successfully",
+          failedToCreateItem: "Failed To Create Item",
+          failedToUpdateItem: "Failed To Update Item",
+          failedToDeleteItem: "Failed To Delete Item",
+          deletionCancelled: "Deletion Cancelled",
 
           // MISSING KEYS - ADD THESE:
           search: "Search",

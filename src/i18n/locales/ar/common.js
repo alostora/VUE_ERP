@@ -56,7 +56,14 @@ export default {
           no: "لا",
           creating: "انشاء...",
           updating: "تحديث...",
-          
+          itemCreated: "تم الانشاء بنجاح",
+          itemUpdated: "تم التعديل بنجاح",
+          itemDeleted: "تم الحذف بنجاح",
+          failedToCreateItem: "فشل الانشاء",
+          failedToUpdateItem: "فشل التحديث",
+          failedToDeleteItem: "فشل الحذف",
+          deletionCancelled: "تم الغاء الحذف",
+
           // MISSING KEYS - ADD THESE:
           search: "بحث",
           switchToLight: "التغيير إلى الوضع الفاتح",

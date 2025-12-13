@@ -172,7 +172,7 @@ import UpdateForm from "./UpdateForm.vue";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
-import general_request from "@/utils/general_request";
+import moduleUrl from "@/constants/moduleUrl";
 import customFunctions from "../custom_functions/customFunctions";
 
 export default {
@@ -197,11 +197,16 @@ export default {
     tooltip: Tooltip,
   },
 
+  computed: {
+    propSearchUrl() {
+      let url = `${moduleUrl.URLS.COUNTRY.propSearchUrl}?paginate=true`;
+      return url;
+    },
+  },
+
   data() {
     return {
-      propSearchUrl:
-        general_request.BASE_URL + "/admin/countries/search?paginate=true",
-      propMainUrl: general_request.BASE_URL + "/admin/country",
+      propMainUrl: moduleUrl.URLS.COUNTRY.propMainUrl,
     };
   },
 
@@ -233,8 +238,8 @@ export default {
       this.deleteItem(
         item,
         this.propMainUrl,
-        this.$t("countries.countryDeleted"),
-        this.$t("countries.deleteError")
+        this.$t("common.itemDeleted"),
+        this.$t("common.failedToDeleteItem")
       );
     },
   },

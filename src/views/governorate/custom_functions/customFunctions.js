@@ -1,9 +1,9 @@
 export default {
      methods: {
-          viewGovernorates(item) {
+          viewCities(item) {
                this.$router.push({
-                    name: "governorates",
-                    params: { country_id: item.id },
+                    name: "cities",
+                    params: { governorate_id: item.id },
                });
           },
      }

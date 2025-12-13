@@ -111,8 +111,8 @@ import Message from "primevue/message";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
+import moduleUrl from "@/constants/moduleUrl";
 import validationRequest from "../validation/validationRequest";
-import general_request from "@/utils/general_request";
 
 export default {
   name: "UpdateForm",
@@ -134,6 +134,7 @@ export default {
   },
   data() {
     return {
+      propMainUrl: moduleUrl.URLS.COUNTRY.propMainUrl,
       accountTypes: [],
       selectedAccountType: null,
       formData: {
@@ -180,7 +181,7 @@ export default {
       this.loading = true;
       this.error = "";
 
-      const url = `${general_request.BASE_URL}/admin/country`;
+      const url = this.propMainUrl;
       await this.updateItem(this.formData.id, this.formData, url);
 
       this.closeModal();
