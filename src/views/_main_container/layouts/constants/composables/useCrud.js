@@ -1,30 +1,19 @@
-import general_request from "./general_request";
+import general_request from "../general_request";
 
 export function useCrud() {
      return {
           data() {
                return {
-                    visible: false,
-                    loading: false,
+                    loading: null,
                     selectedItem: null,
-                    error: "",
-                    errors: {},
                     formData: {},
                     formErrors: {},
-
-                    //optional for some models
-                    selectedClient: null,
-                    selectedCountry: null,
-                    selectedGovernorate: null,
-                    selectedCity: null,
-                    selectedCurrency: null,
-                    logoFile: null,
-                    coverFile: null
                }
           },
 
           methods: {
                async createItem(data, url, successMessage = null, errorMessage = null) {
+                    console.log(url);
                     this.loading = true;
                     try {
                          const response = await this.$http.post(url, data, {
@@ -38,10 +27,10 @@ export function useCrud() {
                               this.handleItemCreated(newItem);
                          }
 
-                         this.showToast("success", "Success", successMessage || this.$t("common.itemCreated"));
+                         this.showToast("success", "Success", successMessage || "Item created successfully");
                          return newItem;
                     } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToCreateItem"));
+                         this.handleCrudError(error, error.response.data.message || "Failed to create item");
                          throw error;
                     } finally {
                          this.loading = false;
@@ -62,10 +51,10 @@ export function useCrud() {
                               this.handleItemUpdated(updatedItem);
                          }
 
-                         this.showToast("success", "Success", successMessage || this.$t("common.itemUpdatedSuccessfully"));
+                         this.showToast("success", "Success", successMessage || "Item updated successfully");
                          return updatedItem;
                     } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUpdateItem"));
+                         this.handleCrudError(error, error.response.data.message || "Failed to update item");
                          throw error;
                     } finally {
                          this.loading = false;
@@ -85,10 +74,10 @@ export function useCrud() {
                               this.handleItemUpdated(updatedItem);
                          }
 
-                         this.showToast("success", "Success", successMessage || this.$t("common.itemUpdatedSuccessfully"));
+                         this.showToast("success", "Success", successMessage || "Item updated successfully");
                          return updatedItem;
                     } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUpdateItem"));
+                         this.handleCrudError(error, error.response.data.message || "Failed to update item");
                          throw error;
                     } finally {
                          this.loading = false;
@@ -115,17 +104,17 @@ export function useCrud() {
                                              this.handleItemDeleted(item.id);
                                         }
 
-                                        this.showToast("success", "Success", successMessage || this.$t("common.itemDeletedSuccessfully"));
+                                        this.showToast("success", "Success", successMessage || "Item deleted successfully");
                                         resolve(true);
                                    } catch (error) {
-                                        this.handleCrudError(error, error.response.data.message || this.$t("common.failedToDeleteItem"));
+                                        this.handleCrudError(error, error.response.data.message || "Failed to delete item");
                                         resolve(false);
                                    } finally {
                                         this.loading = false;
                                    }
                               },
                               reject: () => {
-                                   this.showToast("info", "Cancelled", this.$t("common.deletionCancelled"));
+                                   this.showToast("info", "Cancelled", "Deletion cancelled");
                                    resolve(false);
                               }
                          });
@@ -165,52 +154,26 @@ export function useCrud() {
 
                                    if (successCount > 0) {
                                         this.showToast("success", "Success",
-                                             successMessage || `${successCount} ` + this.$t("common.itemDeletedSuccessfully"));
+                                             successMessage || `${successCount} items deleted successfully`);
                                    }
 
                                    if (failCount > 0) {
                                         this.showToast("warn", "Partial Success",
-                                             `${successCount} deleted, ${failCount} ` + this.$t("common.failedToDeleteItem"));
+                                             `${successCount} deleted, ${failCount} failed`);
                                    }
 
                                    resolve({ successCount, failCount });
                               },
                               reject: () => {
-                                   this.showToast("info", "Cancelled", this.$t("common.deletionCancelled"));
+                                   this.showToast("info", "Cancelled", "Bulk deletion cancelled");
                                    resolve({ successCount: 0, failCount: 0 });
                               }
                          });
                     });
                },
 
-               async uploadFile(file) {
-                    try {
-                         const formData = new FormData();
-                         formData.append("file", file);
-
-                         const response = await this.$http.post(
-                              `${general_request.BASE_URL}/storage/file`,
-                              formData,
-                              {
-                                   headers: {
-                                        ...general_request.headers,
-                                        "Content-Type": "multipart/form-data",
-                                   },
-                              }
-                         );
-
-                         return response.data.data.id;
-                    } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUploadFile"));
-                         resolve(false);
-                    }
-               },
-
-               onFileSelect(event, key) {
-                    this[key] = event.files[0];
-               },
-
                handleCrudError(error, defaultMessage) {
+                    console.error('CRUD Error:', error);
 
                     if (error.response?.status === 422 && error.response.data.errors) {
                          this.formErrors = error.response.data.errors;
@@ -263,27 +226,6 @@ export function useCrud() {
                     this.formData = {};
                     this.formErrors = {};
                     this.selectedItem = null;
-
-
-                    this.selectedClient = null;
-                    this.selectedCountry = null;
-                    this.selectedGovernorate = null;
-                    this.selectedCity = null;
-                    this.selectedCurrency = null;
-                    this.logoFile = null;
-                    this.coverFile = null;
-               },
-
-               openModal() {
-                    this.visible = true;
-               },
-
-               closeModal() {
-                    this.visible = false;
-                    this.loading = false;
-                    this.formErrors = {};
-                    this.errors = {};
-                    this.resetForm();
                },
           }
      }

@@ -132,6 +132,21 @@ export default {
       default: () => ({}),
     },
   },
+
+  watch: {
+    selected_item: {
+      immediate: true,
+      deep: true,
+      handler(selectedItem) {
+        if (selectedItem && selectedItem.id) {
+          this.populateForm(selectedItem);
+        } else {
+          this.resetForm();
+        }
+      },
+    },
+  },
+
   data() {
     return {
       propMainUrl: moduleUrl.URLS.COUNTRY.propMainUrl,
@@ -148,19 +163,6 @@ export default {
     };
   },
 
-  watch: {
-    selected_item: {
-      immediate: true,
-      deep: true,
-      handler(selectedItem) {
-        if (selectedItem && selectedItem.id) {
-          this.populateForm(selectedItem);
-        } else {
-          this.resetForm();
-        }
-      },
-    },
-  },
   methods: {
     populateForm(selectedItem) {
       this.formData = {

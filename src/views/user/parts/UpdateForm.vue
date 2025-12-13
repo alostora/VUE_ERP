@@ -158,6 +158,21 @@ export default {
       default: () => ({}),
     },
   },
+
+  watch: {
+    selected_item: {
+      immediate: true,
+      deep: true,
+      handler(selectedItem) {
+        if (selectedItem && selectedItem.id) {
+          this.populateForm(selectedItem);
+        } else {
+          this.resetForm();
+        }
+      },
+    },
+  },
+
   data() {
     return {
       propMainUrl: moduleUrl.URLS.USER.propMainUrl,
@@ -173,20 +188,6 @@ export default {
         user_account_type_id: "",
       },
     };
-  },
-
-  watch: {
-    selected_item: {
-      immediate: true,
-      deep: true,
-      handler(selectedItem) {
-        if (selectedItem && selectedItem.id) {
-          this.populateForm(selectedItem);
-        } else {
-          this.resetForm();
-        }
-      },
-    },
   },
 
   mounted() {

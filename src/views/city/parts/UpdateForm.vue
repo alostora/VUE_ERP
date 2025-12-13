@@ -96,17 +96,6 @@ export default {
       default: () => ({}),
     },
   },
-  data() {
-    return {
-      propMainUrl: moduleUrl.URLS.CITY.propMainUrl,
-      countries: [],
-      formData: {
-        id: "",
-        name: "",
-        name_ar: "",
-      },
-    };
-  },
 
   watch: {
     selected_item: {
@@ -120,6 +109,18 @@ export default {
         }
       },
     },
+  },
+
+  data() {
+    return {
+      propMainUrl: moduleUrl.URLS.CITY.propMainUrl,
+      countries: [],
+      formData: {
+        id: "",
+        name: "",
+        name_ar: "",
+      },
+    };
   },
 
   mounted() {

@@ -4,9 +4,9 @@ import lookupTypes from "@/constants/lookupTypes";
 export default {
      URLS: {
           LOOK_UP: {
-               propSearchUrl: `${general_request.BASE_URL}/system-lookups/${lookupTypes.LOOKUP_TYPES.USER_ACCOUNT_TYPE}`,
-               propGetUrl: `${general_request.BASE_URL}/system-lookups/${lookupTypes.LOOKUP_TYPES.USER_ACCOUNT_TYPE}`,
-               propMainUrl: `${general_request.BASE_URL}/system-lookups/${lookupTypes.LOOKUP_TYPES.USER_ACCOUNT_TYPE}`,
+               propSearchUrl: `${general_request.BASE_URL}/system-lookups`,
+               propGetUrl: `${general_request.BASE_URL}/system-lookups`,
+               propMainUrl: `${general_request.BASE_URL}/system-lookups`,
           },
           USER: {
                propSearchUrl: `${general_request.BASE_URL}/admin/users/search`,
@@ -27,6 +27,16 @@ export default {
                propSearchUrl: `${general_request.BASE_URL}/admin/cities-search-all`,
                propGethUrl: `${general_request.BASE_URL}/admin/cities`,
                propMainUrl: `${general_request.BASE_URL}/admin/city`,
+          },
+          CLIENT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/clients/search`,
+               propGethUrl: `${general_request.BASE_URL}/admin/clients`,
+               propMainUrl: `${general_request.BASE_URL}/admin/client`,
+          },
+          COMPANY: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/companies/search`,
+               propGethUrl: `${general_request.BASE_URL}/admin/companies`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company`,
           },
      }
 }

@@ -111,18 +111,6 @@ export default {
       default: () => ({}),
     },
   },
-  data() {
-    return {
-      propMainUrl: moduleUrl.URLS.GOVERNORATE.propMainUrl,
-      countries: [],
-      formData: {
-        id: "",
-        name: "",
-        name_ar: "",
-        prefix: "",
-      },
-    };
-  },
 
   watch: {
     selected_item: {
@@ -136,6 +124,19 @@ export default {
         }
       },
     },
+  },
+
+  data() {
+    return {
+      propMainUrl: moduleUrl.URLS.GOVERNORATE.propMainUrl,
+      countries: [],
+      formData: {
+        id: "",
+        name: "",
+        name_ar: "",
+        prefix: "",
+      },
+    };
   },
 
   mounted() {
