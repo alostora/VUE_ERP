@@ -265,13 +265,6 @@ export default {
         this.$t("common.failedToDeleteItem")
       );
     },
-
-    viewCompany(company) {
-      this.$router.push({
-        name: "company-show",
-        params: { company_id: company.id },
-      });
-    },
   },
 };
 </script>

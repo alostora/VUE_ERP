@@ -1,16 +1,20 @@
 import Table from "../parts/Table.vue";
-/* import CompanyShow from "../parts/CompanyShow.vue";
-import category_routes from "../../category/routes/category_routes";
-import measurement_unit_routes from "../../measurement_unit/routes/measurement_unit_routes";
-import variant_routes from "../../variant/routes/variant_routes";
-import product_routes from "../../product/routes/product_routes";
-import final_product_routes from "../../final_product/routes/final_product_routes";
-import branch_routes from "../../branch/routes/branch_routes";
-import invoice_stage_routes from "../../invoice_stage/routes/invoice_stage_routes";
-import tax_routes from "../../tax/routes/tax_routes";
-import discount_routes from "../../discount/routes/discount_routes";
-import contact_routes from "../../contact/routes/contact_routes";
-import CompanyDetails from "../parts/CompanyDetails.vue"; */
+import Show from "../parts/Show.vue";
+import category_routes from "@/views/user/routes/routes";
+
+
+import measurement_unit_routes from "@/latest/model/measurement_unit/routes/measurement_unit_routes";
+import variant_routes from "@/latest/model/variant/routes/variant_routes";
+import product_routes from "@/latest/model/product/routes/product_routes";
+import final_product_routes from "@/latest/model/final_product/routes/final_product_routes";
+import branch_routes from "@/latest/model/branch/routes/branch_routes";
+import invoice_stage_routes from "@/latest/model/invoice_stage/routes/invoice_stage_routes";
+import tax_routes from "@/latest/model/tax/routes/tax_routes";
+import discount_routes from "@/latest/model/discount/routes/discount_routes";
+import contact_routes from "@/latest/model/contact/routes/contact_routes";
+
+
+import CompanyDetails from "../parts/details/CompanyDetails.vue";
 
 const routes = [
   {
@@ -19,13 +23,14 @@ const routes = [
     component: Table,
     props: true,
   },
-  /* {
+  {
     path: "/company/:company_id/show",
     name: "company-show",
-    component: CompanyShow,
+    component: Show,
     props: (route) => ({
       company_id: route.params.company_id
     }),
+
     redirect: { name: 'company-details' },
     children: [
       {
@@ -47,7 +52,7 @@ const routes = [
       ...tax_routes,
       ...discount_routes,
     ],
-  } */
+  }
 ];
 
 export default routes;

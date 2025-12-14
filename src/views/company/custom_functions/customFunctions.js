@@ -1,9 +1,10 @@
 export default {
      methods: {
-          viewCities(item) {
+
+          viewCompany(company) {
                this.$router.push({
-                    name: "cities",
-                    params: { governorate_id: item.id },
+                    name: "company-show",
+                    params: { company_id: company.id },
                });
           },
      }
