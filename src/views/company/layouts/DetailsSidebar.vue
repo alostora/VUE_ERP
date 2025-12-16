@@ -45,21 +45,6 @@
           </router-link>
         </div>
       </nav>
-
-      <div class="sidebar-footer" v-if="!collapsed && !isMobile">
-        <div class="company-stats">
-          <div class="stat-item">
-            <i class="pi pi-folder stat-icon"></i>
-            <span class="stat-value">12</span>
-            <span class="stat-label">{{ $t("companies.categories") }}</span>
-          </div>
-          <div class="stat-item">
-            <i class="pi pi-shopping-bag stat-icon"></i>
-            <span class="stat-value">156</span>
-            <span class="stat-label">{{ $t("companies.products") }}</span>
-          </div>
-        </div>
-      </div>
     </div>
   </aside>
 </template>
@@ -200,7 +185,6 @@ export default {
 .sidebar-content {
   display: flex;
   flex-direction: column;
-  height: 100%;
   padding: 1rem 0;
   background: var(--surface-card);
   position: relative;

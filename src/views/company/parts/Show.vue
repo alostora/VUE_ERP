@@ -44,7 +44,7 @@
           />
         </div>
 
-        <div v-else-if="company.id" class="main-content-wrapper">
+        <div v-else-if="company.id" class="main-content-wrapper mt-8">
           <RouterView :company="company" :company_id="company_id" />
         </div>
       </main>
