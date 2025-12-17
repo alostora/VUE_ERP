@@ -15,12 +15,12 @@
         class="details-sidebar"
         :class="{ collapsed: detailsSidebarCollapsed }"
       >
-        <DetailsSidebar
-          :company="company"
-          :collapsed="detailsSidebarCollapsed"
+        <AppSidebar
+          :collapsed="sidebarCollapsed"
+          :sidebar-items="navItems"
           :position="currentDirection"
           :is-mobile="isMobile"
-          @toggle="toggleDetailsSidebar"
+          @toggle="toggleAppSidebar"
         />
       </div>
 
@@ -44,7 +44,7 @@
           />
         </div>
 
-        <div v-else-if="company.id" class="main-content-wrapper mt-4">
+        <div v-else-if="company.id" class="main-content-wrapper mt-1">
           <RouterView :company="company" :company_id="company_id" />
         </div>
       </main>
@@ -67,23 +67,25 @@ import customFunctions from "../custom_functions/customFunctions";
 import general_request from "@/utils/general_request";
 
 import DetailsHeader from "../layouts/DetailsHeader.vue";
-import DetailsSidebar from "../layouts/DetailsSidebar.vue";
 import UpdateForm from "./UpdateForm.vue";
 
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
 import Message from "primevue/message";
 
+import AppSidebar from "@/views/_main_container/layouts/MVVMSidebar.vue";
+import sidebarItems from "@/utils/sidebarItems";
+
 export default {
   name: "CompanyShow",
   components: {
     RouterView,
     DetailsHeader,
-    DetailsSidebar,
     UpdateForm,
     Button,
     ProgressSpinner,
     Message,
+    AppSidebar,
   },
 
   mixins: [useTable(), useCrud(), customFunctions],
@@ -101,6 +103,7 @@ export default {
       loading: false,
       error: "",
       detailsSidebarCollapsed: false,
+      sidebarCollapsed: false,
       isMobile: false,
       currentLanguage: localStorage.getItem("language") || "en",
       selectedItem: null,
@@ -119,6 +122,11 @@ export default {
         "details-mobile": this.isMobile,
       };
     },
+
+    navItems() {
+      const items = sidebarItems("company", this.company_id);
+      return items || [];
+    },
   },
 
   watch: {
@@ -134,6 +142,10 @@ export default {
   },
 
   mounted() {
+    console.log("CompanyShow component mounted");
+    console.log("Company ID:", this.company_id);
+    console.log("Route params:", this.$route.params);
+
     this.fetchCompany();
     this.checkMobile();
     this.setupLanguageListener();
@@ -214,6 +226,10 @@ export default {
       });
     },
 
+    toggleAppSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed;
+    },
+
     showToast(severity, summary, detail) {
       if (this.$toast) {
         this.$toast.add({
@@ -230,51 +246,52 @@ export default {
 
 <style scoped>
 .details-show-page {
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
   background: var(--surface-ground);
+  display: flex;
+  flex-direction: column;
 }
 
 .details-header {
   background: var(--surface-card);
-  align-items: center;
   position: sticky;
-  z-index: 1;
+  top: 0;
+  z-index: 1000;
   width: 100%;
+  border-bottom: 1px solid var(--surface-border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .layout-container {
   display: flex;
-  height: calc(100vh - 124px);
+  flex: 1;
+  min-height: calc(100vh - 64px);
+  position: relative;
 }
 
 .details-sidebar {
-  top: 124px;
   width: 280px;
   flex-shrink: 0;
-  background: var(--surface-card);
-  border-right: 1px solid var(--surface-border);
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: calc(100vh - 64px);
   position: sticky;
-  height: calc(100vh - 124px);
+  top: 64px;
+  z-index: 50;
+  transition: width 0.3s ease;
+  overflow: hidden;
 }
 
-/* 
-     .details-sidebar {
-     top: 124px; 
-     width: 280px;
-     flex-shrink: 0;
-     background: var(--surface-card);
-     border-right: 1px solid var(--surface-border);
-     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-     top: 124px; 
-     height: calc(100vh - 124px);
-     position: fixed;
-     z-index: 900;
-     }
-*/
-
 .details-sidebar.collapsed {
-  width: 70px;
+  width: 66px;
+}
+
+/* Make AppSidebar fill its container */
+.details-sidebar :deep(.app-sidebar) {
+  height: 100% !important;
+  width: 100% !important;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+  border-right: 1px solid var(--surface-border);
 }
 
 .details-rtl .details-sidebar {
@@ -282,28 +299,21 @@ export default {
   border-left: 1px solid var(--surface-border);
 }
 
+.details-rtl .details-sidebar :deep(.app-sidebar) {
+  border-right: none;
+  border-left: 1px solid var(--surface-border);
+}
+
 .details-content {
   flex: 1;
-  height: calc(100vh - 124px);
+  height: calc(100vh - 64px);
   padding: 1.5rem;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+  background: var(--surface-ground);
 }
 
-.details-ltr .details-content {
-  margin-left: 0px;
-}
-
-.details-ltr .details-content.sidebar-collapsed {
-  margin-left: 10px;
-}
-
-.details-rtl .details-content {
-  margin-right: 0px;
-}
-
-.details-rtl .details-content.sidebar-collapsed {
-  margin-right: 10px;
-}
+/* LTR Layout */
 
 .main-content-wrapper {
   width: 100%;
@@ -326,22 +336,31 @@ export default {
 
 @media (max-width: 768px) {
   .details-show-page {
-    min-height: calc(100vh - 56px);
+    min-height: 100vh;
+  }
+
+  .details-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 56px;
   }
 
   .layout-container {
-    min-height: calc(100vh - 106px);
+    min-height: 100vh;
+    margin-top: 56px;
   }
 
   .details-sidebar {
     position: fixed;
-    top: 0px;
+    top: 56px;
     left: 0;
     bottom: 0;
     z-index: 100;
     transform: translateX(-100%);
     width: 280px !important;
-    height: calc(100vh - 0px);
+    height: calc(100vh - 56px);
+    transition: transform 0.3s ease;
   }
 
   .details-sidebar:not(.collapsed) {
@@ -362,7 +381,19 @@ export default {
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding: 1rem;
-    height: calc(100vh - 106px);
+    height: calc(100vh - 56px);
+  }
+
+  /* Add overlay when sidebar is open */
+  .details-sidebar:not(.collapsed) + .details-content::before {
+    content: "";
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 90;
   }
 
   .main-content-wrapper {
@@ -380,20 +411,20 @@ export default {
     width: 70px;
   }
 
-  .details-ltr .details-content {
-    margin-left: 0px;
+  .details-ltr .details-content:not(.sidebar-collapsed) {
+    margin-left: 240px;
   }
 
   .details-ltr .details-content.sidebar-collapsed {
-    margin-left: 0px;
+    margin-left: 70px;
   }
 
-  .details-rtl .details-content {
-    margin-right: 0px;
+  .details-rtl .details-content:not(.sidebar-collapsed) {
+    margin-right: 240px;
   }
 
   .details-rtl .details-content.sidebar-collapsed {
-    margin-right: 0px;
+    margin-right: 70px;
   }
 }
 
@@ -414,5 +445,10 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Debug styles */
+.debug-border {
+  border: 2px solid red !important;
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="app-layout" :class="layoutClasses">
+  <div class="app-layout min-h-screen">
     <!-- Header -->
     <AppHeader
       @toggle-sidebar="toggleSidebar"
@@ -12,22 +12,27 @@
     <!-- Mobile Overlay -->
     <div
       v-if="isMobile && !sidebarCollapsed"
-      class="mobile-overlay"
-      @click="toggleSidebar"
-    ></div>
+      class="mobile-overlay fixed top-0 left-0 w-full h-full bg-black-alpha-40 z-4"
+      @click="sidebarCollapsed = true"
+    />
 
-    <div class="layout-container">
+    <div class="layout-container flex">
       <!-- Sidebar -->
       <AppSidebar
         :collapsed="sidebarCollapsed"
+        :sidebar-items="navItems"
         :position="currentDirection"
         :is-mobile="isMobile"
-        @toggle="toggleSidebar"
+        @toggle="sidebarCollapsed = !sidebarCollapsed"
       />
 
       <!-- Main Content -->
-      <main class="main-content" :class="contentClasses">
-        <div class="content-wrapper">
+      <main
+        class="main-content flex-1 overflow-auto"
+        :class="contentClasses"
+        :style="mainContentStyle"
+      >
+        <div class="mt-1">
           <RouterView />
         </div>
       </main>
@@ -44,6 +49,7 @@ import AppHeader from "./layouts/MVVMMainHeader.vue";
 import AppSidebar from "./layouts/MVVMSidebar.vue";
 import Toast from "primevue/toast";
 import ConfirmDialog from "primevue/confirmdialog";
+import sidebarItems from "@/utils/sidebarItems";
 
 export default {
   name: "HomePage",
@@ -65,76 +71,67 @@ export default {
     };
   },
   computed: {
-    layoutClasses() {
-      return {
-        "layout-ltr": this.currentDirection === "ltr",
-        "layout-rtl": this.currentDirection === "rtl",
-        "mobile-layout": this.isMobile,
-      };
+    navItems() {
+      return sidebarItems("homePage");
     },
-    contentClasses() {
-      return {
-        "content-expanded": this.sidebarCollapsed && !this.isMobile,
-        "mobile-content": this.isMobile,
-        "sidebar-open": this.isMobile && !this.sidebarCollapsed,
-      };
+    mainContentStyle() {
+      if (this.isMobile) {
+        return {
+          width: "100%",
+          marginLeft: "0",
+          marginRight: "0",
+        };
+      }
+
+      // Desktop: Calculate dynamic width based on sidebar state
+      const sidebarWidth = this.sidebarCollapsed ? 70 : 280; // px
+
+      if (this.currentDirection === "ltr") {
+        return {
+          width: `calc(100% - ${sidebarWidth}px)`,
+          marginLeft: `${sidebarWidth}px`,
+          marginRight: "0",
+        };
+      } else {
+        return {
+          width: `calc(100% - ${sidebarWidth}px)`,
+          marginLeft: "0",
+          marginRight: `${sidebarWidth}px`,
+        };
+      }
     },
   },
   methods: {
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
-
-      // Prevent body scrolling when sidebar is open on mobile
-      if (this.isMobile) {
-        if (!this.sidebarCollapsed) {
-          document.body.style.overflow = "hidden";
-        } else {
-          document.body.style.overflow = "";
-        }
-      }
     },
-
     onLanguageChanged(language) {
       this.currentDirection = language.dir;
       document.documentElement.dir = language.dir;
       document.documentElement.lang = language.code;
-
-      // Update i18n locale
-      this.$i18n.locale = language.code;
     },
-
     onThemeChanged(theme) {
-      this.currentTheme = theme;
       document.documentElement.classList.remove("light-mode", "dark-mode");
-      document.documentElement.classList.add(theme + "-mode");
+      document.documentElement.classList.add(`${theme}-mode`);
     },
-
     checkMobile() {
-      const width = window.innerWidth;
-      this.isMobile = width <= 768;
-
-      // Auto-collapse sidebar on mobile
+      this.isMobile = window.innerWidth <= 768;
       if (this.isMobile) {
         this.sidebarCollapsed = true;
       }
     },
-
     handleResize() {
       clearTimeout(this.resizeTimeout);
-      this.resizeTimeout = setTimeout(() => {
-        this.checkMobile();
-      }, 100);
+      this.resizeTimeout = setTimeout(this.checkMobile, 100);
     },
   },
   mounted() {
     this.checkMobile();
     window.addEventListener("resize", this.handleResize);
 
-    // Set initial theme
     const savedTheme = localStorage.getItem("theme") || "light";
-    document.documentElement.classList.add(savedTheme + "-mode");
+    document.documentElement.classList.add(`${savedTheme}-mode`);
 
-    // Set initial language direction
     const savedLang = localStorage.getItem("language") || "en";
     document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = savedLang;
@@ -147,7 +144,35 @@ export default {
 </script>
 
 <style scoped>
-/* Base Layout */
+.main-content {
+  position: fixed;
+  width: 87%;
+  flex: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface-ground);
+  min-height: 100%;
+}
+
+.layout-ltr:not(.mobile-layout) .main-content {
+  margin-left: 280px;
+  width: calc(100% - 280px);
+}
+
+.layout-ltr:not(.mobile-layout) .main-content.content-expanded {
+  margin-left: 70px;
+  width: calc(100% - 70px);
+}
+
+.layout-rtl:not(.mobile-layout) .main-content {
+  margin-right: 280px;
+  width: calc(100% - 280px);
+}
+
+.layout-rtl:not(.mobile-layout) .main-content.content-expanded {
+  margin-right: 70px;
+  width: calc(100% - 70px);
+}
+/* 
 .app-layout {
   min-height: 100vh;
   background: var(--surface-ground);
@@ -159,46 +184,13 @@ export default {
   position: relative;
 }
 
-/* Main Content */
-.main-content {
-  flex: 1;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--surface-ground);
-  min-height: 100%;
-}
-
-/* Desktop - LTR */
-.layout-ltr:not(.mobile-layout) .main-content {
-  margin-left: 280px;
-  width: calc(100% - 280px);
-}
-
-.layout-ltr:not(.mobile-layout) .main-content.content-expanded {
-  margin-left: 70px;
-  width: calc(100% - 70px);
-}
-
-/* Desktop - RTL */
-.layout-rtl:not(.mobile-layout) .main-content {
-  margin-right: 280px;
-  width: calc(100% - 280px);
-}
-
-.layout-rtl:not(.mobile-layout) .main-content.content-expanded {
-  margin-right: 70px;
-  width: calc(100% - 70px);
-}
-
-/* Content Wrapper */
 .content-wrapper {
   padding: 1.5rem;
-  /*  max-width: 1600px; */
   margin: 0 auto;
   width: 100%;
-  min-height: calc(100vh - 64px - 3rem); /* Viewport - header - padding */
+  min-height: calc(100vh - 64px - 3rem);
 }
 
-/* Mobile Overlay */
 .mobile-overlay {
   position: fixed;
   top: 0;
@@ -210,8 +202,7 @@ export default {
   z-index: 99;
   animation: fadeIn 0.2s ease;
 }
-
-/* Mobile & Tablet Styles */
+ */
 @media (max-width: 768px) {
   .mobile-layout {
     overflow-x: hidden;
@@ -225,7 +216,6 @@ export default {
     transition: transform 0.3s ease;
   }
 
-  /* When sidebar is open, shift content */
   .sidebar-open .main-content {
     transform: translateX(280px);
   }
@@ -236,11 +226,10 @@ export default {
 
   .content-wrapper {
     padding: 1rem;
-    min-height: calc(100vh - 56px - 2rem); /* Mobile header - padding */
+    min-height: calc(100vh - 56px - 2rem);
   }
 }
 
-/* Small Mobile */
 @media (max-width: 480px) {
   .content-wrapper {
     padding: 0.75rem;
@@ -256,7 +245,6 @@ export default {
   }
 }
 
-/* Print Styles */
 @media print {
   .app-header,
   .app-sidebar {

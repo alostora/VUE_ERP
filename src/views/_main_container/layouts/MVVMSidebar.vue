@@ -34,7 +34,7 @@
       <!-- Navigation -->
       <nav class="sidebar-nav">
         <div
-          v-for="item in navItems"
+          v-for="item in sidebarItems"
           :key="item.label"
           class="nav-item-wrapper"
         >
@@ -90,6 +90,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    sidebarItems: {
+      type: Array,
+      default: () => [],
+    },
   },
   emits: ["toggle"],
   computed: {
@@ -98,24 +102,6 @@ export default {
         return this.collapsed ? "0px" : "280px";
       }
       return this.collapsed ? "70px" : "280px";
-    },
-    navItems() {
-      return [
-        { label: "menu.home", icon: "pi pi-home", route: "/" },
-        { label: "menu.users", icon: "pi pi-users", route: "/users" },
-        { label: "menu.countries", icon: "pi pi-flag", route: "/countries" },
-        {
-          label: "menu.governorates",
-          icon: "pi pi-map",
-          route: "/governorates",
-        },
-        { label: "menu.cities", icon: "pi pi-building", route: "/cities" },
-        {
-          label: "menu.companies",
-          icon: "pi pi-briefcase",
-          route: "/companies",
-        },
-      ];
     },
   },
 };

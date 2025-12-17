@@ -1078,6 +1078,37 @@
 .hide-on-mobile {
   display: none !important;
 }
+
+/* --------------------------------------------------- */
+/* 14. PRIMEVUE INTEGRATION - UNIVERSAL */
+/* --------------------------------------------------- */
+
+/* PrimeVue DataTable integration */
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+  white-space: nowrap;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+  vertical-align: middle;
+}
+
+/* --------------------------------------------------- */
+/* PRIMEVUE DATATABLE ENHANCEMENTS - UNIVERSAL */
+/* --------------------------------------------------- */
+
+:deep(.p-datatable .p-sortable-column:hover) {
+  background-color: var(--surface-hover);
+}
+
+:deep(.p-datatable .p-sortable-column.p-highlight) {
+  background-color: var(--primary-color);
+  color: var(--primary-color-text);
+}
+
+:deep(.p-datatable .p-sortable-column.p-highlight:hover) {
+  background-color: var(--primary-color-dark);
+}
+
 @media (min-width: 769px) {
   .hide-on-mobile {
     display: table-cell !important;
@@ -1100,19 +1131,6 @@
   .show-on-mobile {
     display: none !important;
   }
-}
-
-/* --------------------------------------------------- */
-/* 14. PRIMEVUE INTEGRATION - UNIVERSAL */
-/* --------------------------------------------------- */
-
-/* PrimeVue DataTable integration */
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  white-space: nowrap;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr > td) {
-  vertical-align: middle;
 }
 
 /* --------------------------------------------------- */

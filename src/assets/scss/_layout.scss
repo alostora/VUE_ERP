@@ -891,3 +891,229 @@
     page-break-inside: avoid;
   }
 }
+
+// src/assets/scss/_layout.scss
+// Add this section after the existing container styles
+
+// ==================== PAGE CONTAINERS ====================
+
+// Base page container (used for ALL pages)
+.page-container {
+  width: 100%;
+  padding: 1.5rem;
+  margin-right: auto;
+  margin-left: auto;
+
+  @media (min-width: 576px) {
+    max-width: 540px;
+  }
+
+  @media (min-width: 768px) {
+    max-width: 720px;
+  }
+
+  @media (min-width: 992px) {
+    max-width: 960px;
+  }
+
+  @media (min-width: 1200px) {
+    max-width: 1140px;
+  }
+
+  @media (min-width: 1400px) {
+    max-width: 1320px;
+  }
+}
+
+// Fluid page container (full width with padding)
+.page-container-fluid {
+  width: 100%;
+  padding: 1.5rem;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+// Page header (for all pages)
+.page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+
+  .page-title {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-color);
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .page-subtitle {
+    margin: 0;
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+}
+
+// Page content wrapper (for all pages)
+.page-content {
+  padding: 1rem 0;
+}
+
+// Page card wrapper (for card-based pages)
+.page-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+// Page section (for grouped content)
+.page-section {
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Page actions (for action buttons at bottom)
+.page-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+// Page loading state
+.page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+
+  .loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid var(--surface-border);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+
+  .loading-text {
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+  }
+}
+
+// Page empty state
+.page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 4rem;
+    color: var(--text-color-secondary);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+  }
+
+  .empty-title {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .empty-description {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-color-secondary);
+    font-size: 1rem;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+}
+
+// ==================== RESPONSIVE PAGE CONTAINERS ====================
+
+@media (max-width: 768px) {
+  .page-container,
+  .page-container-fluid {
+    padding: 1rem;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+    }
+  }
+
+  .page-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .page-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container,
+  .page-container-fluid {
+    padding: 0.75rem;
+  }
+
+  .page-header .page-title {
+    font-size: 1.25rem;
+  }
+
+  .page-card {
+    padding: 0.75rem;
+  }
+}
+
+// ==================== DARK MODE ====================
+
+.dark-mode {
+  .page-card {
+    background: var(--surface-800);
+    border-color: var(--surface-700);
+  }
+
+  .page-header {
+    border-color: var(--surface-700);
+  }
+
+  .page-actions {
+    border-color: var(--surface-700);
+  }
+
+  .page-loading .loading-spinner {
+    border-color: var(--surface-700);
+    border-top-color: var(--primary-color);
+  }
+
+  .page-empty .empty-icon {
+    color: var(--text-color-secondary);
+  }
+}
