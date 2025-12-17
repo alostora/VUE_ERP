@@ -44,7 +44,7 @@
           />
         </div>
 
-        <div v-else-if="company.id" class="main-content-wrapper mt-8">
+        <div v-else-if="company.id" class="main-content-wrapper mt-4">
           <RouterView :company="company" :company_id="company_id" />
         </div>
       </main>
@@ -237,7 +237,7 @@ export default {
 .details-header {
   background: var(--surface-card);
   align-items: center;
-  position: fixed;
+  position: sticky;
   z-index: 1;
   width: 100%;
 }
@@ -254,24 +254,10 @@ export default {
   background: var(--surface-card);
   border-right: 1px solid var(--surface-border);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: sticky;
   height: calc(100vh - 124px);
+  position: sticky;
+  z-index: 900;
 }
-
-/* 
-     .details-sidebar {
-     top: 124px; 
-     width: 280px;
-     flex-shrink: 0;
-     background: var(--surface-card);
-     border-right: 1px solid var(--surface-border);
-     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-     top: 124px; 
-     height: calc(100vh - 124px);
-     position: fixed;
-     z-index: 900;
-     }
-*/
 
 .details-sidebar.collapsed {
   width: 70px;
@@ -381,19 +367,19 @@ export default {
   }
 
   .details-ltr .details-content {
-    margin-left: 240px;
+    margin-left: 0px;
   }
 
   .details-ltr .details-content.sidebar-collapsed {
-    margin-left: 70px;
+    margin-left: 0px;
   }
 
   .details-rtl .details-content {
-    margin-right: 240px;
+    margin-right: 0px;
   }
 
   .details-rtl .details-content.sidebar-collapsed {
-    margin-right: 70px;
+    margin-right: 0px;
   }
 }
 

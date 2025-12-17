@@ -29,16 +29,6 @@
         />
 
         <!-- Collapse Toggle for Desktop -->
-        <Button
-          v-if="!isMobile"
-          :icon="collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"
-          @click="$emit('toggle')"
-          text
-          rounded
-          severity="secondary"
-          size="small"
-          class="collapse-btn"
-        />
       </div>
 
       <!-- Navigation -->
@@ -366,7 +356,7 @@ export default {
 
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.1s ease;
 }
 
 .fade-slide-enter-from,

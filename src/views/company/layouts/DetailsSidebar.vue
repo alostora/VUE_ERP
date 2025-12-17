@@ -1,45 +1,65 @@
 <template>
   <aside
-    class="company-sidebar"
+    class="app-sidebar"
     :class="[position, { collapsed: collapsed, mobile: isMobile }]"
+    :style="{ width: sidebarWidth }"
   >
-    <div class="sidebar-content">
+    <div class="sidebar-container">
       <!-- Header -->
-      <div class="sidebar-header" v-if="!collapsed">
+      <div class="sidebar-header">
         <div class="sidebar-brand">
-          <i class="pi pi-building brand-icon"></i>
-          <span class="brand-text">{{ company.name }}</span>
+          <div class="brand-icon">
+            <i class="pi pi-shield"></i>
+          </div>
+          <transition name="fade-slide">
+            <span v-if="!collapsed" class="brand-text">ERP System</span>
+          </transition>
         </div>
 
-        <!-- Close button for mobile -->
+        <!-- Close Button for Mobile -->
         <Button
           v-if="isMobile && !collapsed"
           icon="pi pi-times"
           @click="$emit('toggle')"
           text
           rounded
+          severity="secondary"
+          size="small"
           class="close-btn"
-          v-tooltip="'Close'"
         />
+
+        <!-- Collapse Toggle for Desktop -->
       </div>
 
+      <!-- Navigation -->
       <nav class="sidebar-nav">
-        <div v-for="item in items" :key="item.label" class="nav-item-wrapper">
+        <div
+          v-for="item in navItems"
+          :key="item.label"
+          class="nav-item-wrapper"
+        >
           <router-link
             v-if="item.route"
-            v-slot="{ isActive }"
+            v-slot="{ isActive, navigate }"
             :to="item.route"
             custom
           >
             <div
               class="nav-item"
               :class="{ active: isActive, collapsed: collapsed }"
-              @click="handleNavigation(item.route)"
+              @click="navigate"
+              @keyup.enter="navigate"
+              role="button"
+              tabindex="0"
             >
               <div class="nav-icon">
                 <i :class="item.icon"></i>
               </div>
-              <span class="nav-label">{{ $t(item.label) }}</span>
+              <transition name="fade">
+                <span class="nav-label" v-if="!collapsed">{{
+                  $t(item.label)
+                }}</span>
+              </transition>
               <div class="active-indicator" v-if="isActive && !collapsed"></div>
             </div>
           </router-link>
@@ -76,9 +96,18 @@ export default {
     },
   },
   emits: ["toggle"],
+  computed: {
+    sidebarWidth() {
+      if (this.isMobile) {
+        return this.collapsed ? "0px" : "280px";
+      }
+      return this.collapsed ? "70px" : "280px";
+    },
+  },
+
   data() {
     return {
-      items: [
+      navItems: [
         {
           label: "companies.companyDetails",
           icon: "pi pi-building",
@@ -158,16 +187,15 @@ export default {
 </script>
 
 <style scoped>
-/* Base Styles */
-.company-sidebar {
-  width: 280px;
-  height: calc(100vh - 70px);
+/* Base Sidebar */
+.app-sidebar {
+  height: calc(100vh - 64px);
   background: var(--surface-card);
-  position: absolute;
-  top: 70px;
+  position: sticky;
+  top: 64px;
   left: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 700;
+  z-index: 50;
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--surface-border);
@@ -175,87 +203,19 @@ export default {
 }
 
 /* RTL Support */
-.company-sidebar.rtl {
+.app-sidebar.rtl {
   left: auto;
   right: 0;
   border-right: none;
   border-left: 1px solid var(--surface-border);
 }
 
-.sidebar-content {
+.sidebar-container {
   display: flex;
   flex-direction: column;
+  height: 100%;
   padding: 1rem 0;
   background: var(--surface-card);
-  position: relative;
-  z-index: 701;
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-  .company-sidebar {
-    height: 100vh;
-    top: 0;
-    width: 280px !important;
-    z-index: 900;
-    box-shadow: none;
-    transform: translateX(-100%);
-  }
-
-  .company-sidebar.rtl {
-    transform: translateX(100%);
-  }
-
-  .company-sidebar:not(.collapsed):not(.rtl) {
-    transform: translateX(0);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
-  }
-
-  .company-sidebar:not(.collapsed).rtl {
-    transform: translateX(0);
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
-  }
-
-  .company-sidebar.collapsed:not(.rtl) {
-    transform: translateX(-100%);
-  }
-  .company-sidebar.collapsed.rtl {
-    transform: translateX(100%);
-  }
-
-  .close-btn {
-    display: block !important;
-  }
-}
-
-/* Desktop Collapsed State */
-@media (min-width: 769px) {
-  .company-sidebar.collapsed {
-    width: 70px;
-  }
-
-  .company-sidebar.collapsed .nav-item {
-    padding: 0.75rem;
-    justify-content: center;
-  }
-
-  .company-sidebar.collapsed .nav-icon {
-    margin: 0;
-  }
-
-  .company-sidebar.collapsed .nav-label {
-    opacity: 0;
-    width: 0;
-    overflow: hidden;
-  }
-
-  .company-sidebar.collapsed .active-indicator {
-    display: none;
-  }
-
-  .close-btn {
-    display: none !important;
-  }
 }
 
 /* Sidebar Header */
@@ -275,18 +235,26 @@ export default {
 }
 
 .brand-icon {
-  color: var(--primary-500);
-  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-info));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.brand-icon i {
+  color: white;
+  font-size: 1.25rem;
 }
 
 .brand-text {
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--text-color);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
 }
 
 /* Navigation */
@@ -296,6 +264,7 @@ export default {
   flex-direction: column;
   gap: 0.25rem;
   padding: 0 0.75rem;
+  overflow-y: auto;
 }
 
 .nav-item {
@@ -308,15 +277,17 @@ export default {
   position: relative;
   color: var(--text-color-secondary);
   text-decoration: none;
+  outline: none;
+  min-height: 44px;
 }
 
-.nav-item:hover:not(.disabled) {
+.nav-item:hover {
   background: var(--surface-hover);
   color: var(--text-color);
   transform: translateX(4px);
 }
 
-.rtl .nav-item:hover:not(.disabled) {
+.rtl .nav-item:hover {
   transform: translateX(-4px);
 }
 
@@ -324,11 +295,6 @@ export default {
   background: var(--primary-50);
   color: var(--primary-600);
   font-weight: 500;
-}
-
-.nav-item.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .dark-mode .nav-item.active {
@@ -344,6 +310,7 @@ export default {
   justify-content: center;
   margin-right: 0.75rem;
   flex-shrink: 0;
+  font-size: 1.125rem;
 }
 
 .rtl .nav-icon {
@@ -355,6 +322,7 @@ export default {
   transition: all 0.3s ease;
   white-space: nowrap;
   flex: 1;
+  font-size: 0.9375rem;
 }
 
 .active-indicator {
@@ -362,7 +330,7 @@ export default {
   right: 0.5rem;
   width: 4px;
   height: 20px;
-  background: var(--primary-500);
+  background: var(--color-primary);
   border-radius: 2px;
 }
 
@@ -371,73 +339,99 @@ export default {
   left: 0.5rem;
 }
 
-/* Footer with Stats */
-.sidebar-footer {
-  padding: 1rem 1.5rem 0;
-  border-top: 1px solid var(--surface-border);
-  margin-top: auto;
+/* Close & Collapse Buttons */
+.close-btn,
+.collapse-btn {
+  width: 32px;
+  height: 32px;
 }
 
-.company-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 6px;
-  background: var(--surface-ground);
-}
-
-.stat-icon {
-  color: var(--primary-500);
-  font-size: 1rem;
-}
-
-.stat-value {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  color: var(--text-color-secondary);
-  margin-left: auto;
-}
-
-/* Smooth animations */
-.company-sidebar * {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Tablet Responsive */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .company-sidebar:not(.collapsed) {
-    width: 240px;
-  }
-
-  .brand-text {
-    max-width: 120px;
-  }
-}
-
-/* Mobile Navigation Items */
+/* Mobile Styles */
 @media (max-width: 768px) {
-  .nav-item {
-    min-height: 44px;
+  .app-sidebar {
+    height: 100vh;
+    top: 0;
+    width: 280px !important;
+    z-index: 1000;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+    transform: translateX(-100%);
   }
 
-  .nav-label {
-    font-size: 0.95rem;
+  .app-sidebar.rtl {
+    transform: translateX(100%);
   }
 
-  .sidebar-nav {
-    gap: 0.5rem;
-    padding: 0 1rem;
+  .app-sidebar:not(.collapsed) {
+    transform: translateX(0);
   }
+
+  .app-sidebar.rtl:not(.collapsed) {
+    transform: translateX(0);
+  }
+
+  .close-btn {
+    display: flex !important;
+  }
+
+  .collapse-btn {
+    display: none !important;
+  }
+}
+
+/* Desktop Collapsed State */
+@media (min-width: 769px) {
+  .app-sidebar.collapsed {
+    width: 70px;
+  }
+
+  .app-sidebar.collapsed .nav-item {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+
+  .app-sidebar.collapsed .nav-icon {
+    margin: 0;
+  }
+
+  .app-sidebar.collapsed .nav-label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  .app-sidebar.collapsed .active-indicator {
+    display: none;
+  }
+
+  .close-btn {
+    display: none !important;
+  }
+}
+
+/* Animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.1s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.rtl .fade-slide-enter-from,
+.rtl .fade-slide-leave-to {
+  transform: translateX(10px);
 }
 </style>
