@@ -1,6 +1,6 @@
 import Table from "../parts/Table.vue";
 import Show from "../parts/Show.vue";
-import category_routes from "@/views/user/routes/routes";
+import category_routes from "@/latest/model/category/routes/category_routes";
 
 
 import measurement_unit_routes from "@/latest/model/measurement_unit/routes/measurement_unit_routes";
