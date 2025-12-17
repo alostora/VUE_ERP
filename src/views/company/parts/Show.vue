@@ -1,7 +1,7 @@
 <template>
   <div class="details-show-page" :class="layoutClasses">
     <div class="details-header">
-      <DetailsHeader
+      <MVVMMainHeader
         :company="company"
         :current-page="$route.name"
         @toggle-sidebar="toggleDetailsSidebar"
@@ -11,10 +11,7 @@
     </div>
 
     <div class="layout-container">
-      <div
-        class="details-sidebar"
-        :class="{ collapsed: detailsSidebarCollapsed }"
-      >
+      <div class="details-sidebar" :class="{ collapsed: sidebarCollapsed }">
         <AppSidebar
           :collapsed="sidebarCollapsed"
           :sidebar-items="navItems"
@@ -26,7 +23,7 @@
 
       <main
         class="details-content"
-        :class="{ 'sidebar-collapsed': detailsSidebarCollapsed }"
+        :class="{ 'sidebar-collapsed': sidebarCollapsed }"
       >
         <div v-if="loading" class="loading-container">
           <ProgressSpinner />
@@ -66,7 +63,7 @@ import { useCrud } from "@/utils/useCrud";
 import customFunctions from "../custom_functions/customFunctions";
 import general_request from "@/utils/general_request";
 
-import DetailsHeader from "../layouts/DetailsHeader.vue";
+import MVVMMainHeader from "@/views/_main_container/layouts/MVVMMainHeader.vue";
 import UpdateForm from "./UpdateForm.vue";
 
 import Button from "primevue/button";
@@ -80,7 +77,7 @@ export default {
   name: "CompanyShow",
   components: {
     RouterView,
-    DetailsHeader,
+    MVVMMainHeader,
     UpdateForm,
     Button,
     ProgressSpinner,
@@ -102,7 +99,7 @@ export default {
       company: {},
       loading: false,
       error: "",
-      detailsSidebarCollapsed: false,
+      sidebarCollapsed: false,
       sidebarCollapsed: false,
       isMobile: false,
       currentLanguage: localStorage.getItem("language") || "en",
@@ -193,7 +190,7 @@ export default {
     },
 
     toggleDetailsSidebar() {
-      this.detailsSidebarCollapsed = !this.detailsSidebarCollapsed;
+      this.sidebarCollapsed = !this.sidebarCollapsed;
     },
 
     goBackToCompanies() {
@@ -216,7 +213,7 @@ export default {
     checkMobile() {
       this.isMobile = window.innerWidth <= 768;
       if (this.isMobile) {
-        this.detailsSidebarCollapsed = true;
+        this.sidebarCollapsed = true;
       }
     },
 
@@ -356,7 +353,7 @@ export default {
     top: 56px;
     left: 0;
     bottom: 0;
-    z-index: 100;
+    z-index: 1000;
     transform: translateX(-100%);
     width: 280px !important;
     height: calc(100vh - 56px);
@@ -399,6 +396,10 @@ export default {
   .main-content-wrapper {
     padding: 0;
   }
+  
+  .details-header {
+    margin-top: 4rem; /* يعادل mt-8 (8 * 0.25rem = 2rem) */
+  }
 }
 
 /* Tablet */
@@ -408,23 +409,23 @@ export default {
   }
 
   .details-sidebar.collapsed {
-    width: 70px;
+    width: 0px;
   }
 
   .details-ltr .details-content:not(.sidebar-collapsed) {
-    margin-left: 240px;
+    margin-left: 0px;
   }
 
   .details-ltr .details-content.sidebar-collapsed {
-    margin-left: 70px;
+    margin-left: 0px;
   }
 
   .details-rtl .details-content:not(.sidebar-collapsed) {
-    margin-right: 240px;
+    margin-right: 0px;
   }
 
   .details-rtl .details-content.sidebar-collapsed {
-    margin-right: 70px;
+    margin-right: 0px;
   }
 }
 
