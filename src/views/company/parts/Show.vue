@@ -254,10 +254,24 @@ export default {
   background: var(--surface-card);
   border-right: 1px solid var(--surface-border);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  height: calc(100vh - 124px);
   position: sticky;
-  z-index: 900;
+  height: calc(100vh - 124px);
 }
+
+/* 
+     .details-sidebar {
+     top: 124px; 
+     width: 280px;
+     flex-shrink: 0;
+     background: var(--surface-card);
+     border-right: 1px solid var(--surface-border);
+     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+     top: 124px; 
+     height: calc(100vh - 124px);
+     position: fixed;
+     z-index: 900;
+     }
+*/
 
 .details-sidebar.collapsed {
   width: 70px;
