@@ -273,6 +273,7 @@ export default {
      }
 */
 
+/* 
 .details-sidebar.collapsed {
   width: 70px;
 }
@@ -280,7 +281,7 @@ export default {
 .details-rtl .details-sidebar {
   border-right: none;
   border-left: 1px solid var(--surface-border);
-}
+} */
 
 .details-content {
   flex: 1;
