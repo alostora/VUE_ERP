@@ -12,12 +12,12 @@
 
     <div class="layout-container">
       <div class="details-sidebar" :class="{ collapsed: sidebarCollapsed }">
-        <AppSidebar
+        <MVVMSidebar
           :collapsed="sidebarCollapsed"
           :sidebar-items="navItems"
           :position="currentDirection"
           :is-mobile="isMobile"
-          @toggle="toggleAppSidebar"
+          @toggle="toggleMVVMSidebar"
         />
       </div>
 
@@ -47,7 +47,6 @@
       </main>
     </div>
 
-    <!-- Update Form Modal -->
     <UpdateForm
       ref="updateModalForm"
       :selected_item="selectedItem"
@@ -70,7 +69,7 @@ import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
 import Message from "primevue/message";
 
-import AppSidebar from "@/views/_main_container/layouts/MVVMSidebar.vue";
+import MVVMSidebar from "@/views/_main_container/layouts/MVVMSidebar.vue";
 import sidebarItems from "@/utils/sidebarItems";
 
 export default {
@@ -82,7 +81,7 @@ export default {
     Button,
     ProgressSpinner,
     Message,
-    AppSidebar,
+    MVVMSidebar,
   },
 
   mixins: [useTable(), useCrud(), customFunctions],
@@ -223,7 +222,7 @@ export default {
       });
     },
 
-    toggleAppSidebar() {
+    toggleMVVMSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
     },
 
@@ -281,7 +280,6 @@ export default {
   width: 66px;
 }
 
-/* Make AppSidebar fill its container */
 .details-sidebar :deep(.app-sidebar) {
   height: 100% !important;
   width: 100% !important;
@@ -309,8 +307,6 @@ export default {
   transition: margin-left 0.3s ease;
   background: var(--surface-ground);
 }
-
-/* LTR Layout */
 
 .main-content-wrapper {
   width: 100%;
@@ -381,7 +377,6 @@ export default {
     height: calc(100vh - 56px);
   }
 
-  /* Add overlay when sidebar is open */
   .details-sidebar:not(.collapsed) + .details-content::before {
     content: "";
     position: fixed;
@@ -396,9 +391,9 @@ export default {
   .main-content-wrapper {
     padding: 0;
   }
-  
+
   .details-header {
-    margin-top: 4rem; /* يعادل mt-8 (8 * 0.25rem = 2rem) */
+    margin-top: 4rem;
   }
 }
 
@@ -429,14 +424,12 @@ export default {
   }
 }
 
-/* Small Mobile */
 @media (max-width: 576px) {
   .details-content {
     padding: 0.75rem;
   }
 }
 
-/* Animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -448,7 +441,6 @@ export default {
   }
 }
 
-/* Debug styles */
 .debug-border {
   border: 2px solid red !important;
 }

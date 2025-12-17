@@ -4,13 +4,14 @@ export function useCrud() {
      return {
           data() {
                return {
-                    visible: false,
-                    loading: false,
-                    selectedItem: null,
                     error: "",
                     errors: {},
                     formData: {},
                     formErrors: {},
+
+                    visible: false,
+                    loading: false,
+                    selectedItem: null,
 
                     //optional for some models
                     selectedClient: null,
@@ -18,6 +19,12 @@ export function useCrud() {
                     selectedGovernorate: null,
                     selectedCity: null,
                     selectedCurrency: null,
+
+                    //file states
+                    uploading: false,
+                    uploadProgress: 0,
+                    imagePreview: null,
+                    selectedFile: null,
                     logoFile: null,
                     coverFile: null
                }
@@ -184,6 +191,10 @@ export function useCrud() {
                },
 
                async uploadFile(file) {
+
+                    this.uploading = true;
+                    this.uploadProgress = 0;
+
                     try {
                          const formData = new FormData();
                          formData.append("file", file);
@@ -196,6 +207,13 @@ export function useCrud() {
                                         ...general_request.headers,
                                         "Content-Type": "multipart/form-data",
                                    },
+                                   onUploadProgress: (progressEvent) => {
+                                        if (progressEvent.total) {
+                                             this.uploadProgress = Math.round(
+                                                  (progressEvent.loaded * 100) / progressEvent.total
+                                             );
+                                        }
+                                   },
                               }
                          );
 
@@ -203,6 +221,9 @@ export function useCrud() {
                     } catch (error) {
                          this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUploadFile"));
                          resolve(false);
+                    } finally {
+                         this.uploading = false;
+                         this.uploadProgress = 0;
                     }
                },
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container-fluid">
+  <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
         <h1 class="table-title">{{ $t("companies.title") }}</h1>

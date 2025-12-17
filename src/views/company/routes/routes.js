@@ -1,6 +1,6 @@
 import Table from "../parts/Table.vue";
 import Show from "../parts/Show.vue";
-import category_routes from "@/latest/model/category/routes/category_routes";
+// import category_routes from "@/latest/model/category/routes/category_routes";
 
 
 import measurement_unit_routes from "@/latest/model/measurement_unit/routes/measurement_unit_routes";
@@ -13,6 +13,7 @@ import tax_routes from "@/latest/model/tax/routes/tax_routes";
 import discount_routes from "@/latest/model/discount/routes/discount_routes";
 import contact_routes from "@/latest/model/contact/routes/contact_routes";
 
+import category_routes from "@/views/category/routes/routes";
 
 import CompanyDetails from "../parts/details/CompanyDetails.vue";
 

@@ -52,7 +52,7 @@
           showGridlines
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="{first} to {last} of {totalRecords}"
-          class="data-table"
+          class="table-content"
           @page="handlePageChange"
         >
           <!-- ID Column -->

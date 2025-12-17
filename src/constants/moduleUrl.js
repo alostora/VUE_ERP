@@ -38,5 +38,10 @@ export default {
                propGethUrl: `${general_request.BASE_URL}/admin/companies`,
                propMainUrl: `${general_request.BASE_URL}/admin/company`,
           },
+          CATEGORY: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/categories/search`,
+               propGethUrl: `${general_request.BASE_URL}/admin/company/categories`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/category`,
+          },
      }
 }

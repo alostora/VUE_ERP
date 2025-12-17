@@ -1,14 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import HomePage from "@/views/_main_container/HomePage.vue";
 import LoginPage from "@/views/_main_container/LoginPage.vue";
+import HomePage from "@/views/_main_container/HomePage.vue";
+import MVVMContent from "../latest/views/layouts/MVVMContent.vue";
 import user_routes from "@/views/user/routes/routes";
 import country_routes from "@/views/country/routes/routes";
 import governorate_routes from "@/views/governorate/routes/routes";
 import city_routes from "@/views/city/routes/routes";
 import company_routes from "@/views/company/routes/routes";
 import branch_routes from "../latest/model/branch/routes/branch_routes";
-import MVVMContent from "../latest/views/layouts/MVVMContent.vue";
 
 
 const router = createRouter({

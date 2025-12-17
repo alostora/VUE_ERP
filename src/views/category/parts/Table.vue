@@ -7,17 +7,13 @@
           <Button
             :label="$t('categories.addCategory')"
             icon="pi pi-plus"
-            @click="createCategory"
+            @click="openCreateModel"
             class="p-button-primary"
           />
         </div>
       </div>
 
-      <!-- Filters -->
-      <div
-        class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
-      >
-        <!-- Search -->
+      <div class="table-filters">
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
@@ -28,18 +24,15 @@
           <i class="pi pi-search search-icon" />
         </div>
 
-        <!-- Per page select -->
-        <div class="flex items-center gap-2">
-          <Select
-            v-model="per_page"
-            :options="perPageOptions"
-            optionLabel="label"
-            optionValue="value"
-            :placeholder="$t('categories.show')"
-            @change="getData(propSearchUrl)"
-            class="w-10rem"
-          />
-        </div>
+        <Select
+          v-model="per_page"
+          :options="perPageOptions"
+          optionLabel="label"
+          optionValue="value"
+          :placeholder="$t('categories.show')"
+          @change="getData(propSearchUrl)"
+          class="w-10rem"
+        />
       </div>
 
       <DataTable
@@ -60,21 +53,13 @@
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <Column
-          field="id"
-          :header="$t('categories.id')"
-          style="min-width: 100px"
-        >
+        <Column field="id" :header="$t('categories.id')" class="col-identifier">
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
         </Column>
 
-        <Column
-          field="file"
-          :header="$t('categories.image')"
-          style="min-width: 80px"
-        >
+        <Column field="file" :header="$t('categories.image')" class="col-image">
           <template #body="slotProps">
             <img
               v-if="slotProps.data.file"
@@ -90,7 +75,7 @@
           field="name"
           :header="$t('categories.name')"
           sortable
-          style="min-width: 150px"
+          class="col-name"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name }}</span>
@@ -101,7 +86,7 @@
           field="name_ar"
           :header="$t('categories.nameAr')"
           sortable
-          style="min-width: 150px"
+          class="col-name"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name_ar }}</span>
@@ -112,7 +97,7 @@
           field="created_at"
           :header="$t('categories.createdAt')"
           sortable
-          style="min-width: 150px"
+          class="col-name"
         >
           <template #body="slotProps">
             {{ formatDate(slotProps.data.created_at) }}
@@ -122,7 +107,7 @@
         <Column
           :header="$t('categories.actions')"
           :exportable="false"
-          style="min-width: 200px"
+          class="col-actions"
         >
           <template #body="slotProps">
             <div class="flex gap-1">
@@ -143,21 +128,15 @@
         </Column>
       </DataTable>
 
-      <CategoryEditModal
-        ref="categoryEditModal"
-        :category="selectedItem"
-        :company_id="effectiveCompanyId"
-        @category-updated="handleCategoryUpdated"
+      <UpdateForm
+        ref="updateModalForm"
+        :selected_item="selectedItem"
+        @updated="handleUpdated"
       />
 
-      <CategoryCreateModal
-        ref="categoryCreateModal"
-        :company_id="effectiveCompanyId"
-        @category-created="handleCategoryCreated"
-      />
+      <CreateForm ref="createModalForm" @created="handleCreated" />
 
       <Toast />
-      <ConfirmDialog />
     </div>
   </div>
 </template>
@@ -168,28 +147,33 @@ import Column from "primevue/column";
 import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 import Select from "primevue/select";
+import ProgressSpinner from "primevue/progressspinner";
 import Toast from "primevue/toast";
 import ConfirmDialog from "primevue/confirmdialog";
 import Tooltip from "primevue/tooltip";
 
-import CategoryCreateModal from "./CategoryCreateModal.vue";
-import CategoryEditModal from "./CategoryEditModal.vue";
+import CreateForm from "./CreateForm.vue";
+import UpdateForm from "./UpdateForm.vue";
 
-import { useTable } from "../../../views/layouts/constants/composables/useTable";
-import { useCrud } from "../../../views/layouts/constants/composables/useCrud";
-import general_request from "../../../views/layouts/constants/general_request";
+import { useTable } from "@/utils/useTable";
+import { useCrud } from "@/utils/useCrud";
+import moduleUrl from "@/constants/moduleUrl";
+import customFunctions from "../custom_functions/customFunctions";
 
 export default {
-  name: "CategoryTable",
+  name: "Table",
+
+  mixins: [useTable(), useCrud(), customFunctions],
 
   components: {
-    CategoryCreateModal,
-    CategoryEditModal,
+    CreateForm,
+    UpdateForm,
     DataTable,
     Column,
     InputText,
     Button,
     Select,
+    ProgressSpinner,
     Toast,
     ConfirmDialog,
   },
@@ -205,70 +189,59 @@ export default {
     },
   },
 
-  mixins: [useTable(), useCrud()],
-
-  computed: {
-    effectiveCompanyId() {
-      const companyId = this.company_id || this.$route.params.company_id;
-      return companyId;
-    },
-
-    propSearchUrl() {
-      if (!this.effectiveCompanyId) {
-        return "";
-      }
-      return `${general_request.BASE_URL}/admin/company/categories/${this.effectiveCompanyId}?paginate=true`;
-    },
-
-    propMainUrl() {
-      return `${general_request.BASE_URL}/admin/company/category`;
-    },
-  },
-
-  mounted() {
-    if (this.effectiveCompanyId) {
-      this.getData();
-    } else {
-    }
-  },
-
   watch: {
     "$route.params.company_id": {
       immediate: true,
-      handler(newCompanyId) {
-        if (newCompanyId) {
-          this.getData();
+      deep: true,
+      handler(company_id) {
+        if (company_id) {
+          this.companyId = company_id;
+          this.getData(this.propSearchUrl);
         }
       },
     },
   },
 
+  computed: {
+    propSearchUrl() {
+      let url = `${moduleUrl.URLS.CATEGORY.propSearchUrl}/${this.companyId}?paginate=true`;
+      return url;
+    },
+  },
+
+  data() {
+    return {
+      companyId: null,
+      propMainUrl: moduleUrl.URLS.CATEGORY.propMainUrl,
+    };
+  },
+
   methods: {
-    createCategory() {
-      this.$refs.categoryCreateModal.openModal();
+    openCreateModel() {
+      this.$refs.createModalForm.openModal();
     },
 
-    handleCategoryCreated(newCategory) {
-      this.handleItemCreated(newCategory);
-    },
-
-    editCategoryModal(category) {
-      this.selectedItem = { ...category };
+    openUpdateModel(item) {
+      this.selectedItem = { ...item };
       this.$nextTick(() => {
-        this.$refs.categoryEditModal.openModal();
+        this.$refs.updateModalForm.openModal();
       });
     },
 
-    handleCategoryUpdated(updatedCategory) {
-      this.handleItemUpdated(updatedCategory);
+    handleCreated(newItem) {
+      this.handleItemCreated(newItem);
     },
 
-    deleteRow(category) {
+    handleUpdated(updatedItem) {
+      this.handleItemUpdated(updatedItem);
+    },
+
+    deleteRow(item) {
       this.deleteItem(
-        category,
+        item,
         this.propMainUrl,
-        this.$t("categories.categoryDeleted"),
-        this.$t("categories.deleteError")
+        this.$t("common.itemDeleted"),
+        this.$t("common.failedToDeleteItem")
       );
     },
   },

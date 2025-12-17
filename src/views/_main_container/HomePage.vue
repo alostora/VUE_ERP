@@ -1,6 +1,5 @@
 <template>
   <div class="app-layout min-h-screen">
-    <!-- Header -->
     <AppHeader
       @toggle-sidebar="toggleSidebar"
       @language-changed="onLanguageChanged"
@@ -9,7 +8,6 @@
       :sidebar-collapsed="sidebarCollapsed"
     />
 
-    <!-- Mobile Overlay -->
     <div
       v-if="isMobile && !sidebarCollapsed"
       class="mobile-overlay fixed top-0 left-0 w-full h-full bg-black-alpha-40 z-4"
@@ -17,7 +15,6 @@
     />
 
     <div class="layout-container flex">
-      <!-- Sidebar -->
       <AppSidebar
         :collapsed="sidebarCollapsed"
         :sidebar-items="navItems"
@@ -26,13 +23,12 @@
         @toggle="sidebarCollapsed = !sidebarCollapsed"
       />
 
-      <!-- Main Content -->
       <main
-        class="main-content flex-1 overflow-auto"
+        class="main-content"
         :class="contentClasses"
         :style="mainContentStyle"
       >
-        <div class="mt-1">
+        <div class="content-wrapper">
           <RouterView />
         </div>
       </main>
@@ -83,8 +79,7 @@ export default {
         };
       }
 
-      // Desktop: Calculate dynamic width based on sidebar state
-      const sidebarWidth = this.sidebarCollapsed ? 70 : 280; // px
+      const sidebarWidth = this.sidebarCollapsed ? 70 : 280;
 
       if (this.currentDirection === "ltr") {
         return {
@@ -144,13 +139,36 @@ export default {
 </script>
 
 <style scoped>
-.main-content {
-  position: fixed;
-  width: 87%;
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--surface-ground);
+}
+
+.layout-container {
+  display: flex;
   flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: var(--surface-ground);
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 1.5rem;
   min-height: 100%;
+  width: 100%;
 }
 
 .layout-ltr:not(.mobile-layout) .main-content {
@@ -172,24 +190,6 @@ export default {
   margin-right: 70px;
   width: calc(100% - 70px);
 }
-/* 
-.app-layout {
-  min-height: 100vh;
-  background: var(--surface-ground);
-}
-
-.layout-container {
-  display: flex;
-  min-height: calc(100vh - 64px);
-  position: relative;
-}
-
-.content-wrapper {
-  padding: 1.5rem;
-  margin: 0 auto;
-  width: 100%;
-  min-height: calc(100vh - 64px - 3rem);
-}
 
 .mobile-overlay {
   position: fixed;
@@ -202,18 +202,27 @@ export default {
   z-index: 99;
   animation: fadeIn 0.2s ease;
 }
- */
+
 @media (max-width: 768px) {
-  .mobile-layout {
-    overflow-x: hidden;
+  .layout-container {
+    overflow: visible;
   }
 
   .main-content {
-    padding: 0;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    position: fixed;
+    top: 64px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0 !important;
     width: 100% !important;
-    transition: transform 0.3s ease;
+    z-index: 1;
+    overflow-y: auto;
+  }
+
+  .content-wrapper {
+    padding: 1rem;
+    min-height: calc(100vh - 64px - 2rem);
   }
 
   .sidebar-open .main-content {
@@ -222,11 +231,6 @@ export default {
 
   .layout-rtl .sidebar-open .main-content {
     transform: translateX(-280px);
-  }
-
-  .content-wrapper {
-    padding: 1rem;
-    min-height: calc(100vh - 56px - 2rem);
   }
 }
 
@@ -252,8 +256,10 @@ export default {
   }
 
   .main-content {
+    position: static !important;
     margin: 0 !important;
     width: 100% !important;
+    overflow: visible !important;
   }
 
   .content-wrapper {

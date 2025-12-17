@@ -118,7 +118,7 @@
       <!-- Values Table -->
       <div class="values-table-section">
         <div
-          class="table-filters flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+          class="table-filters"
         >
           <div class="search-container flex-1 w-full">
             <InputText
