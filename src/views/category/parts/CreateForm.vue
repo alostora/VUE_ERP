@@ -48,17 +48,22 @@
             {{ $t("categories.categoryImage") }}
           </label>
           <div class="flex flex-column gap-2">
-            <div v-if="imagePreview" class="image-preview">
-              <img
-                :src="imagePreview"
-                :alt="formData.name"
-                class="preview-image"
-              />
+            <div v-if="generalFile" class="new-file-preview mt-2">
+              <label class="p-text-secondary text-sm block mb-2"
+                >New File Preview:</label
+              >
+
               <Button
                 icon="pi pi-times"
                 class="p-button-text p-button-danger remove-image-btn"
                 @click="removeImage"
                 v-tooltip="$t('categories.removeImage')"
+              />
+
+              <img
+                :src="getFilePreview(generalFile)"
+                alt="New File Preview"
+                class="file-preview-image"
               />
             </div>
 
@@ -243,6 +248,14 @@ export default {
 
 :deep(.p-fileupload-choose) {
   width: 100%;
+}
+
+.file-preview-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--surface-border);
 }
 
 .loading-overlay {

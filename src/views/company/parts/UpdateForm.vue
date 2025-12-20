@@ -151,7 +151,7 @@
           }}</small>
         </div>
 
-        <div class="field mb-4">
+        <div class="field mb-3">
           <label for="phone" class="font-bold block mb-2">
             {{ $t("companies.phone") }}
           </label>
@@ -165,7 +165,7 @@
           <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
         </div>
 
-        <div class="field mb-4">
+        <div class="field mb-3">
           <label for="email" class="font-bold block mb-2">
             {{ $t("companies.email") }}
           </label>
@@ -179,7 +179,7 @@
           <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
         </div>
 
-        <div class="field mb-4">
+        <div class="field mb-3">
           <label for="address" class="font-bold block mb-2">
             {{ $t("companies.address") }}
           </label>
@@ -464,10 +464,6 @@ export default {
       await this.updateItem(this.formData.id, this.formData, url);
 
       this.closeModal();
-    },
-
-    getFilePreview(file) {
-      return URL.createObjectURL(file);
     },
   },
 };

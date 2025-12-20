@@ -214,10 +214,6 @@ export default {
 
       this.closeModal();
     },
-
-    getFilePreview(file) {
-      return URL.createObjectURL(file);
-    },
   },
 };
 </script>
@@ -230,12 +226,27 @@ export default {
 .field {
   margin-bottom: 1.5rem;
 }
+
 .file-preview-image {
   width: 120px;
   height: 120px;
   object-fit: cover;
   border-radius: 8px;
   border: 2px solid var(--surface-border);
+}
+
+.current-file-preview,
+.new-file-preview {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: var(--surface-ground);
+}
+
+.current-file-preview label,
+.new-file-preview label {
+  font-weight: 500;
+  color: var(--text-color);
 }
 
 .loading-overlay {

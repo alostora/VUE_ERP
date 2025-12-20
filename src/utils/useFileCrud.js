@@ -85,6 +85,10 @@ export function useFileCrud() {
                     }
                },
 
+               getFilePreview(file) {
+                    return URL.createObjectURL(file);
+               },
+
                removeImage() {
                     this.generalFile = null;
                     this.selectedFile = null;
