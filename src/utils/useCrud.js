@@ -32,12 +32,10 @@ export function useCrud() {
 
                          const newItem = response.data.data || response.data;
 
-                         // Call handleItemCreated if it exists
-                         if (typeof this.handleItemCreated === 'function') {
-                              this.handleItemCreated(newItem);
-                         }
+                         this.handleItemCreated(newItem);
 
                          this.showToast("success", "Success", successMessage || this.$t("common.itemCreated"));
+
                          return newItem;
                     } catch (error) {
                          this.handleCrudError(error, error.response.data.message || this.$t("common.failedToCreateItem"));
@@ -45,6 +43,45 @@ export function useCrud() {
                     } finally {
                          this.loading = false;
                     }
+               },
+
+               /* handleItemCreated(newItem) {
+
+                    this.tableItems.unshift(newItem);
+
+                    if (this.meta && this.meta.total !== undefined) {
+                         this.meta.total++;
+                    }
+
+                    this.$emit("created", newItem);
+               }, */
+
+               handleItemCreated(newItem) {
+                    const items = Array.isArray(newItem) ? newItem : [newItem];
+
+                    // Add all items to the beginning of the array
+                    this.tableItems.unshift(...items);
+
+                    // Update meta total
+                    if (this.meta && this.meta.total !== undefined) {
+                         this.meta.total += items.length;
+                    }
+
+                    // Emit the original data (array or single object)
+                    this.$emit("created", newItem);
+               },
+
+               handleItemUpdated(updatedItem) {
+                    const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
+                    if (index !== -1) {
+                         if (typeof this.$set === 'function') {
+                              this.$set(this.tableItems, index, updatedItem);
+                         } else {
+
+                              this.tableItems.splice(index, 1, updatedItem);
+                         }
+                    }
+                    this.$emit("updated", updatedItem);
                },
 
                async updateItem(id, data, url, successMessage = null, errorMessage = null) {

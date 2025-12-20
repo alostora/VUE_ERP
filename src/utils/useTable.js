@@ -68,31 +68,6 @@ export function useTable() {
                     }
                },
 
-               // CRUD Handlers - These will be called by useCrud
-               handleItemCreated(newItem) {
-
-                    this.tableItems.unshift(newItem);
-
-                    if (this.meta && this.meta.total !== undefined) {
-                         this.meta.total++;
-                    }
-
-                    this.$emit("created", newItem);
-               },
-
-               handleItemUpdated(updatedItem) {
-                    const index = this.tableItems.findIndex(item => item.id === updatedItem.id);
-                    if (index !== -1) {
-                         if (typeof this.$set === 'function') {
-                              this.$set(this.tableItems, index, updatedItem);
-                         } else {
-
-                              this.tableItems.splice(index, 1, updatedItem);
-                         }
-                    }
-                    this.$emit("updated", updatedItem);
-               },
-
                handleItemDeleted(itemId) {
                     this.tableItems = this.tableItems.filter(item => item.id !== itemId);
                     if (this.meta && this.meta.total !== undefined) {

@@ -2,12 +2,24 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
-        <h1 class="table-title">{{ $t("categories.title") }}</h1>
+        <h1 class="table-title">{{ $t("variantValues.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('categories.addCategory')"
+            :label="$t('variantValues.back')"
+            icon="pi pi-arrow-circle-left"
+            @click="viewVariants(companyId)"
+            class="p-button-primary"
+          />
+          <Button
+            :label="$t('variantValues.add')"
             icon="pi pi-plus"
             @click="openCreateModel"
+            class="p-button-primary"
+          />
+          <Button
+            :label="$t('variantValues.addMultiple')"
+            icon="pi pi-plus"
+            @click="openCreateMultipleModel"
             class="p-button-primary"
           />
         </div>
@@ -17,7 +29,7 @@
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
-            :placeholder="$t('categories.search')"
+            :placeholder="$t('variantValues.search')"
             @input="handleSearchInput"
             class="search-input w-20rem"
           />
@@ -29,7 +41,7 @@
           :options="perPageOptions"
           optionLabel="label"
           optionValue="value"
-          :placeholder="$t('categories.show')"
+          :placeholder="$t('variantValues.show')"
           @change="getData(propSearchUrl)"
           class="w-10rem"
         />
@@ -53,49 +65,41 @@
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <Column field="id" :header="$t('categories.id')" class="col-identifier">
+        <Column
+          field="id"
+          :header="$t('variantValues.id')"
+          class="col-identifier"
+        >
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
         </Column>
 
-        <Column field="file" :header="$t('categories.image')" class="col-image">
-          <template #body="slotProps">
-            <img
-              v-if="slotProps.data.file"
-              :src="slotProps.data.file.file_path"
-              :alt="slotProps.data.name"
-              class="img-40 object-cover rounded"
-            />
-            <span v-else>-</span>
-          </template>
-        </Column>
-
         <Column
-          field="name"
-          :header="$t('categories.name')"
+          field="value"
+          :header="$t('variantValues.value')"
           sortable
           class="col-name"
         >
           <template #body="slotProps">
-            <span class="font-medium">{{ slotProps.data.name }}</span>
+            <span class="font-medium">{{ slotProps.data.value }}</span>
           </template>
         </Column>
 
         <Column
-          field="name_ar"
-          :header="$t('categories.nameAr')"
+          field="value_ar"
+          :header="$t('variantValues.valueAr')"
           sortable
           class="col-name"
         >
           <template #body="slotProps">
-            <span class="font-medium">{{ slotProps.data.name_ar }}</span>
+            <span class="font-medium">{{ slotProps.data.value_ar }}</span>
           </template>
         </Column>
 
         <Column
           field="created_at"
-          :header="$t('categories.createdAt')"
+          :header="$t('variantValues.createdAt')"
           sortable
           class="col-name"
         >
@@ -105,7 +109,7 @@
         </Column>
 
         <Column
-          :header="$t('categories.actions')"
+          :header="$t('common.actions')"
           :exportable="false"
           class="col-actions"
         >
@@ -115,13 +119,13 @@
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
                 @click="openUpdateModel(slotProps.data)"
-                v-tooltip.top="$t('categories.edit')"
+                v-tooltip.top="$t('common.edit')"
               />
               <Button
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
                 @click="deleteRow(slotProps.data)"
-                v-tooltip.top="$t('categories.delete')"
+                v-tooltip.top="$t('common.delete')"
               />
             </div>
           </template>
@@ -135,6 +139,12 @@
       />
 
       <CreateForm ref="createModalForm" @created="handleCreated" />
+      <CreateFormMultiple
+        ref="createMultipleModalForm"
+        :company_id="companyId"
+        :variant_id="variantId"
+        @created="handleCreated"
+      />
 
       <Toast />
     </div>
@@ -153,6 +163,7 @@ import ConfirmDialog from "primevue/confirmdialog";
 import Tooltip from "primevue/tooltip";
 
 import CreateForm from "./CreateForm.vue";
+import CreateFormMultiple from "./CreateFormMultiple.vue";
 import UpdateForm from "./UpdateForm.vue";
 
 import { useTable } from "@/utils/useTable";
@@ -167,6 +178,7 @@ export default {
 
   components: {
     CreateForm,
+    CreateFormMultiple,
     UpdateForm,
     DataTable,
     Column,
@@ -187,6 +199,10 @@ export default {
       type: String,
       default: null,
     },
+    variant_id: {
+      type: String,
+      default: null,
+    },
   },
 
   watch: {
@@ -196,6 +212,15 @@ export default {
       handler(company_id) {
         if (company_id) {
           this.companyId = company_id;
+        }
+      },
+    },
+    "$route.params.variant_id": {
+      immediate: true,
+      deep: true,
+      handler(variant_id) {
+        if (variant_id) {
+          this.variantId = variant_id;
           this.getData(this.propSearchUrl);
         }
       },
@@ -204,7 +229,7 @@ export default {
 
   computed: {
     propSearchUrl() {
-      let url = `${moduleUrl.URLS.CATEGORY.propSearchUrl}/${this.companyId}?paginate=true`;
+      let url = `${moduleUrl.URLS.VARIANT_VALUE.propSearchUrl}/${this.variantId}?paginate=true`;
       return url;
     },
   },
@@ -212,13 +237,18 @@ export default {
   data() {
     return {
       companyId: null,
-      propMainUrl: moduleUrl.URLS.CATEGORY.propMainUrl,
+      variantId: null,
+      propMainUrl: moduleUrl.URLS.VARIANT_VALUE.propMainUrl,
     };
   },
 
   methods: {
     openCreateModel() {
       this.$refs.createModalForm.openModal();
+    },
+
+    openCreateMultipleModel() {
+      this.$refs.createMultipleModalForm.openModal();
     },
 
     openUpdateModel(item) {

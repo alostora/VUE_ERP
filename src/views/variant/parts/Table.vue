@@ -2,10 +2,10 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
-        <h1 class="table-title">{{ $t("categories.title") }}</h1>
+        <h1 class="table-title">{{ $t("variants.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('categories.addCategory')"
+            :label="$t('variants.add')"
             icon="pi pi-plus"
             @click="openCreateModel"
             class="p-button-primary"
@@ -17,7 +17,7 @@
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
-            :placeholder="$t('categories.search')"
+            :placeholder="$t('variants.search')"
             @input="handleSearchInput"
             class="search-input w-20rem"
           />
@@ -29,7 +29,7 @@
           :options="perPageOptions"
           optionLabel="label"
           optionValue="value"
-          :placeholder="$t('categories.show')"
+          :placeholder="$t('variants.show')"
           @change="getData(propSearchUrl)"
           class="w-10rem"
         />
@@ -53,27 +53,15 @@
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <Column field="id" :header="$t('categories.id')" class="col-identifier">
+        <Column field="id" :header="$t('variants.id')" class="col-identifier">
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
         </Column>
 
-        <Column field="file" :header="$t('categories.image')" class="col-image">
-          <template #body="slotProps">
-            <img
-              v-if="slotProps.data.file"
-              :src="slotProps.data.file.file_path"
-              :alt="slotProps.data.name"
-              class="img-40 object-cover rounded"
-            />
-            <span v-else>-</span>
-          </template>
-        </Column>
-
         <Column
           field="name"
-          :header="$t('categories.name')"
+          :header="$t('variants.name')"
           sortable
           class="col-name"
         >
@@ -84,7 +72,7 @@
 
         <Column
           field="name_ar"
-          :header="$t('categories.nameAr')"
+          :header="$t('variants.nameAr')"
           sortable
           class="col-name"
         >
@@ -95,7 +83,7 @@
 
         <Column
           field="created_at"
-          :header="$t('categories.createdAt')"
+          :header="$t('variants.createdAt')"
           sortable
           class="col-name"
         >
@@ -105,7 +93,7 @@
         </Column>
 
         <Column
-          :header="$t('categories.actions')"
+          :header="$t('common.actions')"
           :exportable="false"
           class="col-actions"
         >
@@ -115,13 +103,19 @@
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
                 @click="openUpdateModel(slotProps.data)"
-                v-tooltip.top="$t('categories.edit')"
+                v-tooltip.top="$t('common.edit')"
               />
               <Button
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
                 @click="deleteRow(slotProps.data)"
-                v-tooltip.top="$t('categories.delete')"
+                v-tooltip.top="$t('common.delete')"
+              />
+              <Button
+                icon="pi pi-list"
+                class="p-button-text p-button-sm p-button-info"
+                @click="viewVariantValues(slotProps.data)"
+                v-tooltip.top="$t('variants.viewValues')"
               />
             </div>
           </template>
@@ -204,7 +198,7 @@ export default {
 
   computed: {
     propSearchUrl() {
-      let url = `${moduleUrl.URLS.CATEGORY.propSearchUrl}/${this.companyId}?paginate=true`;
+      let url = `${moduleUrl.URLS.VARIANT.propSearchUrl}/${this.companyId}?paginate=true`;
       return url;
     },
   },
@@ -212,7 +206,7 @@ export default {
   data() {
     return {
       companyId: null,
-      propMainUrl: moduleUrl.URLS.CATEGORY.propMainUrl,
+      propMainUrl: moduleUrl.URLS.VARIANT.propMainUrl,
     };
   },
 

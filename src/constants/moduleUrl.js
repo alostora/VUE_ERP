@@ -1,5 +1,4 @@
 import general_request from "@/utils/general_request";
-import lookupTypes from "@/constants/lookupTypes";
 
 export default {
      URLS: {
@@ -7,41 +6,67 @@ export default {
                propSearchUrl: `${general_request.BASE_URL}/system-lookups`,
                propGetUrl: `${general_request.BASE_URL}/system-lookups`,
                propMainUrl: `${general_request.BASE_URL}/system-lookups`,
+               propCreateMultiUrl: ``,
           },
           USER: {
                propSearchUrl: `${general_request.BASE_URL}/admin/users/search`,
                propGetUrl: `${general_request.BASE_URL}/admin/users`,
                propMainUrl: `${general_request.BASE_URL}/admin/user`,
+               propCreateMultiUrl: ``,
           },
           COUNTRY: {
                propSearchUrl: `${general_request.BASE_URL}/admin/countries/search`,
-               propGethUrl: `${general_request.BASE_URL}/admin/countries/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/countries/search`,
                propMainUrl: `${general_request.BASE_URL}/admin/country`,
+               propCreateMultiUrl: ``,
           },
           GOVERNORATE: {
                propSearchUrl: `${general_request.BASE_URL}/admin/governorates-search-all`,
-               propGethUrl: `${general_request.BASE_URL}/admin/governorates`,
+               propGetUrl: `${general_request.BASE_URL}/admin/governorates`,
                propMainUrl: `${general_request.BASE_URL}/admin/governorate`,
+               propCreateMultiUrl: ``,
           },
           CITY: {
                propSearchUrl: `${general_request.BASE_URL}/admin/cities-search-all`,
-               propGethUrl: `${general_request.BASE_URL}/admin/cities`,
+               propGetUrl: `${general_request.BASE_URL}/admin/cities`,
                propMainUrl: `${general_request.BASE_URL}/admin/city`,
+               propCreateMultiUrl: ``,
           },
           CLIENT: {
                propSearchUrl: `${general_request.BASE_URL}/admin/clients/search`,
-               propGethUrl: `${general_request.BASE_URL}/admin/clients`,
+               propGetUrl: `${general_request.BASE_URL}/admin/clients`,
                propMainUrl: `${general_request.BASE_URL}/admin/client`,
+               propCreateMultiUrl: ``,
           },
           COMPANY: {
                propSearchUrl: `${general_request.BASE_URL}/admin/companies/search`,
-               propGethUrl: `${general_request.BASE_URL}/admin/companies`,
+               propGetUrl: `${general_request.BASE_URL}/admin/companies`,
                propMainUrl: `${general_request.BASE_URL}/admin/company`,
+               propCreateMultiUrl: ``,
           },
           CATEGORY: {
                propSearchUrl: `${general_request.BASE_URL}/admin/company/categories/search`,
-               propGethUrl: `${general_request.BASE_URL}/admin/company/categories`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/categories`,
                propMainUrl: `${general_request.BASE_URL}/admin/company/category`,
+               propCreateMultiUrl: ``,
+          },
+          MEASUREMENT_UNIT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/measurement-units/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/measurement-units`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/measurement-unit`,
+               propCreateMultiUrl: ``,
+          },
+          VARIANT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/variants/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/variants`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/variant`,
+               propCreateMultiUrl: ``,
+          },
+          VARIANT_VALUE: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/variant-values/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/variant-values`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/variant-value`,
+               propCreateMultiUrl: `${general_request.BASE_URL}/admin/company/variant-values`,
           },
      }
 }

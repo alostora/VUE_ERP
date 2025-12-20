@@ -144,7 +144,7 @@
             class="col-actions"
           >
             <template #body="slotProps">
-              <div class="flex gap-1">
+            <div class="table-actions-cell">
                 <Button
                   icon="pi pi-pencil"
                   class="p-button-text p-button-sm p-button-primary"
