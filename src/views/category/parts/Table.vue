@@ -114,7 +114,7 @@
               <Button
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
-                @click="editCategoryModal(slotProps.data)"
+                @click="openUpdateModel(slotProps.data)"
                 v-tooltip.top="$t('categories.edit')"
               />
               <Button

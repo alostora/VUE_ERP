@@ -19,14 +19,6 @@ export function useCrud() {
                     selectedGovernorate: null,
                     selectedCity: null,
                     selectedCurrency: null,
-
-                    //file states
-                    uploading: false,
-                    uploadProgress: 0,
-                    imagePreview: null,
-                    selectedFile: null,
-                    logoFile: null,
-                    coverFile: null
                }
           },
 
@@ -190,47 +182,6 @@ export function useCrud() {
                     });
                },
 
-               async uploadFile(file) {
-
-                    this.uploading = true;
-                    this.uploadProgress = 0;
-
-                    try {
-                         const formData = new FormData();
-                         formData.append("file", file);
-
-                         const response = await this.$http.post(
-                              `${general_request.BASE_URL}/storage/file`,
-                              formData,
-                              {
-                                   headers: {
-                                        ...general_request.headers,
-                                        "Content-Type": "multipart/form-data",
-                                   },
-                                   onUploadProgress: (progressEvent) => {
-                                        if (progressEvent.total) {
-                                             this.uploadProgress = Math.round(
-                                                  (progressEvent.loaded * 100) / progressEvent.total
-                                             );
-                                        }
-                                   },
-                              }
-                         );
-
-                         return response.data.data.id;
-                    } catch (error) {
-                         this.handleCrudError(error, error.response.data.message || this.$t("common.failedToUploadFile"));
-                         resolve(false);
-                    } finally {
-                         this.uploading = false;
-                         this.uploadProgress = 0;
-                    }
-               },
-
-               onFileSelect(event, key) {
-                    this[key] = event.files[0];
-               },
-
                handleCrudError(error, defaultMessage) {
 
                     if (error.response?.status === 422 && error.response.data.errors) {
@@ -293,6 +244,7 @@ export function useCrud() {
                     this.selectedCurrency = null;
                     this.logoFile = null;
                     this.coverFile = null;
+                    this.generalFile = null;
                },
 
                openModal() {

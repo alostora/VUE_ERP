@@ -71,7 +71,7 @@
               "
               accept="image/*"
               :maxFileSize="1000000"
-              @select="onImageSelect"
+              @select="(event) => onFileSelect(event, 'generalFile', 'file_id')"
               :class="{ 'p-invalid': errors.file_id }"
               class="w-full"
             />
@@ -125,13 +125,14 @@ import Message from "primevue/message";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
+import { useFileCrud } from "@/utils/useFileCrud";
 import moduleUrl from "@/constants/moduleUrl";
 import validationRequest from "../validation/validationRequest";
 
 export default {
   name: "CreateForm",
 
-  mixins: [useTable(), useCrud(), validationRequest],
+  mixins: [useTable(), useCrud(), useFileCrud(), validationRequest],
 
   components: {
     Dialog,
@@ -162,6 +163,7 @@ export default {
   data() {
     return {
       propMainUrl: moduleUrl.URLS.CATEGORY.propMainUrl,
+      generalFile: null,
       formData: {
         company_id: "",
         file_id: "",
@@ -180,32 +182,22 @@ export default {
       this.error = "";
 
       const url = this.propMainUrl;
+
       await this.createItem(this.formData, url);
 
       this.closeModal();
     },
 
-    onImageSelect(event) {
-      const file = event.files[0];
-      if (file) {
-        this.selectedFile = file;
+    async getSelectedFileId() {
+      let generalFileId = null;
 
-        // Create preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.imagePreview = e.target.result;
-        };
-        reader.readAsDataURL(file);
-
-        // Upload file
-       this.formData.file_id = this.uploadFile(file);
+      if (this.generalFile) {
+        generalFileId = await this.uploadFile(this.generalFile);
       }
-    },
 
-    removeImage() {
-      this.selectedFile = null;
-      this.imagePreview = null;
-      this.formData.file_id = "";
+      if (generalFileId) {
+        this.formData.file_id = generalFileId;
+      }
     },
   },
 };

@@ -234,7 +234,7 @@
               class="w-full"
               :maxFileSize="1000000"
               accept="image/*"
-              @select="(event) => onFileSelect(event, 'logoFile')"
+              @select="(event) => onFileSelect(event, 'logoFile', 'logo_id')"
             />
 
             <div v-if="logoFile" class="new-file-preview mt-2">
@@ -259,7 +259,7 @@
               class="w-full"
               :maxFileSize="1000000"
               accept="image/*"
-              @select="(event) => onFileSelect(event, 'coverFile')"
+              @select="(event) => onFileSelect(event, 'coverFile', 'cover_id')"
             />
 
             <div v-if="coverFile" class="new-file-preview mt-2">
@@ -312,12 +312,22 @@ import FileUpload from "primevue/fileupload";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
+import { useFileCrud } from "@/utils/useFileCrud";
 import moduleUrl from "@/constants/moduleUrl";
 import useSelectionItems from "@/utils/useSelectionItems";
 import validationRequest from "../validation/validationRequest";
 
 export default {
   name: "CreateForm",
+
+  mixins: [
+    useTable(),
+    useCrud(),
+    useFileCrud(),
+    validationRequest,
+    useSelectionItems,
+  ],
+
   components: {
     Dialog,
     ProgressSpinner,
@@ -327,8 +337,6 @@ export default {
     Select,
     FileUpload,
   },
-
-  mixins: [useTable(), useCrud(), validationRequest, useSelectionItems],
 
   data() {
     return {
