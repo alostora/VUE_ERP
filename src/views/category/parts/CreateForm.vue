@@ -69,11 +69,7 @@
 
             <FileUpload
               mode="basic"
-              :chooseLabel="
-                imagePreview
-                  ? $t('categories.changeImage')
-                  : $t('categories.selectImage')
-              "
+              :chooseLabel="$t('categories.chooseFile')"
               accept="image/*"
               :maxFileSize="1000000"
               @select="(event) => onFileSelect(event, 'generalFile', 'file_id')"
@@ -191,18 +187,6 @@ export default {
       await this.createItem(this.formData, url);
 
       this.closeModal();
-    },
-
-    async getSelectedFileId() {
-      let generalFileId = null;
-
-      if (this.generalFile) {
-        generalFileId = await this.uploadFile(this.generalFile);
-      }
-
-      if (generalFileId) {
-        this.formData.file_id = generalFileId;
-      }
     },
   },
 };

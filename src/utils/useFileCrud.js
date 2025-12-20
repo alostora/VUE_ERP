@@ -8,13 +8,10 @@ export function useFileCrud() {
                     //file states
                     uploading: false,
                     uploadProgress: 0,
-                    imagePreview: null,
 
-                    selectedFile: null,
-                    generalFile: null,
-
-                    logoFile: null,
-                    coverFile: null,
+                    generalFile: null, // for any file
+                    logoFile: null, // only company logo
+                    coverFile: null, //only company cover
                }
           },
 
@@ -57,31 +54,29 @@ export function useFileCrud() {
                     }
                },
 
-               onFileSelect(event, generalFile, formFileId = "file_id") {
-                    this[generalFile] = event.files[0];
-                    if (this[generalFile]) {
-                         this.selectedFile = this[generalFile];
+               onFileSelect(event, fileModule = 'generalFile', formFileId = "file_id") {
 
-                         // Create preview
+                    this[fileModule] = event.files[0];
+
+                    if (this[fileModule]) {
+
                          const reader = new FileReader();
-                         reader.onload = (e) => {
-                              this.imagePreview = e.target.result;
-                         };
-                         reader.readAsDataURL(this[generalFile]);
+
+                         reader.readAsDataURL(this[fileModule]);
                     }
 
-                    this.getSelectedFileId(generalFile, formFileId);
+                    this.getSelectedFileId(fileModule, formFileId);
                },
 
-               async getSelectedFileId(generalFile, formFileId = "file_id") {
-                    let generalFileId = null;
+               async getSelectedFileId(fileModule = 'generalFile', formFileId = "file_id") {
+                    let fileId = null;
 
-                    if (this[generalFile]) {
-                         generalFileId = await this.uploadFile(this[generalFile]);
+                    if (this[fileModule]) {
+                         fileId = await this.uploadFile(this[fileModule]);
                     }
 
-                    if (generalFileId) {
-                         this.formData[formFileId] = generalFileId;
+                    if (fileId) {
+                         this.formData[formFileId] = fileId;
                     }
                },
 
@@ -91,9 +86,11 @@ export function useFileCrud() {
 
                removeImage() {
                     this.generalFile = null;
-                    this.selectedFile = null;
-                    this.imagePreview = null;
+                    this.logoFile = null;
+                    this.coverFile = null;
                     this.formData.file_id = "";
+                    this.formData.logo_id = "";
+                    this.formData.cover_id = "";
                },
           }
      }
