@@ -222,11 +222,6 @@ export default {
 
       this.closeModal();
     },
-
-    onAccountTypeChange(value) {
-      this.selectedAccountType = value;
-      this.formData.user_account_type_id = value;
-    },
   },
 };
 </script>

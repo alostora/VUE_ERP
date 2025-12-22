@@ -124,6 +124,11 @@ export default {
           //handel on change event 
           //handel on change event 
 
+          onAccountTypeChange(value) {
+               this.selectedAccountType = value;
+               this.formData.user_account_type_id = value;
+          },
+
           onCountryChange(value) {
                this.selectedCountry = value;
                this.formData.country_id = value;
