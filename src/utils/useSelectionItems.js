@@ -13,6 +13,8 @@ export default {
                governorates: [],
                cities: [],
                clients: [],
+               measurementUnits: [],
+               categories: [],
           }
      },
 
@@ -121,6 +123,40 @@ export default {
                }
           },
 
+          async loadMeasurementUnits(company_id) {
+               this.loadingItems = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.MEASUREMENT_UNIT.propSearchUrl}/${company_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.measurementUnits = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingItems = false;
+               }
+          },
+
+          async loadCategories(company_id) {
+               this.loadingItems = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.CATEGORY.propSearchUrl}/${company_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.categories = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingItems = false;
+               }
+          },
+
           //handel on change event 
           //handel on change event 
 
@@ -164,6 +200,16 @@ export default {
           onCurrencyChange(value) {
                this.selectedCurrency = value;
                this.formData.currency_id = value;
+          },
+
+          onMeasurementUnitChange(value) {
+               this.selectedMeasurementUnit = value;
+               this.formData.measurement_unit_id = value;
+          },
+
+          onCategoryChange(value) {
+               this.selectedCategory = value;
+               this.formData.category_id = value;
           },
      }
 }

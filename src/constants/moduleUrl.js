@@ -68,5 +68,11 @@ export default {
                propMainUrl: `${general_request.BASE_URL}/admin/company/variant-value`,
                propCreateMultiUrl: `${general_request.BASE_URL}/admin/company/variant-values`,
           },
+          PRODUCT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/products/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/products`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/product`,
+               propCreateMultiUrl: ``,
+          },
      }
 }
