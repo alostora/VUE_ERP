@@ -15,6 +15,7 @@ export default {
                clients: [],
                measurementUnits: [],
                categories: [],
+               products: [],
           }
      },
 
@@ -157,6 +158,23 @@ export default {
                }
           },
 
+          async loadProducts(company_id, category_id) {
+               this.loadingItems = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.PRODUCT.propSearchUrl}/${company_id}?category_id=${category_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.products = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingItems = false;
+               }
+          },
+
           //handel on change event 
           //handel on change event 
 
@@ -210,6 +228,11 @@ export default {
           onCategoryChange(value) {
                this.selectedCategory = value;
                this.formData.category_id = value;
+          },
+
+          onProductChange(value) {
+               this.selectedProduct = value;
+               this.formData.product_id = value;
           },
      }
 }

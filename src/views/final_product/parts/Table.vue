@@ -2,10 +2,10 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
-        <h1 class="table-title">{{ $t("products.title") }}</h1>
+        <h1 class="table-title">{{ $t("final_products.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('products.addProduct')"
+            :label="$t('final_products.addProduct')"
             icon="pi pi-plus"
             @click="openCreateModel"
             class="p-button-primary"
@@ -17,7 +17,7 @@
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
-            :placeholder="$t('products.search')"
+            :placeholder="$t('final_products.search')"
             @input="handleSearchInput"
             class="search-input w-20rem"
           />
@@ -29,7 +29,7 @@
           :options="perPageOptions"
           optionLabel="label"
           optionValue="value"
-          :placeholder="$t('products.show')"
+          :placeholder="$t('final_products.show')"
           @change="getData(propSearchUrl)"
           class="w-10rem"
         />
@@ -54,24 +54,68 @@
         @page="handlePageChange"
       >
         <!-- ID Column -->
-        <Column field="id" :header="$t('products.id')" class="col-identifier">
+        <Column
+          field="id"
+          :header="$t('final_products.id')"
+          class="col-identifier"
+        >
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
+
+        <!-- Image Column -->
+        <Column
+          field="main_image"
+          :header="$t('final_product.image')"
+          style="min-width: 80px"
+        >
+          <template #body="slotProps">
+            <img
+              v-if="slotProps.data.main_image"
+              :src="slotProps.data.main_image.file.file_path"
+              :alt="slotProps.data.name"
+              class="img-40 object-cover rounded"
+            />
+            <div v-else class="no-image-placeholder">
+              <i class="pi pi-image text-color-secondary"></i>
+            </div>
           </template>
         </Column>
 
         <!-- Name Column -->
         <Column
           field="name"
-          :header="$t('products.name')"
-          sortable
-          class="col-name"
+          :header="$t('final_product.name')"
+          :sortable="true"
+          style="min-width: 150px"
         >
           <template #body="slotProps">
             <div>
-              <div class="font-medium">{{ slotProps.data.name }}</div>
+              <div class="font-medium">
+                {{ slotProps.data.name || slotProps.data.product?.name }}
+              </div>
               <div class="text-sm text-color-secondary">
-                {{ slotProps.data.name_ar }}
+                {{ slotProps.data.name_ar || slotProps.data.product?.name_ar }}
+              </div>
+            </div>
+          </template>
+        </Column>
+
+          <!-- Details Column -->
+        <Column
+          field="details"
+          :header="$t('final_product.details')"
+          :sortable="true"
+          style="min-width: 150px"
+        >
+          <template #body="slotProps">
+            <div>
+              <div class="font-medium">
+                {{ slotProps.data.details || slotProps.data.product?.details }}
+              </div>
+              <div class="text-sm text-color-secondary">
+                {{ slotProps.data.details_ar || slotProps.data.product?.details_ar }}
               </div>
             </div>
           </template>
@@ -80,8 +124,8 @@
         <!-- Category Column -->
         <Column
           field="category"
-          :header="$t('products.category')"
-          class="col-name"
+          :header="$t('final_product.category')"
+          style="min-width: 120px"
         >
           <template #body="slotProps">
             <div class="flex align-items-center gap-2">
@@ -91,52 +135,39 @@
                 :alt="slotProps.data.category.name"
                 class="img-40 object-cover rounded"
               />
-              <span class="font-medium">{{
-                slotProps.data.category?.name || "-"
-              }}</span>
+              <span>{{ slotProps.data.category?.name || "-" }}</span>
             </div>
           </template>
         </Column>
 
-        <!-- Purchases Unit Column -->
+        <!-- Product Column -->
         <Column
-          field="purchases_measurement_unit"
-          :header="$t('products.purchasesUnit')"
-          class="col-name"
+          field="product"
+          :header="$t('final_product.product')"
+          style="min-width: 120px"
         >
           <template #body="slotProps">
-            <span class="font-medium">{{
-              slotProps.data.purchases_measurement_unit?.name || "-"
-            }}</span>
+            <span>{{ slotProps.data.product?.name || "-" }}</span>
           </template>
         </Column>
 
-        <!-- Sales Unit Column -->
+        <!-- Price Column -->
         <Column
-          field="sales_measurement_unit"
-          :header="$t('products.salesUnit')"
-          class="col-name"
+          field="price"
+          :header="$t('final_product.price')"
+          :sortable="true"
+          style="min-width: 100px"
         >
           <template #body="slotProps">
-            <span class="font-medium">{{
-              slotProps.data.sales_measurement_unit?.name || "-"
-            }}</span>
-          </template>
-        </Column>
-
-        <!-- Details Column -->
-        <Column
-          field="details"
-          :header="$t('products.details')"
-          class="col-name"
-        >
-          <template #body="slotProps">
-            <div>
-              <div class="font-medium text-color-secondary">
-                {{ slotProps.data.details || "-" }}
+            <div class="text-right">
+              <div class="font-bold">
+                {{ formatCurrency(slotProps.data.price) }}
               </div>
-              <div class="font-medium text-sm text-color-secondary">
-                {{ slotProps.data.details_ar || "" }}
+              <div
+                v-if="slotProps.data.has_discount"
+                class="text-sm text-green-500"
+              >
+                {{ formatCurrency(slotProps.data.price_after_discount) }}
               </div>
             </div>
           </template>
@@ -145,7 +176,7 @@
         <!-- Created At Column -->
         <Column
           field="created_at"
-          :header="$t('products.createdAt')"
+          :header="$t('final_products.createdAt')"
           sortable
           class="col-name"
         >
@@ -155,7 +186,7 @@
         </Column>
 
         <Column
-          :header="$t('products.actions')"
+          :header="$t('final_products.actions')"
           :exportable="false"
           class="col-actions"
         >
@@ -165,13 +196,13 @@
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
                 @click="openUpdateModel(slotProps.data)"
-                v-tooltip.top="$t('products.edit')"
+                v-tooltip.top="$t('final_products.edit')"
               />
               <Button
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
                 @click="deleteRow(slotProps.data)"
-                v-tooltip.top="$t('products.delete')"
+                v-tooltip.top="$t('final_products.delete')"
               />
             </div>
           </template>
@@ -254,7 +285,7 @@ export default {
 
   computed: {
     propSearchUrl() {
-      let url = `${moduleUrl.URLS.PRODUCT.propSearchUrl}/${this.companyId}?paginate=true`;
+      let url = `${moduleUrl.URLS.FINAL_PRODUCT.propSearchUrl}/${this.companyId}?paginate=true`;
       return url;
     },
   },
@@ -262,7 +293,7 @@ export default {
   data() {
     return {
       companyId: null,
-      propMainUrl: moduleUrl.URLS.PRODUCT.propMainUrl,
+      propMainUrl: moduleUrl.URLS.FINAL_PRODUCT.propMainUrl,
     };
   },
 

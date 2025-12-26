@@ -1,6 +1,6 @@
 <template>
   <Dialog
-    :header="$t('products.add')"
+    :header="$t('final_products.add')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
@@ -13,150 +13,147 @@
       </Message>
 
       <form @submit.prevent="submitForm">
-        <div class="field mb-3">
-          <label for="name" class="font-bold block mb-2">
-            {{ $t("products.name") }} *
-          </label>
-          <InputText
-            id="name"
-            v-model="formData.name"
-            :class="{ 'p-invalid': errors.name }"
-            class="w-full"
-            :placeholder="$t('products.namePlaceholder')"
-          />
-          <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
+        <!-- Basic Information -->
+        <div class="grid">
+          <!-- Category -->
+          <div class="col-12 md:col-6 field">
+            <label for="category" class="font-bold block mb-2">
+              {{ $t("final_product.category") }} *
+            </label>
+            <Select
+              id="category"
+              v-model="selectedCategory"
+              @update:modelValue="onCategoryChange"
+              :options="categories"
+              option-label="name"
+              option-value="id"
+              :class="{ 'p-invalid': errors.category_id }"
+              :placeholder="
+                loadingCategories
+                  ? $t('final_product.loadingCategories')
+                  : $t('final_product.selectCategory')
+              "
+              class="w-full"
+              :loading="loadingCategories"
+              :disabled="loadingCategories"
+            />
+            <small v-if="errors.category_id" class="p-error">
+              {{ errors.category_id }}
+            </small>
+          </div>
+
+          <!-- Product -->
+          <div class="col-12 md:col-6 field">
+            <label for="product" class="font-bold block mb-2">
+              {{ $t("final_product.product") }} *
+            </label>
+            <Select
+              id="product"
+              v-model="selectedProduct"
+              @update:modelValue="onProductChange"
+              :options="products"
+              option-label="name"
+              option-value="id"
+              :class="{ 'p-invalid': errors.product_id }"
+              :placeholder="
+                loadingProducts
+                  ? $t('final_product.loadingProducts')
+                  : $t('final_product.selectProduct')
+              "
+              class="w-full"
+              :loading="loadingProducts"
+              :disabled="loadingProducts || !selectedCategory"
+            />
+            <small v-if="errors.product_id" class="p-error">
+              {{ errors.product_id }}
+            </small>
+          </div>
         </div>
 
+        <!-- Price -->
         <div class="field mb-3">
-          <label for="name_ar" class="font-bold block mb-2">
-            {{ $t("products.name_ar") }} *
+          <label for="price" class="font-bold block mb-2">
+            {{ $t("final_product.price") }} *
           </label>
-          <InputText
-            id="name_ar"
-            v-model="formData.name_ar"
-            :class="{ 'p-invalid': errors.name_ar }"
-            class="w-full"
-            :placeholder="$t('products.name_arPlaceholder')"
+          <InputNumber
+            id="price"
+            v-model="formData.price"
+            :class="{ 'p-invalid': errors.price }"
+            class="w-full price-input"
+            mode="decimal"
+            :min="0"
+            :minFractionDigits="2"
+            :maxFractionDigits="2"
+            :placeholder="$t('final_product.pricePlaceholder')"
+            @blur="validatePrice"
           />
-          <small v-if="errors.name_ar" class="p-error">{{
-            errors.name_ar
-          }}</small>
+          <small v-if="errors.price" class="p-error">{{ errors.price }}</small>
         </div>
 
-        <div class="field mb-3">
-          <label for="category" class="font-bold block mb-2">
-            {{ $t("products.category") }} *
-          </label>
-          <Select
-            id="category"
-            v-model="selectedCategory"
-            @update:modelValue="onCategoryChange"
-            :options="categories"
-            optionLabel="name"
-            optionValue="id"
-            :class="{ 'p-invalid': errors.category_id }"
-            :placeholder="
-              loadingCategories
-                ? $t('products.loadingCategories')
-                : $t('products.selectCategory')
-            "
-            class="w-full"
-            :loading="loadingCategories"
-            :disabled="loadingCategories"
-            filter
-          />
-          <small v-if="errors.category_id" class="p-error">
-            {{ errors.category_id }}
-          </small>
-        </div>
-
+        <!-- Names -->
         <div class="grid">
           <div class="col-12 md:col-6 field">
-            <label for="purchasesUnit" class="font-bold block mb-2">
-              {{ $t("products.purchasesUnit") }} *
+            <label for="name" class="font-bold block mb-2">
+              {{ $t("final_product.name") }}
             </label>
-            <Select
-              id="purchasesUnit"
-              v-model="selectedPurchasesUnit"
-              @update:modelValue="onPurchasesUnitChange"
-              :options="measurementUnits"
-              optionLabel="name"
-              optionValue="id"
-              :class="{ 'p-invalid': errors.purchases_measurement_unit_id }"
-              :placeholder="
-                loadingMeasurementUnits
-                  ? $t('products.loadingMeasurementUnits')
-                  : $t('products.selectPurchasesUnit')
-              "
+            <InputText
+              id="name"
+              v-model="formData.name"
               class="w-full"
-              :loading="loadingMeasurementUnits"
-              :disabled="loadingMeasurementUnits"
+              :placeholder="$t('final_product.namePlaceholder')"
             />
-            <small v-if="errors.purchases_measurement_unit_id" class="p-error">
-              {{ errors.purchases_measurement_unit_id }}
-            </small>
           </div>
 
           <div class="col-12 md:col-6 field">
-            <label for="salesUnit" class="font-bold block mb-2">
-              {{ $t("products.salesUnit") }} *
+            <label for="name_ar" class="font-bold block mb-2">
+              {{ $t("final_product.name_ar") }}
             </label>
-            <Select
-              id="salesUnit"
-              v-model="selectedSalesUnit"
-              @update:modelValue="onSalesUnitChange"
-              :options="measurementUnits"
-              optionLabel="name"
-              optionValue="id"
-              :class="{ 'p-invalid': errors.sales_measurement_unit_id }"
-              :placeholder="
-                loadingMeasurementUnits
-                  ? $t('products.loadingMeasurementUnits')
-                  : $t('products.selectSalesUnit')
-              "
+            <InputText
+              id="name_ar"
+              v-model="formData.name_ar"
               class="w-full"
-              :loading="loadingMeasurementUnits"
-              :disabled="loadingMeasurementUnits"
+              :placeholder="$t('final_product.nameArPlaceholder')"
             />
-            <small v-if="errors.sales_measurement_unit_id" class="p-error">
-              {{ errors.sales_measurement_unit_id }}
-            </small>
           </div>
         </div>
 
+        <!-- Details -->
         <div class="grid">
           <div class="col-12 md:col-6 field">
             <label for="details" class="font-bold block mb-2">
-              {{ $t("products.details") }}
+              {{ $t("final_product.details") }}
             </label>
             <Textarea
               id="details"
               v-model="formData.details"
               rows="3"
               class="w-full"
-              :placeholder="$t('products.detailsPlaceholder')"
+              :placeholder="$t('final_product.detailsPlaceholder')"
             />
           </div>
 
           <div class="col-12 md:col-6 field">
             <label for="details_ar" class="font-bold block mb-2">
-              {{ $t("products.details_ar") }}
+              {{ $t("final_product.details_ar") }}
             </label>
             <Textarea
               id="details_ar"
               v-model="formData.details_ar"
               rows="3"
               class="w-full"
-              :placeholder="$t('products.detailsArPlaceholder')"
+              :placeholder="$t('final_product.detailsArPlaceholder')"
             />
           </div>
         </div>
 
-        <div class="flex justify-content-end gap-2">
+        <!-- Action Buttons -->
+        <div
+          class="flex justify-content-end gap-2 mt-4 pt-3 border-top-1 surface-border"
+        >
           <Button
             type="button"
             :label="$t('common.cancel')"
-            @click="closeModal"
+            @click="$emit('cancel')"
             class="p-button-text"
             :disabled="loading"
           />
@@ -192,6 +189,7 @@ import { useFileCrud } from "@/utils/useFileCrud";
 import validationRequest from "../validation/validationRequest";
 import useSelectionItems from "@/utils/useSelectionItems";
 import moduleUrl from "@/constants/moduleUrl";
+import customFunctions from "../custom_functions/customFunctions";
 
 export default {
   name: "CreateForm",
@@ -202,6 +200,7 @@ export default {
     useFileCrud(),
     validationRequest,
     useSelectionItems,
+    customFunctions,
   ],
 
   components: {
@@ -227,8 +226,19 @@ export default {
       handler(company_id) {
         if (company_id) {
           this.formData.company_id = company_id;
-          this.loadMeasurementUnits(company_id);
           this.loadCategories(company_id);
+        }
+      },
+    },
+    selectedCategory: {
+      handler(category_id) {
+        if (category_id) {
+          const company_id = this.company_id || this.$route.params.company_id;
+          this.loadProducts(company_id, category_id);
+        } else {
+          this.products = [];
+          this.selectedProduct = null;
+          this.formData.product_id = "";
         }
       },
     },
@@ -236,15 +246,14 @@ export default {
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.PRODUCT.propMainUrl,
+      propMainUrl: moduleUrl.URLS.FINAL_PRODUCT.propMainUrl,
       selectedCategory: null,
-      selectedPurchasesUnit: null,
-      selectedSalesUnit: null,
+      selectedproduct: null,
       formData: {
         company_id: "",
         category_id: "",
-        purchases_measurement_unit_id: "",
-        sales_measurement_unit_id: "",
+        product_id: "",
+        price: 0,
         name: "",
         name_ar: "",
         details: "",
@@ -267,16 +276,6 @@ export default {
 
       this.closeModal();
     },
-
-    onPurchasesUnitChange(value) {
-      this.selectedPurchasesUnit = value;
-      this.formData.purchases_measurement_unit_id = value;
-    },
-
-    onSalesUnitChange(value) {
-      this.selectedSalesUnit = value;
-      this.formData.sales_measurement_unit_id = value;
-    },
   },
 };
 </script>
@@ -288,14 +287,6 @@ export default {
 
 .field {
   margin-bottom: 1.5rem;
-}
-
-:deep(.p-fileupload) {
-  width: 100%;
-}
-
-:deep(.p-fileupload-choose) {
-  width: 100%;
 }
 
 .loading-overlay {

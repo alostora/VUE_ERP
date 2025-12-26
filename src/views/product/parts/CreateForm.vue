@@ -290,14 +290,6 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-:deep(.p-fileupload) {
-  width: 100%;
-}
-
-:deep(.p-fileupload-choose) {
-  width: 100%;
-}
-
 .loading-overlay {
   position: absolute;
   top: 0;

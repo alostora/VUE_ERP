@@ -120,6 +120,14 @@ export function useTable() {
                          return dateString;
                     }
                },
+
+               formatCurrency(amount) {
+                    if (!amount) return "-";
+                    return new Intl.NumberFormat("en-US", {
+                         style: "currency",
+                         currency: "USD",
+                    }).format(amount);
+               },
           }
      }
 }

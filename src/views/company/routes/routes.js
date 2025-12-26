@@ -4,9 +4,9 @@ import Show from "../parts/Show.vue";
 // import measurement_unit_routes from "@/latest/model/measurement_unit/routes/measurement_unit_routes";
 // import variant_routes from "@/latest/model/variant/routes/variant_routes";
 // import product_routes from "@/latest/model/product/routes/product_routes";
+// import final_product_routes from "@/latest/model/final_product/routes/final_product_routes";
 
 
-import final_product_routes from "@/latest/model/final_product/routes/final_product_routes";
 import branch_routes from "@/latest/model/branch/routes/branch_routes";
 import invoice_stage_routes from "@/latest/model/invoice_stage/routes/invoice_stage_routes";
 import tax_routes from "@/latest/model/tax/routes/tax_routes";
@@ -18,6 +18,7 @@ import measurement_unit_routes from "@/views/measurement_unit/routes/routes";
 import variant_routes from "@/views/variant/routes/routes";
 import variant_value_routes from "@/views/variant_value/routes/routes";
 import product_routes from "@/views/product/routes/routes";
+import final_product_routes from "@/views/final_product/routes/routes";
 
 import CompanyDetails from "../parts/details/CompanyDetails.vue";
 

@@ -4,20 +4,16 @@ export default {
           validateCreateForm() {
                this.errors = {};
 
-               if (!this.formData.company_id?.trim()) {
-                    this.errors.company_id = this.$t("validation.company_idRequired");
+               if (!this.selectedCategory) {
+                    this.errors.category_id = this.$t("final_product.categoryRequired");
                }
 
-               if (!this.formData.category_id?.trim()) {
-                    this.errors.category_id = this.$t("validation.category_idRequired");
+               if (!this.selectedProduct) {
+                    this.errors.product_id = this.$t("final_product.productRequired");
                }
 
-               if (!this.formData.purchases_measurement_unit_id?.trim()) {
-                    this.errors.purchases_measurement_unit_id = this.$t("validation.purchases_measurement_unit_idRequired");
-               }
-
-               if (!this.formData.sales_measurement_unit_id?.trim()) {
-                    this.errors.sales_measurement_unit_id = this.$t("validation.sales_measurement_unit_idRequired");
+               if (!this.formData.price || this.formData.price <= 0) {
+                    this.errors.price = this.$t("final_product.priceRequired");
                }
 
                if (!this.formData.name?.trim()) {
@@ -36,6 +32,14 @@ export default {
                     this.errors.details_ar = this.$t("validation.details_arRequired");
                }
 
+               this.variantRows.forEach((row, index) => {
+                    if (row.variant_id && !row.variant_value_id) {
+                         this.errors[`variant_row_${index}`] = this.$t(
+                              "final_product.variantValueRequired"
+                         );
+                    }
+               });
+
                return Object.keys(this.errors).length === 0;
           },
 
@@ -46,12 +50,8 @@ export default {
                     this.errors.id = this.$t("validation.idRequired");
                }
 
-               if (!this.formData.purchases_measurement_unit_id?.trim()) {
-                    this.errors.purchases_measurement_unit_id = this.$t("validation.purchases_measurement_unit_idRequired");
-               }
-
-               if (!this.formData.sales_measurement_unit_id?.trim()) {
-                    this.errors.sales_measurement_unit_id = this.$t("validation.sales_measurement_unit_idRequired");
+               if (!this.formData.price || this.formData.price <= 0) {
+                    this.errors.price = this.$t("final_product.priceRequired");
                }
 
                if (!this.formData.name?.trim()) {

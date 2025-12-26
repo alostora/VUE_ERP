@@ -279,6 +279,10 @@ export function useCrud() {
                     this.selectedGovernorate = null;
                     this.selectedCity = null;
                     this.selectedCurrency = null;
+                    this.selectedCategory = null;
+                    this.selectedProduct = null;
+                    this.selectedPurchasesUnit = null;
+                    this.selectedSalesUnit = null;
                     this.logoFile = null;
                     this.coverFile = null;
                     this.generalFile = null;
