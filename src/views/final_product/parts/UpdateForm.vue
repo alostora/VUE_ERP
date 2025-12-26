@@ -13,7 +13,6 @@
 
       <form @submit.prevent="submitForm">
         <!-- Basic Information (Read-only) -->
-        
 
         <!-- Price -->
         <div class="field mb-3">
@@ -119,17 +118,17 @@
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex justify-content-end gap-2 mt-4">
+        <div class="flex justify-content-end gap-2">
           <Button
             type="button"
             :label="$t('common.cancel')"
-            @click="$emit('cancel')"
+            @click="closeModal"
             class="p-button-text"
             :disabled="loading"
           />
           <Button
             type="submit"
-            :label="$t('common.update')"
+            :label="$t('common.create')"
             :loading="loading"
             class="p-button-primary"
           />
@@ -226,7 +225,8 @@ export default {
       };
       this.selectedCategory = selectedItem.category || null;
       this.selectedProduct = selectedItem.product || null;
-      this.selectedFinalProductVariantValues = selectedItem.final_product_variant_values || [];
+      this.selectedFinalProductVariantValues =
+        selectedItem.final_product_variant_values || [];
     },
 
     async submitForm() {

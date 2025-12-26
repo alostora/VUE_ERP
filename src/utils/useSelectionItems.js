@@ -175,8 +175,53 @@ export default {
                }
           },
 
-          //handel on change event 
-          //handel on change event 
+          async loadVariants(company_id) {
+               this.loadingItems = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.VARIANT.propSearchUrl}/${company_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.variants = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingItems = false;
+               }
+          },
+
+          async loadVariantValues(variantId) {
+               this.loadingVariantValues = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.VARIANT_VALUE.propSearchUrl}/${variantId}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+
+                    const variantValuesData = response.data.data || [];
+
+                    this.variantValues = {
+                         ...this.variantValues,
+                         [variantId]: variantValuesData,
+                    };
+
+                    this.$forceUpdate();
+               } catch (error) {
+                    this.variantValues = {
+                         ...this.variantValues,
+                         [variantId]: [],
+                    };
+               } finally {
+                    this.loadingVariantValues = false;
+               }
+          },
+
+          //handel on change event
+          //handel on change event
 
           onAccountTypeChange(value) {
                this.selectedAccountType = value;
@@ -233,6 +278,18 @@ export default {
           onProductChange(value) {
                this.selectedProduct = value;
                this.formData.product_id = value;
+          },
+
+          async onVariantChange(rowIndex, event) {
+               const variantId = event.value;
+
+               this.variantRows[rowIndex].variant_value_id = null;
+
+               if (variantId) {
+                    await this.loadVariantValues(variantId);
+               }
+
+               this.$forceUpdate();
           },
      }
 }

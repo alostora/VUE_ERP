@@ -445,7 +445,7 @@ export default {
 
   methods: {
     getVariantLabel(variant) {
-      return `${variant.variant.name}: ${variant.variant_value.value}`;
+      return `${variant.variant?.name}: ${variant.variant_value.value}`;
     },
 
     async loadCategories() {

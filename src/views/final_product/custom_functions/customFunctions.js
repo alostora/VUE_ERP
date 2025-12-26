@@ -1,4 +1,20 @@
 export default {
+
+     computed: {
+
+          availableVariantsForRow() {
+               return (currentIndex) => {
+                    const selectedVariantIds = this.variantRows
+                         .filter((_, index) => index !== currentIndex)
+                         .map((row) => row.variant_id)
+                         .filter((id) => id);
+
+                    return this.variants.filter(
+                         (variant) => !selectedVariantIds.includes(variant.id)
+                    );
+               };
+          },
+     },
      data() {
           return {
                variants: [],
@@ -34,18 +50,6 @@ export default {
                }
           },
 
-          async onVariantChange(rowIndex, event) {
-               const variantId = event.value;
-
-               this.variantRows[rowIndex].variant_value_id = null;
-
-               if (variantId) {
-                    await this.loadVariantValues(variantId);
-               }
-
-               this.$forceUpdate();
-          },
-
           getSelectedVariantName(variantId) {
                if (!variantId) return "";
                const variant = this.variants.find((v) => v.id === variantId);
@@ -62,6 +66,10 @@ export default {
           getVariantValues(variantId) {
                if (!variantId) return [];
                return this.variantValues[variantId] || [];
+          },
+
+          getVariantLabel(variant) {
+               return `${variant.variant?.name}: ${variant.variant_value.value}`;
           },
      }
 }

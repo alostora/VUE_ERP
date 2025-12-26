@@ -17,11 +17,11 @@
         <div class="grid">
           <!-- Category -->
           <div class="col-12 md:col-6 field">
-            <label for="category" class="font-bold block mb-2">
+            <label :id="'category_label'" class="font-bold block mb-2">
               {{ $t("final_product.category") }} *
             </label>
             <Select
-              id="category"
+              :aria-labelledby="'category_label'"
               v-model="selectedCategory"
               @update:modelValue="onCategoryChange"
               :options="categories"
@@ -44,11 +44,11 @@
 
           <!-- Product -->
           <div class="col-12 md:col-6 field">
-            <label for="product" class="font-bold block mb-2">
+            <label :id="'product_label'" class="font-bold block mb-2">
               {{ $t("final_product.product") }} *
             </label>
             <Select
-              id="product"
+              :aria-labelledby="'product_label'"
               v-model="selectedProduct"
               @update:modelValue="onProductChange"
               :options="products"
@@ -146,14 +146,119 @@
           </div>
         </div>
 
+        <!-- Variants Section -->
+        <div class="field mb-3">
+          <div class="flex justify-content-between align-items-center mb-3">
+            <h3 class="font-bold m-0">
+              {{ $t("final_product.variants") }}
+            </h3>
+            <Button
+              icon="pi pi-plus"
+              :label="$t('final_product.addVariant')"
+              class="p-button-outlined p-button-sm"
+              @click="addVariantRow"
+              :disabled="!selectedCategory"
+            />
+          </div>
+
+          <div class="variants-section">
+            <!-- Variant Rows -->
+            <div
+              v-for="(variantRow, index) in variantRows"
+              :key="index"
+              class="variant-row mb-2 p-2 border-round border surface-border"
+            >
+              <div class="grid align-items-center">
+                <!-- Variant Selection -->
+                <div class="col-12 md:col-5 field mb-0">
+                  <label class="font-medium block mb-1 text-xs">
+                    {{ $t("final_product.variant") }}
+                  </label>
+                  <Select
+                    v-model="variantRow.variant_id"
+                    :options="availableVariantsForRow(index)"
+                    option-label="name"
+                    option-value="id"
+                    :placeholder="$t('final_product.selectVariant')"
+                    class="w-full variant-select"
+                    @change="onVariantChange(index, $event)"
+                  />
+                </div>
+
+                <!-- Variant Value Selection -->
+                <div class="col-12 md:col-5 field mb-0">
+                  <label class="font-medium block mb-1 text-xs">
+                    {{ $t("final_product.variantValue") }}
+                  </label>
+                  <Select
+                    v-model="variantRow.variant_value_id"
+                    :options="getVariantValues(variantRow.variant_id)"
+                    option-label="value"
+                    option-value="id"
+                    :placeholder="$t('final_product.selectVariantValue')"
+                    class="w-full variant-select"
+                    :disabled="!variantRow.variant_id"
+                    :loading="loadingVariantValues"
+                  />
+                </div>
+
+                <!-- Remove Button -->
+                <div class="col-12 md:col-2 field mb-0">
+                  <Button
+                    icon="pi pi-times"
+                    class="p-button-text p-button-danger p-button-sm remove-btn"
+                    @click="removeVariantRow(index)"
+                    v-tooltip="$t('final_product.removeVariant')"
+                    :disabled="variantRows.length === 1"
+                  />
+                </div>
+              </div>
+
+              <!-- Selected values display -->
+              <div
+                v-if="variantRow.variant_id || variantRow.variant_value_id"
+                class="mt-2 text-xs text-color-secondary"
+              >
+                <span v-if="variantRow.variant_id">
+                  Variant: {{ getSelectedVariantName(variantRow.variant_id) }}
+                </span>
+                <span v-if="variantRow.variant_value_id" class="ml-2">
+                  Value:
+                  {{
+                    getSelectedVariantValueName(
+                      variantRow.variant_value_id,
+                      variantRow.variant_id
+                    )
+                  }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              v-if="variantRows.length === 0"
+              class="empty-variants text-center py-3"
+            >
+              <i class="pi pi-inbox text-3xl text-color-secondary mb-2"></i>
+              <p class="text-color-secondary text-sm mb-2">
+                No variants added yet
+              </p>
+              <Button
+                icon="pi pi-plus"
+                :label="$t('final_product.addVariant')"
+                class="p-button-outlined p-button-sm"
+                @click="addVariantRow"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- Action Buttons -->
-        <div
-          class="flex justify-content-end gap-2 mt-4 pt-3 border-top-1 surface-border"
-        >
+        <div class="flex justify-content-end gap-2">
           <Button
             type="button"
             :label="$t('common.cancel')"
-            @click="$emit('cancel')"
+            @click="closeModal"
             class="p-button-text"
             :disabled="loading"
           />
@@ -227,6 +332,7 @@ export default {
         if (company_id) {
           this.formData.company_id = company_id;
           this.loadCategories(company_id);
+          this.loadVariants(company_id);
         }
       },
     },
@@ -237,6 +343,7 @@ export default {
           this.loadProducts(company_id, category_id);
         } else {
           this.products = [];
+          this.variantRows = [{ variant_id: null, variant_value_id: null }];
           this.selectedProduct = null;
           this.formData.product_id = "";
         }
@@ -249,6 +356,8 @@ export default {
       propMainUrl: moduleUrl.URLS.FINAL_PRODUCT.propMainUrl,
       selectedCategory: null,
       selectedproduct: null,
+      variants: [],
+      variantValues: {},
       formData: {
         company_id: "",
         category_id: "",
@@ -258,6 +367,7 @@ export default {
         name_ar: "",
         details: "",
         details_ar: "",
+        variants: [],
       },
     };
   },

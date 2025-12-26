@@ -5,7 +5,7 @@
         <h1 class="table-title">{{ $t("final_products.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('final_products.addProduct')"
+            :label="$t('final_products.add')"
             icon="pi pi-plus"
             @click="openCreateModel"
             class="p-button-primary"
@@ -102,7 +102,7 @@
           </template>
         </Column>
 
-          <!-- Details Column -->
+        <!-- Details Column -->
         <Column
           field="details"
           :header="$t('final_product.details')"
@@ -115,7 +115,10 @@
                 {{ slotProps.data.details || slotProps.data.product?.details }}
               </div>
               <div class="text-sm text-color-secondary">
-                {{ slotProps.data.details_ar || slotProps.data.product?.details_ar }}
+                {{
+                  slotProps.data.details_ar ||
+                  slotProps.data.product?.details_ar
+                }}
               </div>
             </div>
           </template>
@@ -148,6 +151,25 @@
         >
           <template #body="slotProps">
             <span>{{ slotProps.data.product?.name || "-" }}</span>
+          </template>
+        </Column>
+
+        <!-- Variants Column -->
+        <Column
+          field="variants"
+          :header="$t('final_product.variants')"
+          style="min-width: 200px"
+        >
+          <template #body="slotProps">
+            <div v-if="slotProps.data.final_product_variant_values?.length">
+              <Chip
+                v-for="variant in slotProps.data.final_product_variant_values"
+                :key="variant.id"
+                :label="getVariantLabel(variant)"
+                class="mr-1 mb-1 text-xs"
+              />
+            </div>
+            <span v-else>-</span>
           </template>
         </Column>
 
