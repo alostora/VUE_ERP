@@ -3,21 +3,22 @@ export default {
      computed: {
 
           availableVariantsForRow() {
+
                return (currentIndex) => {
                     const selectedVariantIds = this.variantRows
-                         .filter((_, index) => index !== currentIndex)
-                         .map((row) => row.variant_id)
-                         .filter((id) => id);
+                         .filter((_, index) => index !== currentIndex) // return result without duplicated values ->> the (_) is to ignore the first parameter (row), we only need the index
+                         .map((row) => row.variant_id) // return variant_id
+                         .filter((id) => id); // return variant_id that are not null/undefined
 
                     return this.variants.filter(
-                         (variant) => !selectedVariantIds.includes(variant.id)
+                         (variant) => !selectedVariantIds.includes(variant.id) // exclude already selected variants
                     );
                };
           },
      },
      data() {
           return {
-               variants: [],
+               variants: [], // all available variants from loadVariants function
                variantValues: {},
                variantRows: [
                     {
@@ -39,7 +40,15 @@ export default {
           removeVariantRow(index) {
                if (this.variantRows.length > 1) {
                     this.variantRows.splice(index, 1);
+
+                    this.formData.variants = this.variantRows.filter(
+                         (row) => row.variant_id && row.variant_value_id
+                    );
                }
+
+               console.log("rowIndex", index);
+               console.log("ssssssssssssssssssss", this.formData.variants);
+               console.log("rowIndex", index);
           },
 
           validatePrice() {

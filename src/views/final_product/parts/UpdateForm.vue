@@ -205,6 +205,7 @@ export default {
       propMainUrl: moduleUrl.URLS.FINAL_PRODUCT.propMainUrl,
       formData: {
         id: "",
+        price: "",
         name: "",
         name_ar: "",
         details: "",

@@ -157,7 +157,6 @@
               :label="$t('final_product.addVariant')"
               class="p-button-outlined p-button-sm"
               @click="addVariantRow"
-              :disabled="!selectedCategory"
             />
           </div>
 
@@ -199,6 +198,9 @@
                     class="w-full variant-select"
                     :disabled="!variantRow.variant_id"
                     :loading="loadingVariantValues"
+                    @change="
+                      onVariantValueChange(index, $event, variantRow.variant_id)
+                    "
                   />
                 </div>
 
@@ -356,8 +358,6 @@ export default {
       propMainUrl: moduleUrl.URLS.FINAL_PRODUCT.propMainUrl,
       selectedCategory: null,
       selectedproduct: null,
-      variants: [],
-      variantValues: {},
       formData: {
         company_id: "",
         category_id: "",

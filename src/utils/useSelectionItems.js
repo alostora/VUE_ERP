@@ -289,7 +289,27 @@ export default {
                     await this.loadVariantValues(variantId);
                }
 
-               this.$forceUpdate();
+               // this.$forceUpdate();
+          },
+
+          async onVariantValueChange(rowIndex, event, variantId) {
+
+               // let formDataVariants = this.formData.variants.filter((variant) => variant.variant_id !== variantId);
+
+               // formDataVariants.push({ variant_id: variantId, variant_value_id: event.value });
+
+               // this.formData.variants = formDataVariants;
+
+
+               this.formData.variants = this.variantRows.filter(
+                    (row) => row.variant_id && row.variant_value_id
+               );
+
+
+
+               console.log("rowIndex", rowIndex);
+               console.log("ssssssssssssssssssss", this.formData.variants);
+               console.log("rowIndex", rowIndex);
           },
      }
 }
