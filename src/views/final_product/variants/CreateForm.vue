@@ -186,19 +186,24 @@ export default {
     Textarea,
     Select,
   },
+
   props: {
-    company_id: {
-      type: String,
-      default: null,
+    selected_item: {
+      type: Object,
+      default: () => ({}),
     },
   },
 
   watch: {
-    selectedItem: {
+    selected_item: {
+      immediate: true,
+      deep: true,
       handler(selectedItem) {
         if (selectedItem && selectedItem.id) {
           this.populateForm(selectedItem);
+          this.loadVariants(this.company_id);
         } else {
+          this.variantRows = [{ variant_id: null, variant_value_id: null }];
           this.resetForm();
         }
       },
@@ -208,6 +213,7 @@ export default {
   data() {
     return {
       propMainUrl: moduleUrl.URLS.FINAL_PRODUCT_VARIANT.propCreateMultiUrl,
+      company_id: null,
       formData: {
         final_product_id: "",
         variants: [],
@@ -219,6 +225,8 @@ export default {
       this.formData = {
         final_product_id: selectedItem.id || "",
       };
+
+      this.company_id = selectedItem.company_id || "";
     },
 
     async submitForm() {

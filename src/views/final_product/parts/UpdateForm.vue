@@ -5,6 +5,7 @@
     :modal="true"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
+    @hide="closeModal"
   >
     <div class="form">
       <Message v-if="error" severity="error" class="mb-3">

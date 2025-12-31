@@ -226,6 +226,12 @@
                 @click="deleteRow(slotProps.data)"
                 v-tooltip.top="$t('final_products.delete')"
               />
+              <Button
+                icon="pi pi-list"
+                class="p-button-text p-button-sm p-button-info"
+                @click="openVariantTableModel(slotProps.data)"
+                v-tooltip.top="$t('variants.viewValues')"
+              />
             </div>
           </template>
         </Column>
@@ -236,6 +242,7 @@
         :selected_item="selectedItem"
         @updated="handleUpdated"
       />
+      <VariantTable ref="variantTable" :selected_item="selectedItem" />
 
       <CreateForm ref="createModalForm" @created="handleCreated" />
 
@@ -257,6 +264,7 @@ import Tooltip from "primevue/tooltip";
 
 import CreateForm from "./CreateForm.vue";
 import UpdateForm from "./UpdateForm.vue";
+import VariantTable from "../variants/Table.vue";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
@@ -271,6 +279,7 @@ export default {
   components: {
     CreateForm,
     UpdateForm,
+    VariantTable,
     DataTable,
     Column,
     InputText,
@@ -328,6 +337,13 @@ export default {
       this.selectedItem = { ...item };
       this.$nextTick(() => {
         this.$refs.updateModalForm.openModal();
+      });
+    },
+
+    openVariantTableModel(item) {
+      this.selectedItem = { ...item };
+      this.$nextTick(() => {
+        this.$refs.variantTable.openModal();
       });
     },
 
