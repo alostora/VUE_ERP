@@ -232,6 +232,12 @@
                 @click="openVariantTableModel(slotProps.data)"
                 v-tooltip.top="$t('variants.viewValues')"
               />
+              <Button
+                icon="pi pi-images"
+                class="p-button-text p-button-sm p-button-info"
+                @click="openImageTableModel(slotProps.data)"
+                v-tooltip.top="$t('variants.viewValues')"
+              />
             </div>
           </template>
         </Column>
@@ -242,9 +248,10 @@
         :selected_item="selectedItem"
         @updated="handleUpdated"
       />
-      <VariantTable ref="variantTable" :selected_item="selectedItem" />
 
       <CreateForm ref="createModalForm" @created="handleCreated" />
+      <VariantTable ref="variantTable" :selected_item="selectedItem" />
+      <ImageTable ref="imageTable" :selected_item="selectedItem" />
 
       <Toast />
     </div>
@@ -264,7 +271,8 @@ import Tooltip from "primevue/tooltip";
 
 import CreateForm from "./CreateForm.vue";
 import UpdateForm from "./UpdateForm.vue";
-import VariantTable from "../variants/Table.vue";
+import VariantTable from "../related_models/variants/parts/Table.vue";
+import ImageTable from "../related_models/images/parts/Table.vue";
 
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
@@ -280,6 +288,7 @@ export default {
     CreateForm,
     UpdateForm,
     VariantTable,
+    ImageTable,
     DataTable,
     Column,
     InputText,
@@ -344,6 +353,13 @@ export default {
       this.selectedItem = { ...item };
       this.$nextTick(() => {
         this.$refs.variantTable.openModal();
+      });
+    },
+
+    openImageTableModel(item) {
+      this.selectedItem = { ...item };
+      this.$nextTick(() => {
+        this.$refs.imageTable.openModal();
       });
     },
 
