@@ -1,3 +1,5 @@
+import moduleUrl from "@/constants/moduleUrl";
+
 export default {
 
      computed: {
@@ -34,35 +36,9 @@ export default {
           },
 
           async setAsMain(image) {
-               try {
-                    this.loading = true;
-
-                    const url = `${general_request.BASE_URL}/admin/company/product/final-product-image/set-main/${image.id}`;
-                    await this.$http.patch(
-                         url,
-                         {},
-                         {
-                              headers: general_request.headers,
-                         }
-                    );
-
-                    // Refresh the data to get updated main image status
-                    await this.getData();
-
-                    this.showToast(
-                         "success",
-                         this.$t("common.success"),
-                         this.$t("final_product_images.setMainSuccess")
-                    );
-               } catch (error) {
-                    this.showToast(
-                         "error",
-                         this.$t("common.error"),
-                         this.$t("final_product_images.setMainError")
-                    );
-               } finally {
-                    this.loading = false;
-               }
+               const url = `${moduleUrl.URLS.FINAL_PRODUCT_IMAGE.propMainUrl}/set-main`;
+               await this.updateItem(image.id, {}, url);
+               await this.getData(this.propSearchUrl);
           },
 
           handleImagesUploaded(newImages) {

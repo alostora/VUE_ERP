@@ -137,6 +137,7 @@
         <CreateForm
           ref="createModalForm"
           :selected_item="selectedItem"
+          :final_product_id="final_product_id"
           @created="handleCreated"
         />
         <!-- Preview Modal -->

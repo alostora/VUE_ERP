@@ -167,6 +167,7 @@ import Message from "primevue/message";
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
 import { useFileCrud } from "@/utils/useFileCrud";
+import general_request from "@/utils/general_request";
 
 export default {
   name: "CreateForm",
@@ -211,13 +212,13 @@ export default {
       if (this.selectedFiles.length === 0) return 0;
       const total = this.selectedFiles.reduce(
         (sum, file) => sum + (file.progress || 0),
-        0
+        0,
       );
       return Math.round(total / this.selectedFiles.length);
     },
     hasMultipleMainImages() {
       const mainImagesCount = this.selectedFiles.filter(
-        (file) => file.isMain
+        (file) => file.isMain,
       ).length;
       return mainImagesCount > 1;
     },
@@ -263,11 +264,11 @@ export default {
 
       // منع التكرار بناءً على اسم الملف والحجم
       const existingFileNames = this.selectedFiles.map(
-        (f) => `${f.name}-${f.size}`
+        (f) => `${f.name}-${f.size}`,
       );
       const uniqueNewFiles = newFiles.filter(
         (newFile) =>
-          !existingFileNames.includes(`${newFile.name}-${newFile.size}`)
+          !existingFileNames.includes(`${newFile.name}-${newFile.size}`),
       );
 
       if (uniqueNewFiles.length > 0) {
@@ -343,9 +344,8 @@ export default {
 
         // الخطوة 2: إنشاء سجلات صور المنتج النهائي بجميع الملفات
         console.log("🔄 Creating final product image records...");
-        const finalProductImages = await this.createFinalProductImages(
-          uploadedFileIds
-        );
+        const finalProductImages =
+          await this.createFinalProductImages(uploadedFileIds);
 
         console.log("✅ All images created successfully:", finalProductImages);
 
@@ -353,14 +353,14 @@ export default {
         this.showToast(
           "success",
           this.$t("common.success"),
-          this.$t("final_product_images.uploadSuccess")
+          this.$t("final_product_images.uploadSuccess"),
         );
         this.closeModal();
       } catch (error) {
         this.showToast(
           "error",
           this.$t("common.error"),
-          this.$t("final_product_images.uploadError")
+          this.$t("final_product_images.uploadError"),
         );
       } finally {
         this.uploading = false;
@@ -378,7 +378,7 @@ export default {
         },
         onUploadProgress: (progressEvent) => {
           const progress = Math.round(
-            (progressEvent.loaded * 45) / progressEvent.total
+            (progressEvent.loaded * 45) / progressEvent.total,
           );
           fileItem.progress = 10 + progress; // 10-55% لرفع الملف
           this.$forceUpdate();
@@ -396,7 +396,7 @@ export default {
 
       console.log(
         "📦 Sending payload to create final product images:",
-        payload
+        payload,
       );
 
       const response = await this.$http.post(
@@ -404,7 +404,7 @@ export default {
         payload,
         {
           headers: general_request.headers,
-        }
+        },
       );
 
       console.log("✅ Final product images created:", response.data.data);
