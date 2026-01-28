@@ -1,0 +1,309 @@
+<template>
+  <div class="table-page">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h1 class="table-title">{{ $t("contacts.title") }}</h1>
+        <div class="table-actions">
+          <Button
+            :label="$t('contacts.add')"
+            icon="pi pi-plus"
+            @click="openCreateModel"
+            class="p-button-primary"
+          />
+        </div>
+      </div>
+
+      <div class="table-filters">
+        <div class="search-container flex-1 w-full">
+          <InputText
+            v-model="query_string"
+            :placeholder="$t('contacts.search')"
+            @input="handleSearchInput"
+            class="search-input w-20rem"
+          />
+          <i class="pi pi-search search-icon" />
+        </div>
+
+        <Select
+          v-model="per_page"
+          :options="perPageOptions"
+          optionLabel="label"
+          optionValue="value"
+          :placeholder="$t('contacts.show')"
+          @change="getData(propSearchUrl)"
+          class="w-10rem"
+        />
+      </div>
+
+      <DataTable
+        :value="tableItems"
+        :paginator="true"
+        :rows="per_page"
+        :totalRecords="meta.total"
+        :rowsPerPageOptions="[5, 10, 25, 50, 100]"
+        :loading="loading"
+        :lazy="true"
+        resizableColumns
+        columnResizeMode="fit"
+        showGridlines
+        tableStyle="min-width: 50rem"
+        class="table-content"
+        :class="{ 'responsive-table': true }"
+        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
+        @page="handlePageChange"
+      >
+        <Column field="id" :header="$t('contacts.id')" class="col-identifier">
+          <template #body="slotProps">
+            <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="name"
+          :header="$t('contacts.name')"
+          sortable
+          class="col-name"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.name }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="phone"
+          :header="$t('contacts.phone')"
+          sortable
+          class="col-name"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.phone }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="email"
+          :header="$t('contacts.email')"
+          sortable
+          class="col-name"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.email }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="address"
+          :header="$t('contacts.address')"
+          sortable
+          class="col-name"
+        >
+          <template #body="slotProps">
+            <span class="font-medium">{{ slotProps.data.address }}</span>
+          </template>
+        </Column>
+
+        <Column
+          field="created_at"
+          :header="$t('contacts.createdAt')"
+          sortable
+          class="col-name"
+        >
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <Column
+          :header="$t('contacts.actions')"
+          :exportable="false"
+          class="col-actions"
+        >
+          <template #body="slotProps">
+            <div class="table-actions-cell">
+              <Button
+                icon="pi pi-map-marker"
+                class="p-button-text p-button-sm"
+                @click.prevent="openAddressTableModel(slotProps.data)"
+                v-tooltip.top="$t('contacts.addresses')"
+              />
+              <Button
+                icon="pi pi-envelope"
+                class="p-button-text p-button-sm"
+                @click.prevent="openEmailTableModel(slotProps.data)"
+                v-tooltip.top="$t('contacts.emails')"
+              />
+              <Button
+                icon="pi pi-phone"
+                class="p-button-text p-button-sm"
+                @click.prevent="openPhoneTableModel(slotProps.data)"
+                v-tooltip.top="$t('contacts.phones')"
+              />
+              <Button
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-primary"
+                @click="openUpdateModel(slotProps.data)"
+                v-tooltip.top="$t('contacts.edit')"
+              />
+              <Button
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                @click="deleteRow(slotProps.data)"
+                v-tooltip.top="$t('contacts.delete')"
+              />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+
+      <UpdateForm
+        ref="updateModalForm"
+        :selected_item="selectedItem"
+        @updated="handleUpdated"
+      />
+
+      <CreateForm ref="createModalForm" @created="handleCreated" />
+      <AddressTable ref="addressTable" :selected_item="selectedItem" />
+      <EmailTable ref="emailTable" :selected_item="selectedItem" />
+      <PhoneTable ref="phoneTable" :selected_item="selectedItem" />
+
+      <Toast />
+    </div>
+  </div>
+</template>
+
+<script>
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
+import InputText from "primevue/inputtext";
+import Button from "primevue/button";
+import Select from "primevue/select";
+import ProgressSpinner from "primevue/progressspinner";
+import Toast from "primevue/toast";
+import ConfirmDialog from "primevue/confirmdialog";
+import Tooltip from "primevue/tooltip";
+
+import CreateForm from "./CreateForm.vue";
+import UpdateForm from "./UpdateForm.vue";
+import AddressTable from "../related_models/addresses/parts/Table.vue";
+import EmailTable from "../related_models/emails/parts/Table.vue";
+import PhoneTable from "../related_models/phones/parts/Table.vue";
+
+import { useTable } from "@/utils/useTable";
+import { useCrud } from "@/utils/useCrud";
+import moduleUrl from "@/constants/moduleUrl";
+import customFunctions from "../custom_functions/customFunctions";
+
+export default {
+  name: "Table",
+
+  mixins: [useTable(), useCrud(), customFunctions],
+
+  components: {
+    CreateForm,
+    UpdateForm,
+    AddressTable,
+    EmailTable,
+    PhoneTable,
+    DataTable,
+    Column,
+    InputText,
+    Button,
+    Select,
+    ProgressSpinner,
+    Toast,
+    ConfirmDialog,
+  },
+
+  directives: {
+    tooltip: Tooltip,
+  },
+
+  props: {
+    company_id: {
+      type: String,
+      default: null,
+    },
+  },
+
+  watch: {
+    "$route.params.company_id": {
+      immediate: true,
+      deep: true,
+      handler(company_id) {
+        if (company_id) {
+          this.companyId = company_id;
+          this.getData(this.propSearchUrl);
+        }
+      },
+    },
+  },
+
+  computed: {
+    propSearchUrl() {
+      let url = `${moduleUrl.URLS.CONTACT.propSearchUrl}/${this.companyId}?paginate=true`;
+      return url;
+    },
+  },
+
+  data() {
+    return {
+      companyId: null,
+      propMainUrl: moduleUrl.URLS.CONTACT.propMainUrl,
+    };
+  },
+
+  methods: {
+    openCreateModel() {
+      this.$refs.createModalForm.openModal();
+    },
+
+    openUpdateModel(item) {
+      this.selectedItem = { ...item };
+      this.$nextTick(() => {
+        this.$refs.updateModalForm.openModal();
+      });
+    },
+
+    handleCreated(newItem) {
+      this.handleItemCreated(newItem);
+    },
+
+    handleUpdated(updatedItem) {
+      this.handleItemUpdated(updatedItem);
+    },
+
+    deleteRow(item) {
+      this.deleteItem(
+        item,
+        this.propMainUrl,
+        this.$t("common.itemDeleted"),
+        this.$t("common.failedToDeleteItem"),
+      );
+    },
+
+    openAddressTableModel(item) {
+      this.selectedItem = { ...item };
+      this.$nextTick(() => {
+        this.$refs.addressTable.openModal();
+      });
+    },
+
+    openEmailTableModel(item) {
+      this.selectedItem = { ...item };
+      this.$nextTick(() => {
+        this.$refs.emailTable.openModal();
+      });
+    },
+
+    openPhoneTableModel(item) {
+      this.selectedItem = { ...item };
+      this.$nextTick(() => {
+        this.$refs.phoneTable.openModal();
+      });
+    },
+  },
+};
+</script>
+
+<style scoped></style>

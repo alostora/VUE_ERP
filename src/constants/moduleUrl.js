@@ -92,5 +92,29 @@ export default {
                propMainUrl: `${general_request.BASE_URL}/admin/company/product/final-product-image`,
                propCreateMultiUrl: `${general_request.BASE_URL}/admin/company/product/final-product-image`,
           },
+          CONTACT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/contacts/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/contacts`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/contact`,
+               propCreateMultiUrl: ``,
+          },
+          CONTACT_ADDRESS: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/contact-addresses/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/contact-addresses`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/contact-address`,
+               propCreateMultiUrl: ``,
+          },
+          CONTACT_EMAIL: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/contact-emails/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/contact-emails`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/contact-email`,
+               propCreateMultiUrl: ``,
+          },
+          CONTACT_PHONE: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/contact-phones/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/contact-phones`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/contact-phone`,
+               propCreateMultiUrl: ``,
+          },
      }
 }
