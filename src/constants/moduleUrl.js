@@ -116,5 +116,20 @@ export default {
                propMainUrl: `${general_request.BASE_URL}/admin/company/contact-phone`,
                propCreateMultiUrl: ``,
           },
+          INVOICE_STAGE: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/invoice-stages/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/invoice-stages`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/invoice-stage`,
+               propCreateMultiUrl: ``,
+               propSetDefaultUrl: `${general_request.BASE_URL}/admin/company/invoice-stage-set-default`,
+          },
+          TAX: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/taxes/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/taxes`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/tax`,
+               propCreateMultiUrl: ``,
+               propSetActiveUrl: `${general_request.BASE_URL}/admin/company/tax/set-active`,
+               propSetInactiveUrl: `${general_request.BASE_URL}/admin/company/tax/set-inactive`,
+          },
      }
 }
