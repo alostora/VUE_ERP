@@ -13,8 +13,8 @@
       </Message>
 
       <form @submit.prevent="submitForm">
-        <label>{{ $t("contacts.address") }}</label>
-        <InputText v-model="formData.address" />
+        <label>{{ $t("contacts.email") }}</label>
+        <InputText v-model="formData.email" />
 
         <div class="mt-3">
           <Checkbox v-model="formData.is_default" binary />
@@ -86,6 +86,7 @@ export default {
         if (selectedItem && selectedItem.id) {
           this.populateForm(selectedItem);
         } else {
+          this.variantRows = [{ variant_id: null, variant_value_id: null }];
           this.resetForm();
         }
       },
@@ -94,11 +95,11 @@ export default {
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.CONTACT_ADDRESS.propMainUrl,
+      propMainUrl: moduleUrl.URLS.CONTACT_EMAIL.propMainUrl,
       formData: {
         company_id: "",
         contact_id: "",
-        address: "",
+        email: "",
         is_default: false,
       },
     };

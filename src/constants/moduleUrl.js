@@ -78,6 +78,7 @@ export default {
                propSearchUrl: `${general_request.BASE_URL}/admin/company/product/company-final-products/search`,
                propGetUrl: `${general_request.BASE_URL}/admin/company/product/company-final-products`,
                propMainUrl: `${general_request.BASE_URL}/admin/company/product/final-product`,
+               propListhUrl: `${general_request.BASE_URL}/admin/company/product/final-products/list`,
                propCreateMultiUrl: ``,
           },
           FINAL_PRODUCT_VARIANT: {
@@ -130,6 +131,31 @@ export default {
                propCreateMultiUrl: ``,
                propSetActiveUrl: `${general_request.BASE_URL}/admin/company/tax/set-active`,
                propSetInactiveUrl: `${general_request.BASE_URL}/admin/company/tax/set-inactive`,
+          },
+          DISCOUNT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/discounts/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/discounts`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/discount`,
+               propCreateMultiUrl: ``,
+          },
+          BRANCH: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/branches/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/branches`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/branch`,
+               propCreateMultiUrl: ``,
+               propListhUrl: `${general_request.BASE_URL}/admin/company/branches/list`,
+          },
+          DISCOUNT_BRANCH: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/discount-branches/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/discount-branches`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/discount-branch`,
+               propCreateMultiUrl: ``,
+          },
+          DISCOUNT_FINAL_PRODUCT: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/discount-final-products/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/discount-final-products`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/discount-final-product`,
+               propCreateMultiUrl: ``,
           },
      }
 }

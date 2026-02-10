@@ -1,11 +1,10 @@
 <template>
   <Dialog
-    :header="$t('contacts.create')"
+    :header="this.$t('contacts.edit')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
-    @hide="closeModal"
   >
     <div class="form">
       <Message v-if="error" severity="error" class="mb-3">
@@ -41,7 +40,6 @@
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("common.creating") }}</p>
     </div>
   </Dialog>
 </template>
@@ -59,7 +57,7 @@ import moduleUrl from "@/constants/moduleUrl";
 import validationRequest from "../validation/validationRequest";
 
 export default {
-  name: "CreateForm",
+  name: "UpdateForm",
 
   mixins: [useTable(), useCrud(), validationRequest],
 
@@ -94,24 +92,26 @@ export default {
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.CONTACT_ADDRESS.propMainUrl,
+      propMainUrl: moduleUrl.URLS.DISCOUNT_BRANCH.propMainUrl,
       formData: {
-        company_id: "",
-        contact_id: "",
+        id: "",
         address: "",
         is_default: false,
       },
     };
   },
+
   methods: {
     populateForm(selectedItem) {
       this.formData = {
-        contact_id: selectedItem.id || "",
-        company_id: selectedItem.company_id || "",
+        id: selectedItem.id || "",
+        address: selectedItem.address || "",
+        is_default: selectedItem.is_default || false,
       };
     },
+
     async submitForm() {
-      if (!this.validateCreateForm()) {
+      if (!this.validateUpdateForm()) {
         return;
       }
 
@@ -119,8 +119,7 @@ export default {
       this.error = "";
 
       const url = this.propMainUrl;
-
-      await this.createItem(this.formData, url);
+      await this.updateItem(this.formData.id, this.formData, url);
 
       this.closeModal();
     },
@@ -137,14 +136,6 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-:deep(.p-fileupload) {
-  width: 100%;
-}
-
-:deep(.p-fileupload-choose) {
-  width: 100%;
-}
-
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -153,7 +144,6 @@ export default {
   height: 100%;
   background: rgba(255, 255, 255, 0.8);
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 1000;

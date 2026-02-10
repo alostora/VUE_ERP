@@ -7,6 +7,6 @@ export default {
           CURRENCY: 7,
           INVOICE_TYPE: 8,
           INVOICE_STATUS: 9,
-          DISCOUNT_TYPE: 10,
+          DISCOUNT_TYPE: 16,
      }
 }

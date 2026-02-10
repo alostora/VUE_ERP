@@ -7,6 +7,8 @@ export default {
      data() {
           return {
                loadingItems: false,
+               loadingTypes: false,
+               loadingFinalProducts: false,
                accountTypes: [],
                currencies: [],
                countries: [],
@@ -14,8 +16,12 @@ export default {
                cities: [],
                clients: [],
                measurementUnits: [],
+               discountTypes: [],
                categories: [],
                products: [],
+               branches: [],
+               final_products: [],
+               availableBranches: [],
           }
      },
 
@@ -141,6 +147,24 @@ export default {
                }
           },
 
+          async loadDiscountTypes() {
+               this.loadingTypes = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.LOOK_UP.propSearchUrl}/${lookupTypes.LOOKUP_TYPES.DISCOUNT_TYPE}`,
+                         {
+                              params: { per_page: 100 },
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.discountTypes = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingTypes = false;
+               }
+          },
+
           async loadCategories(company_id) {
                this.loadingItems = true;
                try {
@@ -220,8 +244,60 @@ export default {
                }
           },
 
+          async loadBranches(company_id) {
+               this.loadingBranches = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.BRANCH.propSearchUrl}/${company_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.branches = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingBranches = false;
+               }
+          },
+
+          async loadAvailableBranches(company_id) {
+               alert(company_id);
+               this.loadingBranches = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.BRANCH.propListhUrl}/${company_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.availableBranches = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingBranches = false;
+               }
+          },
+
+          async loadFinalProducts(company_id) {
+               this.loadingFinalProducts = true;
+               try {
+                    const response = await this.$http.get(
+                         `${moduleUrl.URLS.FINAL_PRODUCT.propListhUrl}/${company_id}`,
+                         {
+                              headers: general_request.headers,
+                         }
+                    );
+                    this.final_products = response.data.data || [];
+               } catch (error) {
+                    this.error = this.$t("common.error");
+               } finally {
+                    this.loadingFinalProducts = false;
+               }
+          },
+
           //handel on change event
-          //handel on change event
+          //handel on change event   
 
           onAccountTypeChange(value) {
                this.selectedAccountType = value;
@@ -268,6 +344,11 @@ export default {
           onMeasurementUnitChange(value) {
                this.selectedMeasurementUnit = value;
                this.formData.measurement_unit_id = value;
+          },
+
+          onDiscountTypeChange(value) {
+               this.selectedType = value;
+               this.formData.type_id = value;
           },
 
           onCategoryChange(value) {

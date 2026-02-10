@@ -13,15 +13,55 @@
       </Message>
 
       <form @submit.prevent="submitForm">
-        <label>{{ $t("contacts.address") }}</label>
-        <InputText v-model="formData.address" />
-
-        <div class="mt-3">
-          <Checkbox v-model="formData.is_default" binary />
-          <span class="ml-2">{{ $t("contacts.isDefault") }}</span>
+        <div class="field">
+          <label class="font-bold block mb-2"
+            >{{ $t("discounts.selectBranches") }} *</label
+          >
+          <MultiSelect
+            v-model="selectedBranches"
+            :options="availableBranches"
+            option-label="name"
+            option-value="id"
+            :class="{ 'p-invalid': errors.branch_ids }"
+            :placeholder="
+              loadingBranches
+                ? $t('discounts.loadingBranches')
+                : $t('discounts.branchesPlaceholder')
+            "
+            class="w-full"
+            :loading="loadingBranches"
+            :disabled="loadingBranches || availableBranches.length === 0"
+            display="chip"
+            :maxSelectedLabels="3"
+            :filter="true"
+          />
+          <small class="p-error" v-if="errors.branch_ids">{{
+            errors.branch_ids
+          }}</small>
         </div>
 
-        <div class="flex justify-content-end gap-2">
+        <div
+          v-if="selectedBranches.length > 0"
+          class="selected-branches-preview mt-3"
+        >
+          <label class="font-medium block mb-2"
+            >{{ $t("discounts.selectedProducts") }}:</label
+          >
+          <div class="selected-chips">
+            <Chip
+              v-for="b in getSelectedBranchesDetails()"
+              :key="b.id"
+              :label="b.name"
+              class="mr-2 mb-2"
+            >
+              <span class="ml-2 text-xs text-color-secondary"
+                >({{ b.name_ar }})</span
+              >
+            </Chip>
+          </div>
+        </div>
+
+        <div class="flex justify-content-end gap-2 mt-4">
           <Button
             type="button"
             :label="$t('common.cancel')"
@@ -34,6 +74,7 @@
             :label="$t('common.create')"
             :loading="loading"
             class="p-button-primary"
+            :disabled="!canSubmit"
           />
         </div>
       </form>
@@ -57,11 +98,12 @@ import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
 import moduleUrl from "@/constants/moduleUrl";
 import validationRequest from "../validation/validationRequest";
+import useSelectionItems from "@/utils/useSelectionItems";
 
 export default {
   name: "CreateForm",
 
-  mixins: [useTable(), useCrud(), validationRequest],
+  mixins: [useTable(), useCrud(), validationRequest, useSelectionItems],
 
   components: {
     Dialog,
@@ -94,22 +136,48 @@ export default {
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.CONTACT_ADDRESS.propMainUrl,
+      propMainUrl: moduleUrl.URLS.DISCOUNT_BRANCH.propMainUrl,
+      company_id: "",
+      discount_id: "",
+      selectedBranches: [],
       formData: {
         company_id: "",
-        contact_id: "",
-        address: "",
-        is_default: false,
+        discount_id: "",
       },
     };
   },
+
+  computed: {
+    canSubmit() {
+      return this.selectedBranches.length > 0;
+    },
+  },
+
+  mounted() {
+    this.loadAvailableBranches(this.company_id);
+  },
+
   methods: {
     populateForm(selectedItem) {
       this.formData = {
-        contact_id: selectedItem.id || "",
         company_id: selectedItem.company_id || "",
+        discount_id: selectedItem.id || "",
       };
+      this.company_id = selectedItem.company_id || "";
+      this.discount_id = selectedItem.id || "";
     },
+
+    getSelectedBranchesDetails() {
+      return this.selectedBranches.map(
+        (id) =>
+          this.availableBranches.find((b) => b.id === id) || {
+            id,
+            name: this.$t("discounts.branchName"),
+            name_ar: this.$t("discounts.branchName"),
+          },
+      );
+    },
+
     async submitForm() {
       if (!this.validateCreateForm()) {
         return;
@@ -120,7 +188,13 @@ export default {
 
       const url = this.propMainUrl;
 
-      await this.createItem(this.formData, url);
+      const payload = {
+        company_id: this.company_id,
+        discount_id: this.discount_id,
+        branch_ids: this.selectedBranches,
+      };
+
+      await this.createItem(payload, url);
 
       this.closeModal();
     },
