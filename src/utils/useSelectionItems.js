@@ -261,12 +261,12 @@ export default {
                }
           },
 
-          async loadAvailableBranches(company_id) {
-               alert(company_id);
+          async loadAvailableBranches(company_id, discount_id = "") {
+
                this.loadingBranches = true;
                try {
                     const response = await this.$http.get(
-                         `${moduleUrl.URLS.BRANCH.propListhUrl}/${company_id}`,
+                         `${moduleUrl.URLS.BRANCH.propListhUrl}/${company_id}?discount_id=${discount_id}`,
                          {
                               headers: general_request.headers,
                          }

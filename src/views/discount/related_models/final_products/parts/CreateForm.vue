@@ -95,7 +95,7 @@ export default {
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.CONTACT_EMAIL.propMainUrl,
+      propMainUrl: moduleUrl.URLS.DISCOUNT_FINAL_PRODUCT.propMainUrl,
       formData: {
         company_id: "",
         contact_id: "",

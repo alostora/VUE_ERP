@@ -127,6 +127,9 @@ export default {
       handler(selectedItem) {
         if (selectedItem && selectedItem.id) {
           this.populateForm(selectedItem);
+          this.$nextTick(() => {
+            this.loadAvailableBranches(this.company_id, this.discount_id);
+          });
         } else {
           this.resetForm();
         }
@@ -153,10 +156,6 @@ export default {
     },
   },
 
-  mounted() {
-    this.loadAvailableBranches(this.company_id);
-  },
-
   methods: {
     populateForm(selectedItem) {
       this.formData = {
@@ -174,7 +173,7 @@ export default {
             id,
             name: this.$t("discounts.branchName"),
             name_ar: this.$t("discounts.branchName"),
-          },
+          }
       );
     },
 
