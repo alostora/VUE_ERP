@@ -23,6 +23,7 @@ import contact_routes from "@/views/contact/routes/routes";
 import invoice_stage_routes from "@/views/invoice_stage/routes/routes";
 import tax_routes from "@/views/tax/routes/routes";
 import discount_routes from "@/views/discount/routes/routes";
+import employee_routes from "@/views/employee/routes/routes";
 
 import CompanyDetails from "../parts/details/CompanyDetails.vue";
 
@@ -62,6 +63,7 @@ const routes = [
       ...invoice_stage_routes,
       ...tax_routes,
       ...discount_routes,
+      ...employee_routes,
     ],
   }
 ];

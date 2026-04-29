@@ -163,6 +163,11 @@ export default {
           icon: "pi pi-pound",
           route: `/company/${this.$route.params.company_id}/discounts`,
         },
+        {
+          label: "companies.employees",
+          icon: "pi pi-wrench",
+          route: `/company/${this.$route.params.company_id}/employees`,
+        },
       ],
     };
   },

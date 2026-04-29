@@ -19,9 +19,7 @@
         </div>
       </div>
 
-      <div
-        class="table-filters"
-      >
+      <div class="table-filters">
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
@@ -264,7 +262,7 @@ export default {
       }
 
       // UPDATED URL FORMAT
-      let url = `${general_request.BASE_URL}/admin/company-employees/search?company_id=${this.effectiveCompanyId}&branch_id=${this.effectiveBranchId}&paginate=true`;
+      let url = `${general_request.BASE_URL}/admin/company/employees/search/${this.effectiveCompanyId}?paginate=true`;
 
       if (this.query_string) {
         url += `&query_string=${encodeURIComponent(this.query_string)}`;
@@ -274,7 +272,7 @@ export default {
     },
 
     propMainUrl() {
-      return `${general_request.BASE_URL}/admin/company-employee`;
+      return `${general_request.BASE_URL}/admin/company/employee`;
     },
   },
 
@@ -308,7 +306,7 @@ export default {
         this.showToast(
           "error",
           this.$t("common.error"),
-          this.$t("employees.missingIds")
+          this.$t("employees.missingIds"),
         );
         return;
       }
@@ -339,7 +337,7 @@ export default {
         employee,
         this.propMainUrl,
         this.$t("employees.employeeDeleted"),
-        this.$t("employees.deleteError")
+        this.$t("employees.deleteError"),
       ).then(() => {
         // Refresh data after delete
         this.getData();
@@ -354,7 +352,7 @@ export default {
         this.showToast(
           "error",
           this.$t("common.error"),
-          this.$t("employees.missingIds")
+          this.$t("employees.missingIds"),
         );
         return;
       }

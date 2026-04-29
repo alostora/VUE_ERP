@@ -76,6 +76,11 @@ const sidebarItems = function sidebarItems(model, company_id = null) {
                     icon: "pi pi-pound",
                     route: `/company/${company_id}/discounts`,
                },
+               {
+                    label: "companies.employees",
+                    icon: "pi pi-wrench",
+                    route: `/company/${company_id}/employees`,
+               },
           ];
      }
 };
