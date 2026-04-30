@@ -1,5 +1,5 @@
 // @/utils/sidebarItems.js
-const sidebarItems = function sidebarItems(model, company_id = null) {
+const sidebarItems = function sidebarItems(model, company_id = null, branch_id = null) {
 
      if (model === "homePage") {
           return [
@@ -80,6 +80,30 @@ const sidebarItems = function sidebarItems(model, company_id = null) {
                     label: "companies.employees",
                     icon: "pi pi-wrench",
                     route: `/company/${company_id}/employees`,
+               },
+          ];
+     } else if (model === "branch" && company_id !== null && branch_id !== null) {
+
+          return [
+               {
+                    label: "branches.branchDetails",
+                    icon: "pi pi-map",
+                    route: `/branch/${company_id}/show/${branch_id}`,
+               },
+               {
+                    label: "warehouses.warehouses",
+                    icon: "pi pi-building",
+                    route: `/branch/${company_id}/warehouses/${branch_id}`,
+               },
+               {
+                    label: "employees.employees",
+                    icon: "pi pi-wrench",
+                    route: `/branch/${company_id}/employees/${branch_id}`,
+               },
+               {
+                    label: "branches.backToList",
+                    icon: "pi pi-arrow-left",
+                    route: `/company/${company_id}/branches`,
                },
           ];
      }

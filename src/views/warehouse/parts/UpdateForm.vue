@@ -1,11 +1,10 @@
 <template>
   <Dialog
-    :header="$t('employees.createEmployee')"
+    :header="this.$t('countries.editCountry')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
     :breakpoints="{ '960px': '75vw', '641px': '90vw' }"
-    @hide="closeModal"
   >
     <div class="form">
       <Message v-if="error" severity="error" class="mb-3">
@@ -15,75 +14,53 @@
       <form @submit.prevent="submitForm">
         <div class="field mb-3">
           <label for="name" class="font-bold block mb-2">
-            {{ $t("employees.name") }} *
+            {{ $t("warehouse.name") }} *
           </label>
           <InputText
             id="name"
             v-model="formData.name"
             :class="{ 'p-invalid': errors.name }"
             class="w-full"
-            :placeholder="$t('employees.namePlaceholder')"
           />
           <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
         </div>
 
         <div class="field mb-3">
-          <label for="email" class="font-bold block mb-2">
-            {{ $t("employees.email") }} *
+          <label for="name_ar" class="font-bold block mb-2">
+            {{ $t("warehouse.name_ar") }} *
           </label>
           <InputText
-            id="email"
-            v-model="formData.email"
-            :class="{ 'p-invalid': errors.email }"
+            id="name_ar"
+            v-model="formData.name_ar"
+            :class="{ 'p-invalid': errors.name_ar }"
             class="w-full"
-            :placeholder="$t('employees.emailPlaceholder')"
           />
-          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="phone" class="font-bold block mb-2">
-            {{ $t("employees.phone") }}
-          </label>
-          <InputText
-            id="phone"
-            v-model="formData.phone"
-            :class="{ 'p-invalid': errors.phone }"
-            class="w-full"
-            :placeholder="$t('employees.phonePlaceholder')"
-          />
-          <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="password" class="font-bold block mb-2">
-            {{ $t("employees.password") }} *
-          </label>
-          <Password
-            id="password"
-            v-model="formData.password"
-            :feedback="true"
-            :class="{ 'p-invalid': errors.password }"
-            class="w-full"
-            :placeholder="$t('employees.passwordPlaceholder')"
-            toggleMask
-            :inputStyle="{ width: '100%' }"
-          />
-          <small v-if="errors.password" class="p-error">{{
-            errors.password
+          <small v-if="errors.name_ar" class="p-error">{{
+            errors.name_ar
           }}</small>
         </div>
 
         <div class="field mb-4">
-          <label for="address" class="font-bold block mb-2">
-            {{ $t("employees.address") }}
+          <label for="details" class="font-bold block mb-2">
+            {{ $t("warehouse.details") }}
           </label>
           <Textarea
-            id="address"
-            v-model="formData.address"
+            id="details"
+            v-model="formData.details"
             rows="3"
             class="w-full"
-            :placeholder="$t('employees.addressPlaceholder')"
+          />
+        </div>
+
+        <div class="field mb-4">
+          <label for="details_ar" class="font-bold block mb-2">
+            {{ $t("warehouse.details_ar") }}
+          </label>
+          <Textarea
+            id="details_ar"
+            v-model="formData.details_ar"
+            rows="3"
+            class="w-full"
           />
         </div>
 
@@ -95,9 +72,10 @@
             class="p-button-text"
             :disabled="loading"
           />
+
           <Button
             type="submit"
-            :label="$t('common.create')"
+            :label="$t('common.update')"
             :loading="loading"
             class="p-button-primary"
           />
@@ -107,7 +85,6 @@
 
     <div v-if="loading" class="loading-overlay">
       <ProgressSpinner />
-      <p class="mt-2">{{ $t("common.creating") }}</p>
     </div>
   </Dialog>
 </template>
@@ -126,7 +103,7 @@ import moduleUrl from "@/constants/moduleUrl";
 import validationRequest from "../validation/validationRequest";
 
 export default {
-  name: "CreateForm",
+  name: "UpdateForm",
   components: {
     Dialog,
     ProgressSpinner,
@@ -136,46 +113,59 @@ export default {
     Select,
   },
 
+  mixins: [useTable(), useCrud(), validationRequest],
+
   props: {
-    company_id: {
-      type: String,
-      default: null,
+    selected_item: {
+      type: Object,
+      default: () => ({}),
     },
   },
 
   watch: {
-    "$route.params.company_id": {
+    selected_item: {
       immediate: true,
       deep: true,
-      handler(company_id) {
-        if (company_id) {
-          this.formData.company_id = company_id;
+      handler(selectedItem) {
+        if (selectedItem && selectedItem.id) {
+          this.populateForm(selectedItem);
+        } else {
+          this.resetForm();
         }
       },
     },
   },
 
-  mixins: [useTable(), useCrud(), validationRequest],
-
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.EMPLOYEE.propMainUrl,
+      propMainUrl: moduleUrl.URLS.WAREHOUSE.propMainUrl,
+      accountTypes: [],
       selectedAccountType: null,
       formData: {
-        company_id: "",
+        id: "",
         name: "",
-        email: "",
-        phone: "",
-        password: "",
-        address: "",
+        name_ar: "",
+        details: "",
+        details_ar: "",
       },
     };
   },
 
   mounted() {},
+
   methods: {
+    populateForm(selectedItem) {
+      this.formData = {
+        id: selectedItem.id || "",
+        name: selectedItem.name || "",
+        name_ar: selectedItem.name_ar || "",
+        details: selectedItem.details || "",
+        details_ar: selectedItem.details_ar || "",
+      };
+    },
+
     async submitForm() {
-      if (!this.validateCreateForm()) {
+      if (!this.validateUpdateForm()) {
         return;
       }
 
@@ -183,7 +173,7 @@ export default {
       this.error = "";
 
       const url = this.propMainUrl;
-      await this.createItem(this.formData, url);
+      await this.updateItem(this.formData.id, this.formData, url);
 
       this.closeModal();
     },
@@ -216,7 +206,6 @@ export default {
   height: 100%;
   background: rgba(255, 255, 255, 0.8);
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 1000;

@@ -1,6 +1,6 @@
 <template>
   <Dialog
-    :header="$t('employees.createEmployee')"
+    :header="$t('warehouse.createWarehouse')"
     v-model:visible="visible"
     :modal="true"
     :style="{ width: '50vw' }"
@@ -15,75 +15,57 @@
       <form @submit.prevent="submitForm">
         <div class="field mb-3">
           <label for="name" class="font-bold block mb-2">
-            {{ $t("employees.name") }} *
+            {{ $t("warehouse.name") }} *
           </label>
           <InputText
             id="name"
             v-model="formData.name"
             :class="{ 'p-invalid': errors.name }"
             class="w-full"
-            :placeholder="$t('employees.namePlaceholder')"
+            :placeholder="$t('warehouse.namePlaceholder')"
           />
           <small v-if="errors.name" class="p-error">{{ errors.name }}</small>
         </div>
 
         <div class="field mb-3">
-          <label for="email" class="font-bold block mb-2">
-            {{ $t("employees.email") }} *
+          <label for="name" class="font-bold block mb-2">
+            {{ $t("warehouse.name_ar") }} *
           </label>
           <InputText
-            id="email"
-            v-model="formData.email"
-            :class="{ 'p-invalid': errors.email }"
+            id="name_ar"
+            v-model="formData.name_ar"
+            :class="{ 'p-invalid': errors.name_ar }"
             class="w-full"
-            :placeholder="$t('employees.emailPlaceholder')"
+            :placeholder="$t('warehouse.nameArPlaceholder')"
           />
-          <small v-if="errors.email" class="p-error">{{ errors.email }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="phone" class="font-bold block mb-2">
-            {{ $t("employees.phone") }}
-          </label>
-          <InputText
-            id="phone"
-            v-model="formData.phone"
-            :class="{ 'p-invalid': errors.phone }"
-            class="w-full"
-            :placeholder="$t('employees.phonePlaceholder')"
-          />
-          <small v-if="errors.phone" class="p-error">{{ errors.phone }}</small>
-        </div>
-
-        <div class="field mb-3">
-          <label for="password" class="font-bold block mb-2">
-            {{ $t("employees.password") }} *
-          </label>
-          <Password
-            id="password"
-            v-model="formData.password"
-            :feedback="true"
-            :class="{ 'p-invalid': errors.password }"
-            class="w-full"
-            :placeholder="$t('employees.passwordPlaceholder')"
-            toggleMask
-            :inputStyle="{ width: '100%' }"
-          />
-          <small v-if="errors.password" class="p-error">{{
-            errors.password
+          <small v-if="errors.name_ar" class="p-error">{{
+            errors.name_ar
           }}</small>
         </div>
 
         <div class="field mb-4">
-          <label for="address" class="font-bold block mb-2">
-            {{ $t("employees.address") }}
+          <label for="details" class="font-bold block mb-2">
+            {{ $t("warehouse.details") }}
           </label>
           <Textarea
-            id="address"
-            v-model="formData.address"
+            id="details"
+            v-model="formData.details"
             rows="3"
             class="w-full"
-            :placeholder="$t('employees.addressPlaceholder')"
+            :placeholder="$t('warehouse.detailsPlaceholder')"
+          />
+        </div>
+
+        <div class="field mb-4">
+          <label for="details_ar" class="font-bold block mb-2">
+            {{ $t("warehouse.details_ar") }}
+          </label>
+          <Textarea
+            id="details_ar"
+            v-model="formData.details_ar"
+            rows="3"
+            class="w-full"
+            :placeholder="$t('warehouse.detailsArPlaceholder')"
           />
         </div>
 
@@ -141,6 +123,10 @@ export default {
       type: String,
       default: null,
     },
+    branch_id: {
+      type: String,
+      default: null,
+    },
   },
 
   watch: {
@@ -153,21 +139,29 @@ export default {
         }
       },
     },
+    "$route.params.branch_id": {
+      immediate: true,
+      deep: true,
+      handler(branch_id) {
+        if (branch_id) {
+          this.formData.branch_id = branch_id;
+        }
+      },
+    },
   },
 
   mixins: [useTable(), useCrud(), validationRequest],
 
   data() {
     return {
-      propMainUrl: moduleUrl.URLS.EMPLOYEE.propMainUrl,
-      selectedAccountType: null,
+      propMainUrl: moduleUrl.URLS.WAREHOUSE.propMainUrl,
       formData: {
         company_id: "",
+        branch_id: "",
         name: "",
-        email: "",
-        phone: "",
-        password: "",
-        address: "",
+        name_ar: "",
+        details: "",
+        details_ar: "",
       },
     };
   },

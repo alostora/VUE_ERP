@@ -163,5 +163,11 @@ export default {
                propMainUrl: `${general_request.BASE_URL}/admin/company/employee`,
                propCreateMultiUrl: ``,
           },
+          WAREHOUSE: {
+               propSearchUrl: `${general_request.BASE_URL}/admin/company/branch/warehouses/search`,
+               propGetUrl: `${general_request.BASE_URL}/admin/company/branch/warehouses`,
+               propMainUrl: `${general_request.BASE_URL}/admin/company/branch/warehouse`,
+               propCreateMultiUrl: ``,
+          },
      }
 }

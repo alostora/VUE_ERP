@@ -11,7 +11,6 @@ import Show from "../parts/Show.vue";
 // import discount_routes from "@/latest/model/discount/routes/discount_routes";
 
 
-import branch_routes from "@/latest/model/branch/routes/branch_routes";
 
 import category_routes from "@/views/category/routes/routes";
 import measurement_unit_routes from "@/views/measurement_unit/routes/routes";
@@ -24,6 +23,7 @@ import invoice_stage_routes from "@/views/invoice_stage/routes/routes";
 import tax_routes from "@/views/tax/routes/routes";
 import discount_routes from "@/views/discount/routes/routes";
 import employee_routes from "@/views/employee/routes/routes";
+import branch_routes from "@/views/branch/routes/routes";
 
 import CompanyDetails from "../parts/details/CompanyDetails.vue";
 
@@ -58,12 +58,12 @@ const routes = [
       ...variant_value_routes,
       ...product_routes,
       ...final_product_routes,
-      ...branch_routes,
       ...contact_routes,
       ...invoice_stage_routes,
       ...tax_routes,
       ...discount_routes,
       ...employee_routes,
+      ...branch_routes,
     ],
   }
 ];

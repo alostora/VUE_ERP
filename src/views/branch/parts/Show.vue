@@ -1,50 +1,23 @@
 <template>
   <div class="details-show-page" :class="layoutClasses">
-    <div class="details-header">
-      <MVVMMainHeader
-        :company="company"
-        :current-page="$route.name"
-        @toggle-sidebar="toggleDetailsSidebar"
-        @go-back="goBackToCompanies"
-        @edit-company="editCompany"
+    <div v-if="loading" class="loading-container">
+      <ProgressSpinner />
+      <p class="mt-2">{{ $t("common.loading") }}</p>
+    </div>
+
+    <div v-else-if="error" class="error-container">
+      <Message severity="error" class="mb-3">
+        {{ error }}
+      </Message>
+      <Button
+        :label="$t('common.retry')"
+        icon="pi pi-refresh"
+        @click="fetchBranch"
       />
     </div>
 
-    <div class="layout-container">
-      <div class="details-sidebar" :class="{ collapsed: sidebarCollapsed }">
-        <MVVMSidebar
-          :collapsed="sidebarCollapsed"
-          :sidebar-items="navItems"
-          :position="currentDirection"
-          :is-mobile="isMobile"
-          @toggle="toggleMVVMSidebar"
-        />
-      </div>
-
-      <main
-        class="details-content"
-        :class="{ 'sidebar-collapsed': sidebarCollapsed }"
-      >
-        <div v-if="loading" class="loading-container">
-          <ProgressSpinner />
-          <p class="mt-2">{{ $t("common.loading") }}</p>
-        </div>
-
-        <div v-else-if="error" class="error-container">
-          <Message severity="error" class="mb-3">
-            {{ error }}
-          </Message>
-          <Button
-            :label="$t('common.retry')"
-            icon="pi pi-refresh"
-            @click="fetchCompany"
-          />
-        </div>
-
-        <div v-else-if="company.id" class="main-content-wrapper mt-1">
-          <RouterView :company="company" :company_id="company_id" />
-        </div>
-      </main>
+    <div v-else-if="branch.id" class="main-content-wrapper mt-1">
+      <BranchDetails :branch="branch" :branch_id="branch_id" />
     </div>
 
     <UpdateForm
@@ -56,38 +29,32 @@
 </template>
 
 <script>
-import { RouterView } from "vue-router";
 import { useTable } from "@/utils/useTable";
 import { useCrud } from "@/utils/useCrud";
 import customFunctions from "../custom_functions/customFunctions";
+import BranchDetails from "./details/BranchDetails.vue";
 import general_request from "@/utils/general_request";
 
-import MVVMMainHeader from "@/views/_main_container/layouts/MVVMMainHeader.vue";
 import UpdateForm from "./UpdateForm.vue";
 
 import Button from "primevue/button";
 import ProgressSpinner from "primevue/progressspinner";
 import Message from "primevue/message";
 
-import MVVMSidebar from "@/views/_main_container/layouts/MVVMSidebar.vue";
-import sidebarItems from "@/utils/sidebarItems";
-
 export default {
-  name: "CompanyShow",
+  name: "BranchShow",
   components: {
-    RouterView,
-    MVVMMainHeader,
+    BranchDetails,
     UpdateForm,
     Button,
     ProgressSpinner,
     Message,
-    MVVMSidebar,
   },
 
   mixins: [useTable(), useCrud(), customFunctions],
 
   props: {
-    company_id: {
+    branch_id: {
       type: String,
       required: true,
     },
@@ -95,7 +62,7 @@ export default {
 
   data() {
     return {
-      company: {},
+      branch: {},
       loading: false,
       error: "",
       sidebarCollapsed: false,
@@ -120,15 +87,8 @@ export default {
     },
 
     navItems() {
-      if (this.$route.params.branch_id) {
-        return sidebarItems(
-          "branch",
-          this.$route.params.company_id,
-          this.$route.params.branch_id,
-        );
-      } else {
-        return sidebarItems("company", this.company_id);
-      }
+      const items = sidebarItems("branch", this.branch_id);
+      return items || [];
     },
   },
 
@@ -145,11 +105,11 @@ export default {
   },
 
   mounted() {
-    console.log("CompanyShow component mounted");
-    console.log("Company ID:", this.company_id);
+    console.log("BranchShow component mounted");
+    console.log("Branch ID:", this.branch_id);
     console.log("Route params:", this.$route.params);
 
-    this.fetchCompany();
+    this.fetchBranch();
     this.checkMobile();
     this.setupLanguageListener();
     window.addEventListener("resize", this.checkMobile);
@@ -163,25 +123,25 @@ export default {
   },
 
   methods: {
-    async fetchCompany() {
+    async fetchBranch() {
       this.loading = true;
       this.error = "";
 
       try {
-        const companyId = this.company_id || this.$route.params.company_id;
+        const branchId = this.branch_id || this.$route.params.branch_id;
 
-        if (!companyId) {
-          throw new Error("Company ID is missing");
+        if (!branchId) {
+          throw new Error("Branch ID is missing");
         }
 
-        const url = `${general_request.BASE_URL}/admin/company/${companyId}`;
+        const url = `${general_request.BASE_URL}/admin/company/branch/${branchId}`;
         const response = await this.$http.get(url, {
           headers: general_request.headers,
         });
 
         if (response.data && response.data.data) {
-          this.company = response.data.data;
-          this.selectedItem = this.company;
+          this.branch = response.data.data;
+          this.selectedItem = this.branch;
         } else {
           throw new Error("Invalid response format");
         }
@@ -189,7 +149,7 @@ export default {
         this.error =
           error.response?.data?.message ||
           error.message ||
-          this.$t("errors.failedToLoadCompany");
+          this.$t("errors.failedToLoadBranch");
       } finally {
         this.loading = false;
       }
@@ -203,7 +163,7 @@ export default {
       this.$router.push("/companies");
     },
 
-    editCompany() {
+    editBranch() {
       this.$refs.updateModalForm.openModal();
     },
 
@@ -211,9 +171,9 @@ export default {
       this.showToast(
         "success",
         this.$t("common.success"),
-        this.$t("companies.companyUpdated"),
+        this.$t("companies.branchUpdated"),
       );
-      this.fetchCompany();
+      this.fetchBranch();
     },
 
     checkMobile() {

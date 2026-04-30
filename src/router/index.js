@@ -8,7 +8,7 @@ import country_routes from "@/views/country/routes/routes";
 import governorate_routes from "@/views/governorate/routes/routes";
 import city_routes from "@/views/city/routes/routes";
 import company_routes from "@/views/company/routes/routes";
-import branch_routes from "../latest/model/branch/routes/branch_routes";
+// import branch_routes from "@/views/branch/routes/routes";
 
 
 const router = createRouter({
@@ -30,7 +30,7 @@ const router = createRouter({
         ...governorate_routes,
         ...city_routes,
         ...company_routes,
-        ...branch_routes,
+        // ...branch_routes,
       ],
     },
     {
