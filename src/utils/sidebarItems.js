@@ -91,14 +91,19 @@ const sidebarItems = function sidebarItems(model, company_id = null, branch_id =
                     route: `/branch/${company_id}/show/${branch_id}`,
                },
                {
-                    label: "warehouses.warehouses",
+                    label: "branches.warehouses",
                     icon: "pi pi-building",
                     route: `/branch/${company_id}/warehouses/${branch_id}`,
                },
                {
-                    label: "employees.employees",
+                    label: "branches.employees",
                     icon: "pi pi-wrench",
                     route: `/branch/${company_id}/employees/${branch_id}`,
+               },
+               {
+                    label: "branches.purchasesInvoices",
+                    icon: "pi pi-shopping-cart",
+                    route: `/branch/${company_id}/purchases-invoices/${branch_id}`,
                },
                {
                     label: "branches.backToList",

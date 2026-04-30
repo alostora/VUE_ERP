@@ -2,10 +2,10 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="table-header">
-        <h1 class="table-title">{{ $t("warehouse.title") }}</h1>
+        <h1 class="table-title">{{ $t("measurementUnits.title") }}</h1>
         <div class="table-actions">
           <Button
-            :label="$t('warehouse.addWarehouse')"
+            :label="$t('measurementUnits.add')"
             icon="pi pi-plus"
             @click="openCreateModel"
             class="p-button-primary"
@@ -17,7 +17,7 @@
         <div class="search-container flex-1 w-full">
           <InputText
             v-model="query_string"
-            :placeholder="$t('warehouse.search')"
+            :placeholder="$t('measurementUnits.search')"
             @input="handleSearchInput"
             class="search-input w-20rem"
           />
@@ -29,7 +29,7 @@
           :options="perPageOptions"
           optionLabel="label"
           optionValue="value"
-          :placeholder="$t('warehouse.show')"
+          :placeholder="$t('measurementUnits.show')"
           @change="getData(propSearchUrl)"
           class="w-10rem"
         />
@@ -53,7 +53,11 @@
         currentPageReportTemplate="{first} to {last} of {totalRecords}"
         @page="handlePageChange"
       >
-        <Column field="id" :header="$t('warehouse.id')" class="col-identifier">
+        <Column
+          field="id"
+          :header="$t('measurementUnits.id')"
+          class="col-identifier"
+        >
           <template #body="slotProps">
             <span class="font-mono text-sm">{{ slotProps.index + 1 }}</span>
           </template>
@@ -61,7 +65,7 @@
 
         <Column
           field="name"
-          :header="$t('warehouse.name')"
+          :header="$t('measurementUnits.name')"
           sortable
           class="col-name"
         >
@@ -72,9 +76,9 @@
 
         <Column
           field="name_ar"
-          :header="$t('warehouse.name_ar')"
+          :header="$t('measurementUnits.nameAr')"
           sortable
-          class="col-name_ar"
+          class="col-name"
         >
           <template #body="slotProps">
             <span class="font-medium">{{ slotProps.data.name_ar }}</span>
@@ -82,7 +86,18 @@
         </Column>
 
         <Column
-          :header="$t('warehouse.actions')"
+          field="created_at"
+          :header="$t('measurementUnits.createdAt')"
+          sortable
+          class="col-name"
+        >
+          <template #body="slotProps">
+            {{ formatDate(slotProps.data.created_at) }}
+          </template>
+        </Column>
+
+        <Column
+          :header="$t('measurementUnits.actions')"
           :exportable="false"
           class="col-actions"
         >
@@ -92,13 +107,13 @@
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-primary"
                 @click="openUpdateModel(slotProps.data)"
-                v-tooltip.top="$t('warehouse.edit')"
+                v-tooltip.top="$t('measurementUnits.edit')"
               />
               <Button
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-danger"
                 @click="deleteRow(slotProps.data)"
-                v-tooltip.top="$t('warehouse.delete')"
+                v-tooltip.top="$t('measurementUnits.delete')"
               />
             </div>
           </template>
@@ -173,18 +188,7 @@ export default {
       handler(company_id) {
         if (company_id) {
           this.companyId = company_id;
-          this.getData(this.propSearchUrl); // Trigger data fetch when branch changes
-        }
-      },
-    },
-
-    "$route.params.branch_id": {
-      immediate: true,
-      deep: true,
-      handler(branch_id) {
-        if (branch_id) {
-          this.branchId = branch_id;
-          this.getData(this.propSearchUrl); // Trigger data fetch when branch changes
+          this.getData(this.propSearchUrl);
         }
       },
     },
@@ -192,7 +196,7 @@ export default {
 
   computed: {
     propSearchUrl() {
-      let url = `${moduleUrl.URLS.WAREHOUSE.propSearchUrl}/${this.companyId}?paginate=true`;
+      let url = `${moduleUrl.URLS.MEASUREMENT_UNIT.propSearchUrl}/${this.companyId}?paginate=true`;
       return url;
     },
   },
@@ -200,12 +204,8 @@ export default {
   data() {
     return {
       companyId: null,
-      propMainUrl: moduleUrl.URLS.WAREHOUSE.propMainUrl,
+      propMainUrl: moduleUrl.URLS.MEASUREMENT_UNIT.propMainUrl,
     };
-  },
-
-  mounted() {
-    this.getData(this.propSearchUrl);
   },
 
   methods: {
@@ -233,7 +233,7 @@ export default {
         item,
         this.propMainUrl,
         this.$t("common.itemDeleted"),
-        this.$t("common.failedToDeleteItem"),
+        this.$t("common.failedToDeleteItem")
       );
     },
   },

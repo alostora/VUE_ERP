@@ -175,6 +175,10 @@ export default {
       type: String,
       default: null,
     },
+    branch_id: {
+      type: String,
+      default: null,
+    },
   },
 
   watch: {
@@ -184,7 +188,21 @@ export default {
       handler(company_id) {
         if (company_id) {
           this.companyId = company_id;
-          this.getData(this.propSearchUrl);
+          this.getData(this.propSearchUrl); // Trigger data fetch
+        }
+      },
+    },
+    "$route.params.branch_id": {
+      immediate: true,
+      deep: true,
+      handler(branch_id) {
+        if (branch_id) {
+          this.branchId = branch_id;
+          this.getData(this.propSearchUrl); // Trigger data fetch when branch changes
+        } else {
+          // Handle case when branch_id is removed/undefined
+          this.branchId = null;
+          this.getData(this.propSearchUrl); // Fetch without branch filter
         }
       },
     },
@@ -193,6 +211,9 @@ export default {
   computed: {
     propSearchUrl() {
       let url = `${moduleUrl.URLS.EMPLOYEE.propSearchUrl}/${this.companyId}?paginate=true`;
+      if (this.branchId) {
+        url += `&branch_id=${this.branchId}`;
+      }
       return url;
     },
   },
@@ -200,12 +221,13 @@ export default {
   data() {
     return {
       companyId: null,
+      branchId: null,
       propMainUrl: moduleUrl.URLS.EMPLOYEE.propMainUrl,
     };
   },
 
   mounted() {
-    this.getData();
+    this.getData(this.propSearchUrl);
   },
 
   methods: {

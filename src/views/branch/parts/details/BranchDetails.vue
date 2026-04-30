@@ -2,6 +2,13 @@
   <div class="table-page">
     <div class="table-wrapper">
       <div class="company-details">
+        <Button
+          :label="$t('branches.openPos')"
+          icon="pi pi-shopping-cart"
+          @click="openPosModal"
+          class="p-button-success mb-3"
+          v-if="true"
+        />
         <!-- Cover Image -->
         <div class="cover-image-section mb-4">
           <img
@@ -138,20 +145,35 @@
       </div>
     </div>
   </div>
+
+  <PosModal
+    ref="posModal"
+    :company-id="branch.company_id"
+    :branch-id="branch.id"
+  />
 </template>
 
 <script>
 import Card from "primevue/card";
+import PosModal from "@/views/purchases_invoice/pos/PosModal.vue";
 
 export default {
   name: "BranchDetails",
   components: {
     Card,
+    PosModal,
   },
   props: {
     branch: {
       type: Object,
       required: true,
+    },
+  },
+  methods: {
+    openPosModal() {
+      if (this.$refs.posModal) {
+        this.$refs.posModal.openModal();
+      }
     },
   },
 };
